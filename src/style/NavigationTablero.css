@@ -1,0 +1,10 @@
+
+.logoBack {
+  background-image: url('../images/LogoDIIV.png');
+  background-repeat: repeat;
+  background-position: center;
+  background-size: 200px 200px;
+  opacity: 0.5;
+  pointer-events: none;
+  
+}
