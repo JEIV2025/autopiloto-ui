@@ -1,6 +1,6 @@
 
 import './App.css';
-
+import './App.css';
 import React, { useState, useEffect } from 'react';
 
 import MapView from './components/MapView';
@@ -9,14 +9,11 @@ import ConsoleLog from './components/ConsoleLog';
 import NavigationDashboard from './components/NavigationTablero';
 import ControlPanel from './components/ControlPanel';
 
-
 function App() {
-
   const [x, setX] = useState(0);
   const [y, setY] = useState(0);
+  const [fullscreen, setFullscreen] = useState(null); // <- nuevo
 
-
-    // Simulación: mover cada 0.5s
   useEffect(() => {
     const interval = setInterval(() => {
       setX(prev => prev + 10);
@@ -25,50 +22,111 @@ function App() {
     return () => clearInterval(interval);
   }, []);
 
+  const renderFullscreen = (key, content) => {
+    return (
+      <div className="fixed inset-0 bg-white z-50 p-4 overflow-auto">
+        <button
+          onClick={() => setFullscreen(null)}
+          className="absolute top-2 right-2 bg-gray-200 border border-gray-400 px-2 py-1 rounded"
+        >
+          ❌ Cerrar
+        </button>
+        {content}
+      </div>
+    );
+  };
 
   return (
- <div className="min-h-screen bg-gray-100 p-2 space-y-2">
-      {/* FILA SUPERIOR */}
-      <div className="grid grid-cols-2 gap-2 h-[45vh]">
-        {/* Mapa GPS */}
-        <div className="rounded-xl shadow overflow-hidden">
-          <MapView />
-        </div>
+  <div className="min-h-screen bg-gray-100 p-2 space-y-2">
+    {/* FULLSCREEN (cuando aplica) */}
+    {fullscreen && (
+      <div className="fixed inset-0 bg-white z-50 p-4 overflow-auto">
+        <button
+          onClick={() => setFullscreen(null)}
+          className="absolute top-2 right-2 bg-gray-200 border border-gray-400 px-2 py-1 rounded z-50"
+        >
+          ⤶ Volver
+        </button>
 
-        {/* Visor navegación */}
-        <div className="bg-black rounded-xl shadow flex items-center justify-center">
-          <NavigationViewer posX={x} posY={y} />
+        <div className="mt-10">
+          {fullscreen === 'map' && <MapView />}
+          {fullscreen === 'viewer' && <NavigationViewer posX={x} posY={y} />}
+          {fullscreen === 'dashboard' && <NavigationDashboard />}
+          {fullscreen === 'panel' && <ControlPanel />}
+          {fullscreen === 'console' && <ConsoleLog />}
         </div>
       </div>
+    )}
 
-      {/* FILA INFERIOR */}
-      <div className="grid grid-cols-12 gap-2 h-[45vh]">
-        {/* Gráficos */}
+    {/* LAYOUT NORMAL */}
+    {!fullscreen && (
+      <>
+        {/* FILA SUPERIOR */}
+        <div className="grid grid-cols-2 gap-2 h-[45vh]">
+          <div className="rounded-xl shadow overflow-hidden relative">
+            <button
+              onClick={() => setFullscreen('map')}
+              className="absolute top-2 right-2 z-10 bg-white px-2 py-1 border rounded"
+            >
+              🗖
+            </button>
+            <MapView />
+          </div>
 
-
-      <div className="col-span-6 navigation-tablero relative w-full h-full">
-      <div className="logoBack absolute inset-0 z-0" />
-
-      <div className="relative z-10">
-        <h2 className="font-semibold text-lg mb-2 text-black">📈 Instrumental de Navegación</h2>
-        <NavigationDashboard />
-      </div>
-    </div>
-
-        {/* Panel de control */}
-        <div className="col-span-3 bg-white rounded-xl shadow p-2">
-          <h2 className="font-semibold text-lg mb-2">🎛️ Panel de Control</h2>
-          <ControlPanel />
+          <div className="bg-black rounded-xl shadow flex items-center justify-center relative">
+            <button
+              onClick={() => setFullscreen('viewer')}
+              className="absolute top-2 right-2 z-10 bg-white px-2 py-1 border rounded"
+            >
+              🗖
+            </button>
+            <NavigationViewer posX={x} posY={y} />
+          </div>
         </div>
 
-          {/* Consola de logs */}
-          <div className="col-span-3 bg-white rounded-xl shadow p-2 flex flex-col h-full">
+        {/* FILA INFERIOR */}
+        <div className="grid grid-cols-12 gap-2 h-[45vh]">
+          <div className="col-span-6 relative w-full h-full">
+            <div className="absolute inset-0 z-0 logoBack" />
+            <div className="relative z-10 p-2 bg-white/80 rounded-xl shadow h-full">
+              <button
+                onClick={() => setFullscreen('dashboard')}
+                className="absolute top-2 right-2 z-10 bg-white px-2 py-1 border rounded"
+              >
+                🗖
+              </button>
+              <h2 className="font-semibold text-lg mb-2 text-black">📈 Instrumental de Navegación</h2>
+              <NavigationDashboard />
+            </div>
+          </div>
+
+          <div className="col-span-3 bg-white rounded-xl shadow p-2 relative">
+            <button
+              onClick={() => setFullscreen('panel')}
+              className="absolute top-2 right-2 z-10 bg-white px-2 py-1 border rounded"
+            >
+              🗖
+            </button>
+            <h2 className="font-semibold text-lg mb-2">🎛️ Panel de Control</h2>
+            <ControlPanel />
+          </div>
+
+          <div className="col-span-3 bg-white rounded-xl shadow p-2 flex flex-col h-full relative">
+            <button
+              onClick={() => setFullscreen('console')}
+              className="absolute top-2 right-2 z-10 bg-white px-2 py-1 border rounded"
+            >
+              🗖
+            </button>
             <h2 className="font-semibold text-lg mb-2">🧾 Consola de Mensajes</h2>
             <ConsoleLog />
           </div>
-      </div>
-    </div>
-  );
+        </div>
+      </>
+    )}
+  </div>
+);
+
 }
 
 export default App;
