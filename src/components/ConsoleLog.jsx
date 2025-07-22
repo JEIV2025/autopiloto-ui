@@ -82,8 +82,8 @@ const ConsoleLog = () => {
         <button
           key={type}
           onClick={() => setFilter(type)}
-          className={`py-1 px-3 border border-gray-400 font-bold text-black bg-gray-200
-            ${filter === type ? 'ring ring-offset-1 ring-gray-500 bg-gray-300' : 'hover:bg-gray-300'}
+          className={`py-1 px-4 border border-gray-400 font-bold text-black bg-gray-200 
+            ${filter === type ? 'ring ring-gray-500 bg-gray-300' : 'hover:bg-gray-300'}
           `}
         >
           {type === 'all' ? 'Todo' : type === 'info' ? 'Info' : 'Datos'}

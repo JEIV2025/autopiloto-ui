@@ -29,7 +29,7 @@ function App() {
           onClick={() => setFullscreen(null)}
           className="absolute top-2 right-2 bg-gray-200 border border-gray-400 px-2 py-1 rounded"
         >
-          ❌ Cerrar
+         ⤶ Volver
         </button>
         {content}
       </div>
@@ -43,7 +43,7 @@ function App() {
       <div className="fixed inset-0 bg-white z-50 p-4 overflow-auto">
         <button
           onClick={() => setFullscreen(null)}
-          className="absolute top-2 right-2 bg-gray-200 border border-gray-400 px-2 py-1 rounded z-50"
+          className="backButton"
         >
           ⤶ Volver
         </button>
@@ -66,7 +66,7 @@ function App() {
           <div className="rounded-xl shadow overflow-hidden relative">
             <button
               onClick={() => setFullscreen('map')}
-              className="absolute top-2 right-2 z-10 bg-white px-2 py-1 border rounded"
+              className="backButton"
             >
               🗖
             </button>
@@ -76,7 +76,7 @@ function App() {
           <div className="bg-black rounded-xl shadow flex items-center justify-center relative">
             <button
               onClick={() => setFullscreen('viewer')}
-              className="absolute top-2 right-2 z-10 bg-white px-2 py-1 border rounded"
+              className="backButton"
             >
               🗖
             </button>
@@ -91,7 +91,7 @@ function App() {
             <div className="relative z-10 p-2 bg-white/80 rounded-xl shadow h-full">
               <button
                 onClick={() => setFullscreen('dashboard')}
-                className="absolute top-2 right-2 z-10 bg-white px-2 py-1 border rounded"
+                className="backButton"
               >
                 🗖
               </button>
@@ -103,7 +103,7 @@ function App() {
           <div className="col-span-3 bg-white rounded-xl shadow p-2 relative">
             <button
               onClick={() => setFullscreen('panel')}
-              className="absolute top-2 right-2 z-10 bg-white px-2 py-1 border rounded"
+              className="backButton"
             >
               🗖
             </button>
@@ -114,7 +114,7 @@ function App() {
           <div className="col-span-3 bg-white rounded-xl shadow p-2 flex flex-col h-full relative">
             <button
               onClick={() => setFullscreen('console')}
-              className="absolute top-2 right-2 z-10 bg-white px-2 py-1 border rounded"
+              className="backButton"
             >
               🗖
             </button>

@@ -148,17 +148,129 @@ const NavigationTablero = () => {
 
   }, [simData]);
 
+
+// Función para calcular distancia con Haversine
+function haversineDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371; // Radio de la Tierra en km
+  const toRad = deg => deg * Math.PI / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a = Math.sin(dLat / 2) ** 2 +
+            Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+            Math.sin(dLon / 2) ** 2;
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+// Tiempo estimado en horas
+function estimatedTime(distanceKm, speedKmh = 50) {
+  return distanceKm / speedKmh;
+}
+
+
+  const [waypoints, setWaypoints] = useState([
+    { id: 'Base', lat: -34.58, lon: -58.38 },
+    { id: 'P1', lat: -34.60, lon: -58.40 },
+    { id: 'P2', lat: -34.62, lon: -58.42 }
+  ]);
+
+  // Manejar cambios de coordenadas
+  const handleChange = (index, field, value) => {
+    const updated = [...waypoints];
+    updated[index][field] = parseFloat(value);
+    setWaypoints(updated);
+  };
+const [currentPos, setCurrentPos] = useState({ lat: -34.585, lon: -58.375 });
+
+const base = currentPos;
+
+function formatCoordinate(value, type) {
+  const abs = Math.abs(value).toFixed(4);
+  if (type === 'lat') {
+    return `${abs}° ${value >= 0 ? 'N' : 'S'}`;
+  }
+  if (type === 'lon') {
+    return `${abs}° ${value >= 0 ? 'E' : 'O'}`;
+  }
+  return value;
+}
+
+
+
   return (
     <div className="flex flex-col items-center justify-center h-full bg-no-repeat bg-center bg-cover rounded-xl shadow" >
       {/* Fila 1 */}
-      <div className="flex flex-row justify-center gap-4">
+           <div className="bg-black text-white p-4 rounded-lg shadow-lg w-full overflow-x-auto">
+      <h2 className="text-center text-lg font-bold mb-4">Mi GPS</h2>
+
+      <div className="bg-gray-800 text-white p-2 rounded mb-2 text-sm">
+  <div className="flex items-center gap-2">
+    <span className="font-bold">📍 Posición Actual:</span>
+
+    <div className="flex flex-row gap-1">
+  <div className="flex items-center gap-1">
+    <span className="text-xs text-white">{currentPos.lat >= 0 ? 'N' : 'S'}</span>
+    <input
+      type="number"
+      step="0.01"
+      value={currentPos.lat}
+      onChange={e => setCurrentPos({ ...currentPos, lat: parseFloat(e.target.value) })}
+      className="bg-black border text-white w-24 text-sm px-1"
+    />
+  </div>
+  <div className="flex items-center gap-1">
+    <span className="text-xs text-white">{currentPos.lon >= 0 ? 'E' : 'O'}</span>
+    <input
+      type="number"
+      step="0.01"
+      value={currentPos.lon}
+      onChange={e => setCurrentPos({ ...currentPos, lon: parseFloat(e.target.value) })}
+      className="bg-black border text-white w-24 text-sm px-1"
+    />
+   
+  </div>
+</div>
+  </div>
+</div>
+
+ <table className="w-full text-sm border border-white">
+  
+        <thead>
+          <tr className="bg-gray-800">
+            <th className="border px-2 py-1">WP</th>
+            <th className="border px-2 py-1">LAT-LON</th>
+            <th className="border px-2 py-1">DISTANCIA (km)</th>
+            <th className="border px-2 py-1">TIEM. APROX. (h)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {waypoints.map((wp, idx) => {
+            const dist = idx === 0 ? '-' : haversineDistance(base.lat, base.lon, wp.lat, wp.lon).toFixed(2);
+            const time = idx === 0 ? '-' : estimatedTime(dist).toFixed(2);
+            return (
+              <tr key={wp.id} className="text-center">
+                <td className="border px-2 py-1">{wp.id}</td>
+                <td className="border px-2 py-1">
+                {formatCoordinate(wp.lat, 'lat')}, {formatCoordinate(wp.lon, 'lon')}
+
+                </td>
+                <td className="border px-2 py-1">{dist}</td>
+                <td className="border px-2 py-1">{time}</td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+
+     <div className="flex flex-row justify-center gap-4">
         <canvas ref={compassRef} />
-        <canvas ref={speedRef} />
-        <div className="flex flex-col items-center justify-center bg-black text-white p-4 rounded shadow">
+          <canvas ref={speedRef} />
+        {/* <div className="flex flex-col items-center justify-center bg-black text-white p-4 rounded shadow">
           <div>📍 Lat: -34.60</div>
           <div>📍 Lon: -58.38</div>
           <div>⛵ Rumbo: {simData.heading.toFixed(0)}°</div>
-        </div>
+        </div> */}
       </div>
       {/* Fila 2 */}
       <div className="flex flex-row justify-center items-center mt-4 gap-4">
@@ -168,6 +280,7 @@ const NavigationTablero = () => {
     </div>
   );
 };
+
 
 export default NavigationTablero;
 

@@ -37,7 +37,7 @@ const ControlPanel = () => {
 
 
   return (
-    <div className="h-full bg-gray-100 flex flex-col items-center justify-center">
+    <div className="h-1/2 bg-gray-100 flex flex-col items-center justify-center">
       <button
         onClick={toggleCalibrar}
         className={`px-4 py-2 font-semibold rounded shadow-md transition-all duration-300 ${

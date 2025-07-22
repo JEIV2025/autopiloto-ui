@@ -81,4 +81,25 @@
   border-radius: 5px;
   cursor: pointer;
   padding: 3px 6px;
+  background-color: #fff;
+  color: #0000;
+
+}
+
+.leaflet-container {
+  z-index: 10 !important;
+}
+
+.backButton{
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  z-index: 20;
+  background-color: #ffff;
+  color: #000;
+  border: 2px solid #ada5a5;
+  padding: 5px 10px;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  font-weight: 500;
 }
