@@ -6,8 +6,9 @@ import React, { useState, useEffect } from 'react';
 import MapView from './components/MapView';
 import NavigationViewer from './components/NavigationViewer';
 import ConsoleLog from './components/ConsoleLog';
-import NavigationDashboard from './components/NavigationTablero';
+import NavigationTablero from './components/NavigationTablero';
 import ControlPanel from './components/ControlPanel';
+import { useMapEvent } from 'react-leaflet';
 
 function App() {
   const [x, setX] = useState(0);
@@ -36,22 +37,62 @@ function App() {
     );
   };
 
+const [currentPos, setCurrentPos] = useState({ lat: -34.585, lon: -58.375 });
+
+const [waypoints, setWaypoints] = useState([
+  { id: 'Base', lat: -34.58, lon: -58.38 },
+  { id: 'P1', lat: -34.60, lon: -58.40 }
+]);
+
+
+useEffect(() => {
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      setCurrentPos({
+        lat: pos.coords.latitude,
+        lon: pos.coords.longitude,
+      });
+    },
+    (err) => {
+      console.error("Error de geolocalización:", err);
+    }
+  );
+}, []);
+
+const handleAddWaypoint = (latlng) => {
+  setWaypoints((prev) => [
+    ...prev,
+    {
+      id: `WP${prev.length + 1}`,
+      lat: latlng.lat,
+      lon: latlng.lng,
+    },
+  ]);
+};
+
+
   return (
-  <div className="min-h-screen bg-gray-100 p-2 space-y-2">
+  <div className="h-full bg-gray-100 p-2 space-y-2">
     {/* FULLSCREEN (cuando aplica) */}
     {fullscreen && (
-      <div className="fixed inset-0 bg-white z-50 p-4 overflow-auto">
+      <div className="fixed inset-0 bg-white z-50 p-4 flex flex-col h-full">
         <button
           onClick={() => setFullscreen(null)}
           className="backButton"
         >
           ⤶ Volver
         </button>
-
-        <div className="mt-10">
-          {fullscreen === 'map' && <MapView />}
+        <div className="flex-1 w-full h-full">
+          {fullscreen === 'map' && (
+            <MapView
+              currentPos={currentPos}
+              waypoints={waypoints}
+              fullscreen={fullscreen === 'map'}
+              onAddWaypoint={handleAddWaypoint}
+            />
+          )}
           {fullscreen === 'viewer' && <NavigationViewer posX={x} posY={y} />}
-          {fullscreen === 'dashboard' && <NavigationDashboard />}
+          {fullscreen === 'dashboard' && <NavigationTablero />}
           {fullscreen === 'panel' && <ControlPanel />}
           {fullscreen === 'console' && <ConsoleLog />}
         </div>
@@ -63,17 +104,16 @@ function App() {
       <>
         {/* FILA SUPERIOR */}
         <div className="grid grid-cols-2 gap-2 h-[45vh]">
-          <div className="rounded-xl shadow overflow-hidden relative">
+          <div className="rounded-xl shadow overflow-hidden relative h-full">
             <button
               onClick={() => setFullscreen('map')}
               className="backButton"
             >
               🗖
             </button>
-            <MapView />
+            <MapView currentPos={currentPos} waypoints={waypoints} fullscreen={fullscreen==='map'} onAddWaypoint={handleAddWaypoint} />
           </div>
-
-          <div className="bg-black rounded-xl shadow flex items-center justify-center relative">
+          <div className="bg-black rounded-xl shadow flex items-center justify-center relative h-full">
             <button
               onClick={() => setFullscreen('viewer')}
               className="backButton"
@@ -96,7 +136,12 @@ function App() {
                 🗖
               </button>
               <h2 className="font-semibold text-lg mb-2 text-black">📈 Instrumental de Navegación</h2>
-              <NavigationDashboard />
+              <NavigationTablero
+                currentPos={currentPos}
+                setCurrentPos={setCurrentPos}
+                waypoints={waypoints}
+                setWaypoints={setWaypoints}
+              />
             </div>
           </div>
 

@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { RadialGauge, LinearGauge } from 'canvas-gauges';
 import '../style/NavigationTablero.css';
 
-const NavigationTablero = () => {
+const NavigationTablero = ({ currentPos, setCurrentPos, waypoints, setWaypoints }) => {
   const compassRef = useRef(null);
   const speedRef = useRef(null);
   const batteryRef = useRef(null);
@@ -168,11 +168,11 @@ function estimatedTime(distanceKm, speedKmh = 50) {
 }
 
 
-  const [waypoints, setWaypoints] = useState([
-    { id: 'Base', lat: -34.58, lon: -58.38 },
-    { id: 'P1', lat: -34.60, lon: -58.40 },
-    { id: 'P2', lat: -34.62, lon: -58.42 }
-  ]);
+  // const [waypoints, setWaypoints] = useState([
+  //   { id: 'Base', lat: -34.58, lon: -58.38 },
+  //   { id: 'P1', lat: -34.60, lon: -58.40 },
+  //   { id: 'P2', lat: -34.62, lon: -58.42 }
+  // ]);
 
   // Manejar cambios de coordenadas
   const handleChange = (index, field, value) => {
@@ -180,7 +180,7 @@ function estimatedTime(distanceKm, speedKmh = 50) {
     updated[index][field] = parseFloat(value);
     setWaypoints(updated);
   };
-const [currentPos, setCurrentPos] = useState({ lat: -34.585, lon: -58.375 });
+// const [currentPos, setCurrentPos] = useState({ lat: -34.585, lon: -58.375 });
 
 const base = currentPos;
 
@@ -245,20 +245,22 @@ function formatCoordinate(value, type) {
         </thead>
         <tbody>
           {waypoints.map((wp, idx) => {
-            const dist = idx === 0 ? '-' : haversineDistance(base.lat, base.lon, wp.lat, wp.lon).toFixed(2);
-            const time = idx === 0 ? '-' : estimatedTime(dist).toFixed(2);
-            return (
-              <tr key={wp.id} className="text-center">
-                <td className="border px-2 py-1">{wp.id}</td>
-                <td className="border px-2 py-1">
-                {formatCoordinate(wp.lat, 'lat')}, {formatCoordinate(wp.lon, 'lon')}
+            const dist = haversineDistance(currentPos.lat, currentPos.lon, wp.lat, wp.lon).toFixed(2);
+            const time = estimatedTime(dist).toFixed(2);
 
-                </td>
-                <td className="border px-2 py-1">{dist}</td>
-                <td className="border px-2 py-1">{time}</td>
-              </tr>
-            );
-          })}
+        return (
+          <tr key={wp.id} className="text-center">
+            <td className="border px-2 py-1">{wp.id}</td>
+            <td className="border px-2 py-1">
+              {/* Coordenadas con cardinal */}
+              {formatCoordinate(wp.lat, 'lat')}, {formatCoordinate(wp.lon, 'lon')}
+            </td>
+            <td className="border px-2 py-1">{dist}</td>
+            <td className="border px-2 py-1">{time}</td>
+          </tr>
+        );
+      })}
+
         </tbody>
       </table>
     </div>
