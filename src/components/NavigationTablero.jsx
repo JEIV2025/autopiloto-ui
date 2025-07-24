@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { RadialGauge, LinearGauge } from 'canvas-gauges';
 import '../style/NavigationTablero.css';
 
-const NavigationTablero = ({ currentPos, setCurrentPos, waypoints, setWaypoints }) => {
+const NavigationTablero = ({ currentPos, setCurrentPos, waypoints, setWaypoints, progressIdx }) => {
   const compassRef = useRef(null);
   const speedRef = useRef(null);
   const batteryRef = useRef(null);
@@ -241,26 +241,47 @@ function formatCoordinate(value, type) {
             <th className="border px-2 py-1">LAT-LON</th>
             <th className="border px-2 py-1">DISTANCIA (km)</th>
             <th className="border px-2 py-1">TIEM. APROX. (h)</th>
+            <th className="border px-2 py-1">ESTADO</th>
           </tr>
         </thead>
         <tbody>
-          {waypoints.map((wp, idx) => {
-            const dist = haversineDistance(currentPos.lat, currentPos.lon, wp.lat, wp.lon).toFixed(2);
-            const time = estimatedTime(dist).toFixed(2);
-
-        return (
-          <tr key={wp.id} className="text-center">
-            <td className="border px-2 py-1">{wp.id}</td>
-            <td className="border px-2 py-1">
-              {/* Coordenadas con cardinal */}
-              {formatCoordinate(wp.lat, 'lat')}, {formatCoordinate(wp.lon, 'lon')}
-            </td>
-            <td className="border px-2 py-1">{dist}</td>
-            <td className="border px-2 py-1">{time}</td>
-          </tr>
-        );
-      })}
-
+          {(() => {
+            const wps = waypoints.filter(wp => wp.id !== 'Base' && typeof wp.lat === 'number' && typeof wp.lon === 'number' && !isNaN(wp.lat) && !isNaN(wp.lon));
+            return waypoints.map((wp, idx) => {
+              let estado = '';
+              let color = '';
+              if (wp.id === 'Base') {
+                estado = 'Base';
+                color = 'text-gray-400';
+              } else {
+                // Buscar el índice real del waypoint (sin contar la base)
+                const realIdx = wps.findIndex(w => w.id === wp.id);
+                if (realIdx < progressIdx) {
+                  estado = 'Completado';
+                  color = 'text-green-500';
+                } else if (realIdx === progressIdx) {
+                  estado = 'En camino';
+                  color = 'text-blue-500';
+                } else {
+                  estado = 'Próximo destino';
+                  color = 'text-red-500';
+                }
+              }
+              const dist = (wp.id === 'Base') ? haversineDistance(currentPos.lat, currentPos.lon, wp.lat, wp.lon).toFixed(2) : '--';
+              const time = (dist && !isNaN(dist)) ? estimatedTime(dist).toFixed(2) : '--';
+              return (
+                <tr key={wp.id} className="text-center">
+                  <td className="border px-2 py-1">{wp.id}</td>
+                  <td className="border px-2 py-1">
+                    {formatCoordinate(wp.lat, 'lat')}, {formatCoordinate(wp.lon, 'lon')}
+                  </td>
+                  <td className="border px-2 py-1">{dist}</td>
+                  <td className="border px-2 py-1">{time}</td>
+                  <td className={`border px-2 py-1 font-bold ${color}`}>{estado}</td>
+                </tr>
+              );
+            });
+          })()}
         </tbody>
       </table>
     </div>

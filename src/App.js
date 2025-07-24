@@ -14,6 +14,7 @@ function App() {
   const [x, setX] = useState(0);
   const [y, setY] = useState(0);
   const [fullscreen, setFullscreen] = useState(null); // <- nuevo
+  const [progressIdx, setProgressIdx] = useState(0); // Nuevo estado para el progreso secuencial
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -40,8 +41,7 @@ function App() {
 const [currentPos, setCurrentPos] = useState({ lat: -34.585, lon: -58.375 });
 
 const [waypoints, setWaypoints] = useState([
-  { id: 'Base', lat: -34.58, lon: -58.38 },
-  { id: 'P1', lat: -34.60, lon: -58.40 }
+  { id: 'Base', lat: -34.58, lon: -58.38 }
 ]);
 
 
@@ -73,6 +73,15 @@ const handleAddWaypoint = (latlng) => {
 
   return (
   <div className="h-full bg-gray-100 p-2 space-y-2">
+    {/* Botón para avanzar al siguiente WP */}
+    <div className="mb-2">
+      <button
+        onClick={() => setProgressIdx(idx => Math.min(idx + 1, waypoints.length - 2))}
+        className="px-4 py-2 bg-blue-600 text-white rounded shadow hover:bg-blue-700"
+      >
+        Siguiente WP
+      </button>
+    </div>
     {/* FULLSCREEN (cuando aplica) */}
     {fullscreen && (
       <div className="fixed inset-0 bg-white z-50 p-4 flex flex-col h-full">
@@ -89,10 +98,17 @@ const handleAddWaypoint = (latlng) => {
               waypoints={waypoints}
               fullscreen={fullscreen === 'map'}
               onAddWaypoint={handleAddWaypoint}
+              progressIdx={progressIdx}
             />
           )}
           {fullscreen === 'viewer' && <NavigationViewer posX={x} posY={y} />}
-          {fullscreen === 'dashboard' && <NavigationTablero />}
+          {fullscreen === 'dashboard' && <NavigationTablero    
+            currentPos={currentPos}
+            setCurrentPos={setCurrentPos}
+            waypoints={waypoints}
+            setWaypoints={setWaypoints}
+            progressIdx={progressIdx}
+          />}
           {fullscreen === 'panel' && <ControlPanel />}
           {fullscreen === 'console' && <ConsoleLog />}
         </div>
@@ -111,7 +127,7 @@ const handleAddWaypoint = (latlng) => {
             >
               🗖
             </button>
-            <MapView currentPos={currentPos} waypoints={waypoints} fullscreen={fullscreen==='map'} onAddWaypoint={handleAddWaypoint} />
+            <MapView currentPos={currentPos} waypoints={waypoints} fullscreen={fullscreen==='map'} onAddWaypoint={handleAddWaypoint} progressIdx={progressIdx} />
           </div>
           <div className="bg-black rounded-xl shadow flex items-center justify-center relative h-full">
             <button
@@ -141,6 +157,7 @@ const handleAddWaypoint = (latlng) => {
                 setCurrentPos={setCurrentPos}
                 waypoints={waypoints}
                 setWaypoints={setWaypoints}
+                progressIdx={progressIdx}
               />
             </div>
           </div>
