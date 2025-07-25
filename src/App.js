@@ -1,6 +1,5 @@
 
 import './App.css';
-import './App.css';
 import React, { useState, useEffect } from 'react';
 
 import MapView from './components/MapView';
@@ -141,13 +140,13 @@ const handleAddWaypoint = (latlng) => {
         </div>
 
         {/* FILA INFERIOR */}
-        <div className="grid grid-cols-12 gap-2 h-[45vh]">
-          <div className="col-span-6 relative w-full h-full">
-            <div className="absolute inset-0 z-0 logoBack" />
-            <div className="relative z-10 p-2 bg-white/80 rounded-xl shadow h-full">
+        <div className="lowSection">
+          <div className="col-span-6" style={{ position: 'relative' }}>
+            <div className="instrumentos-container" style={{ height: '100%' }}>
               <button
                 onClick={() => setFullscreen('dashboard')}
                 className="backButton"
+                style={{ zIndex: 10 }}
               >
                 🗖
               </button>
@@ -162,26 +161,29 @@ const handleAddWaypoint = (latlng) => {
             </div>
           </div>
 
-          <div className="col-span-3 bg-white rounded-xl shadow p-2 relative">
-            <button
-              onClick={() => setFullscreen('panel')}
-              className="backButton"
-            >
-              🗖
-            </button>
-            <h2 className="font-semibold text-lg mb-2">🎛️ Panel de Control</h2>
-            <ControlPanel />
-          </div>
-
-          <div className="col-span-3 bg-white rounded-xl shadow p-2 flex flex-col h-full relative">
-            <button
-              onClick={() => setFullscreen('console')}
-              className="backButton"
-            >
-              🗖
-            </button>
-            <h2 className="font-semibold text-lg mb-2">🧾 Consola de Mensajes</h2>
-            <ConsoleLog />
+          <div className="consolas">
+            <div className="controlPanel relative" style={{ paddingBottom: '20px' }}>
+              <button
+                onClick={() => setFullscreen('panel')}
+                className="backButton"
+              >
+                🗖
+              </button>
+              <h2 className="font-semibold text-lg mb-2">🎛️ Panel de Control</h2>
+              
+                <ControlPanel />
+            </div>
+            <div className="consoleLog relative">
+              <button
+                onClick={() => setFullscreen('console')}
+                className="backButton"
+              >
+                🗖
+              </button>
+              <h2 className="font-semibold text-lg mb-2">🧾 Consola de Mensajes</h2>
+              
+                <ConsoleLog />
+            </div>
           </div>
         </div>
       </>

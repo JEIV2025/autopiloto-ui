@@ -198,108 +198,104 @@ function formatCoordinate(value, type) {
 
 
   return (
-    <div className="flex flex-col items-center justify-center h-full bg-no-repeat bg-center bg-cover rounded-xl shadow" >
-      {/* Fila 1 */}
-           <div className="bg-black text-white p-4 rounded-lg shadow-lg w-full overflow-x-auto">
-      <h2 className="text-center text-lg font-bold mb-4">Mi GPS</h2>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflowY: 'auto' }}>
 
-      <div className="bg-gray-800 text-white p-2 rounded mb-2 text-sm">
-  <div className="flex items-center gap-2">
-    <span className="font-bold">📍 Posición Actual:</span>
-
-    <div className="flex flex-row gap-1">
-  <div className="flex items-center gap-1">
-    <span className="text-xs text-white">{currentPos.lat >= 0 ? 'N' : 'S'}</span>
-    <input
-      type="number"
-      step="0.01"
-      value={currentPos.lat}
-      onChange={e => setCurrentPos({ ...currentPos, lat: parseFloat(e.target.value) })}
-      className="bg-black border text-white w-24 text-sm px-1"
-    />
-  </div>
-  <div className="flex items-center gap-1">
-    <span className="text-xs text-white">{currentPos.lon >= 0 ? 'E' : 'O'}</span>
-    <input
-      type="number"
-      step="0.01"
-      value={currentPos.lon}
-      onChange={e => setCurrentPos({ ...currentPos, lon: parseFloat(e.target.value) })}
-      className="bg-black border text-white w-24 text-sm px-1"
-    />
-   
-  </div>
-</div>
-  </div>
-</div>
-
- <table className="w-full text-sm border border-white">
-  
-        <thead>
-          <tr className="bg-gray-800">
-            <th className="border px-2 py-1">WP</th>
-            <th className="border px-2 py-1">LAT-LON</th>
-            <th className="border px-2 py-1">DISTANCIA (km)</th>
-            <th className="border px-2 py-1">TIEM. APROX. (h)</th>
-            <th className="border px-2 py-1">ESTADO</th>
-          </tr>
-        </thead>
-        <tbody>
-          {(() => {
-            const wps = waypoints.filter(wp => wp.id !== 'Base' && typeof wp.lat === 'number' && typeof wp.lon === 'number' && !isNaN(wp.lat) && !isNaN(wp.lon));
-            return waypoints.map((wp, idx) => {
-              let estado = '';
-              let color = '';
-              if (wp.id === 'Base') {
-                estado = 'Base';
-                color = 'text-gray-400';
-              } else {
-                // Buscar el índice real del waypoint (sin contar la base)
-                const realIdx = wps.findIndex(w => w.id === wp.id);
-                if (realIdx < progressIdx) {
-                  estado = 'Completado';
-                  color = 'text-green-500';
-                } else if (realIdx === progressIdx) {
-                  estado = 'En camino';
-                  color = 'text-blue-500';
-                } else {
-                  estado = 'Próximo destino';
-                  color = 'text-red-500';
-                }
-              }
-              const dist = (wp.id === 'Base') ? haversineDistance(currentPos.lat, currentPos.lon, wp.lat, wp.lon).toFixed(2) : '--';
-              const time = (dist && !isNaN(dist)) ? estimatedTime(dist).toFixed(2) : '--';
-              return (
-                <tr key={wp.id} className="text-center">
-                  <td className="border px-2 py-1">{wp.id}</td>
-                  <td className="border px-2 py-1">
-                    {formatCoordinate(wp.lat, 'lat')}, {formatCoordinate(wp.lon, 'lon')}
-                  </td>
-                  <td className="border px-2 py-1">{dist}</td>
-                  <td className="border px-2 py-1">{time}</td>
-                  <td className={`border px-2 py-1 font-bold ${color}`}>{estado}</td>
-                </tr>
-              );
-            });
-          })()}
-        </tbody>
-      </table>
-    </div>
-
-     <div className="flex flex-row justify-center gap-4">
-        <canvas ref={compassRef} />
+<div style={{ width: '100%' }}>
+        <div className="flex flex-row justify-center gap-4">
+          <canvas ref={compassRef} />
           <canvas ref={speedRef} />
-        {/* <div className="flex flex-col items-center justify-center bg-black text-white p-4 rounded shadow">
-          <div>📍 Lat: -34.60</div>
-          <div>📍 Lon: -58.38</div>
-          <div>⛵ Rumbo: {simData.heading.toFixed(0)}°</div>
-        </div> */}
+        </div>
+        <div className="flex flex-row justify-center items-center mt-4 gap-4">
+          <canvas ref={rollRef} />
+          <canvas ref={batteryRef} />
+        </div>
       </div>
-      {/* Fila 2 */}
-      <div className="flex flex-row justify-center items-center mt-4 gap-4">
-        <canvas ref={rollRef} />
-        <canvas ref={batteryRef} />
+
+      {/* Grilla/tablero arriba */}
+      <div style={{ flexShrink: 0 }}>
+        <div className="bg-black text-white p-4 rounded-lg shadow-lg w-full overflow-x-auto">
+          <h2 className="text-center text-lg font-bold mb-4">Mi GPS</h2>
+          <div className="bg-gray-800 text-white p-2 rounded mb-2 text-sm">
+            <div className="flex items-center gap-2">
+              <span className="font-bold">📍 Posición Actual:</span>
+              <div className="flex flex-row gap-1">
+                <div className="flex items-center gap-1">
+                  <span className="text-xs text-white">{currentPos.lat >= 0 ? 'N' : 'S'}</span>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={currentPos.lat}
+                    onChange={e => setCurrentPos({ ...currentPos, lat: parseFloat(e.target.value) })}
+                    className="bg-black border text-white w-24 text-sm px-1"
+                  />
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className="text-xs text-white">{currentPos.lon >= 0 ? 'E' : 'O'}</span>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={currentPos.lon}
+                    onChange={e => setCurrentPos({ ...currentPos, lon: parseFloat(e.target.value) })}
+                    className="bg-black border text-white w-24 text-sm px-1"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+          <table className="w-full text-sm border border-white">
+            <thead>
+              <tr className="bg-gray-800">
+                <th className="border px-2 py-1">WP</th>
+                <th className="border px-2 py-1">LAT-LON</th>
+                <th className="border px-2 py-1">DISTANCIA (km)</th>
+                <th className="border px-2 py-1">TIEM. APROX. (h)</th>
+                <th className="border px-2 py-1">ESTADO</th>
+              </tr>
+            </thead>
+            <tbody>
+              {(() => {
+                const wps = waypoints.filter(wp => wp.id !== 'Base' && typeof wp.lat === 'number' && typeof wp.lon === 'number' && !isNaN(wp.lat) && !isNaN(wp.lon));
+                return waypoints.map((wp, idx) => {
+                  let estado = '';
+                  let color = '';
+                  if (wp.id === 'Base') {
+                    estado = 'Base';
+                    color = 'text-gray-400';
+                  } else {
+                    // Buscar el índice real del waypoint (sin contar la base)
+                    const realIdx = wps.findIndex(w => w.id === wp.id);
+                    if (realIdx < progressIdx) {
+                      estado = 'Completado';
+                      color = 'text-green-500';
+                    } else if (realIdx === progressIdx) {
+                      estado = 'En camino';
+                      color = 'text-blue-500';
+                    } else {
+                      estado = 'Próximo destino';
+                      color = 'text-red-500';
+                    }
+                  }
+                  const dist = (wp.id === 'Base') ? haversineDistance(currentPos.lat, currentPos.lon, wp.lat, wp.lon).toFixed(2) : '--';
+                  const time = (dist && !isNaN(dist)) ? estimatedTime(dist).toFixed(2) : '--';
+                  return (
+                    <tr key={wp.id} className="text-center">
+                      <td className="border px-2 py-1">{wp.id}</td>
+                      <td className="border px-2 py-1">
+                        {formatCoordinate(wp.lat, 'lat')}, {formatCoordinate(wp.lon, 'lon')}
+                      </td>
+                      <td className="border px-2 py-1">{dist}</td>
+                      <td className="border px-2 py-1">{time}</td>
+                      <td className={`border px-2 py-1 font-bold ${color}`}>{estado}</td>
+                    </tr>
+                  );
+                });
+              })()}
+            </tbody>
+          </table>
+        </div>
       </div>
+      {/* Instrumentos abajo (gauges) */}
+      
     </div>
   );
 };

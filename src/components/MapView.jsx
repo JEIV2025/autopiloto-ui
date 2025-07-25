@@ -42,6 +42,7 @@ const MapView = ({ currentPos, waypoints, fullscreen, onAddWaypoint, progressIdx
 
   return (
     <MapContainer
+      key={progressIdx} // Forzar re-montaje cuando cambia progressIdx
       center={[currentPos.lat, currentPos.lon]}
       zoom={14}
       style={{ height: '100%', width: '100%' }}
