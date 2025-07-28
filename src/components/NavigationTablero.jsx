@@ -215,33 +215,25 @@ function formatCoordinate(value, type) {
       <div style={{ flexShrink: 0 }}>
         <div className="bg-black text-white p-4 rounded-lg shadow-lg w-full overflow-x-auto">
           <h2 className="text-center text-lg font-bold mb-4">Mi GPS</h2>
-          <div className="bg-gray-800 text-white p-2 rounded mb-2 text-sm">
-            <div className="flex items-center gap-2">
-              <span className="font-bold">📍 Posición Actual:</span>
-              <div className="flex flex-row gap-1">
-                <div className="flex items-center gap-1">
-                  <span className="text-xs text-white">{currentPos.lat >= 0 ? 'N' : 'S'}</span>
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={currentPos.lat}
-                    onChange={e => setCurrentPos({ ...currentPos, lat: parseFloat(e.target.value) })}
-                    className="bg-black border text-white w-24 text-sm px-1"
-                  />
-                </div>
-                <div className="flex items-center gap-1">
-                  <span className="text-xs text-white">{currentPos.lon >= 0 ? 'E' : 'O'}</span>
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={currentPos.lon}
-                    onChange={e => setCurrentPos({ ...currentPos, lon: parseFloat(e.target.value) })}
-                    className="bg-black border text-white w-24 text-sm px-1"
-                  />
+                      <div className="bg-gray-800 text-white p-2 rounded mb-2 text-sm">
+              <div className="flex items-center gap-2">
+                <span className="font-bold">📍 Posición Actual:</span>
+                <div className="flex flex-row gap-1">
+                  <div className="flex items-center gap-1">
+                    <span className="text-xs text-white">{currentPos.lat >= 0 ? 'N' : 'S'}</span>
+                    <span className="bg-black border text-white w-24 text-sm px-1 py-1">
+                      {currentPos.lat.toFixed(4)}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <span className="text-xs text-white">{currentPos.lon >= 0 ? 'E' : 'O'}</span>
+                    <span className="bg-black border text-white w-24 text-sm px-1 py-1">
+                      {currentPos.lon.toFixed(4)}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
           <table className="w-full text-sm border border-white">
             <thead>
               <tr className="bg-gray-800">

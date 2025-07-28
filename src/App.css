@@ -36,7 +36,7 @@ html, body, #root  {
   position: absolute;
   top: 2px;
   right: 2px;
-  z-index: 70;
+  z-index: 1000;
   background-color: #ffff;
   color: #000;
   border: 2px solid #ada5a5;
@@ -46,7 +46,6 @@ html, body, #root  {
   font-weight: 500;
 }
 
-/* Asegurar que el contenedor del mapa tenga position: relative y overflow visible */
 .grid-cols-2 > div:first-child {
   position: relative;
   overflow: visible;

@@ -7,6 +7,7 @@ import NavigationViewer from './components/NavigationViewer';
 import ConsoleLog from './components/ConsoleLog';
 import NavigationTablero from './components/NavigationTablero';
 import ControlPanel from './components/ControlPanel';
+import PlanManager from './components/PlanManager';
 import { useMapEvent } from 'react-leaflet';
 
 function App() {
@@ -14,6 +15,7 @@ function App() {
   const [y, setY] = useState(0);
   const [fullscreen, setFullscreen] = useState(null); // <- nuevo
   const [progressIdx, setProgressIdx] = useState(0); // Nuevo estado para el progreso secuencial
+  const [showPlanManager, setShowPlanManager] = useState(false); // Estado para el modal de planes
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -72,13 +74,19 @@ const handleAddWaypoint = (latlng) => {
 
   return (
   <div className="h-full bg-gray-100 p-2 space-y-2">
-    {/* Botón para avanzar al siguiente WP */}
-    <div className="mb-2">
+    {/* Botones de control superior */}
+    <div className="mb-2 flex gap-2">
       <button
         onClick={() => setProgressIdx(idx => Math.min(idx + 1, waypoints.length - 2))}
         className="px-4 py-2 bg-blue-600 text-white rounded shadow hover:bg-blue-700"
       >
         Siguiente WP
+      </button>
+      <button
+        onClick={() => setShowPlanManager(true)}
+        className="px-4 py-2 bg-green-600 text-white rounded shadow hover:bg-green-700"
+      >
+        Gestor de Planes
       </button>
     </div>
     {/* FULLSCREEN (cuando aplica) */}
@@ -108,7 +116,7 @@ const handleAddWaypoint = (latlng) => {
             setWaypoints={setWaypoints}
             progressIdx={progressIdx}
           />}
-          {fullscreen === 'panel' && <ControlPanel />}
+          {fullscreen === 'panel' && <ControlPanel waypoints={waypoints} setWaypoints={setWaypoints} currentPos={currentPos} progressIdx={progressIdx} setProgressIdx={setProgressIdx} />}
           {fullscreen === 'console' && <ConsoleLog />}
         </div>
       </div>
@@ -171,7 +179,7 @@ const handleAddWaypoint = (latlng) => {
               </button>
               <h2 className="font-semibold text-lg mb-2">🎛️ Panel de Control</h2>
               
-                <ControlPanel />
+                <ControlPanel waypoints={waypoints} setWaypoints={setWaypoints} currentPos={currentPos} progressIdx={progressIdx} setProgressIdx={setProgressIdx} />
             </div>
             <div className="consoleLog relative">
               <button
@@ -187,6 +195,17 @@ const handleAddWaypoint = (latlng) => {
           </div>
         </div>
       </>
+    )}
+
+    {/* Modal del PlanManager */}
+    {showPlanManager && (
+      <PlanManager
+        waypoints={waypoints}
+        setWaypoints={setWaypoints}
+        progressIdx={progressIdx}
+        setProgressIdx={setProgressIdx}
+        onClose={() => setShowPlanManager(false)}
+      />
     )}
   </div>
 );
