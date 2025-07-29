@@ -8,7 +8,8 @@ import ConsoleLog from './components/ConsoleLog';
 import NavigationTablero from './components/NavigationTablero';
 import ControlPanel from './components/ControlPanel';
 import PlanManager from './components/PlanManager';
-import { useMapEvent } from 'react-leaflet';
+import AIPredictionsPanel from './components/AIPredictionsPanel';
+import { useAIPredictions } from './hooks/useAIPredictions';
 
 function App() {
   const [x, setX] = useState(0);
@@ -16,6 +17,20 @@ function App() {
   const [fullscreen, setFullscreen] = useState(null); // <- nuevo
   const [progressIdx, setProgressIdx] = useState(0); // Nuevo estado para el progreso secuencial
   const [showPlanManager, setShowPlanManager] = useState(false); // Estado para el modal de planes
+  
+  const [currentPos, setCurrentPos] = useState({ lat: -34.585, lon: -58.375 });
+
+  const [waypoints, setWaypoints] = useState([
+    { id: 'Base', lat: -34.58, lon: -58.38 }
+  ]);
+
+  // Hook para predicciones de IA
+  const { 
+    predictions, 
+    isAILoading, 
+    aiError, 
+    updatePredictions 
+  } = useAIPredictions();
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -25,25 +40,14 @@ function App() {
     return () => clearInterval(interval);
   }, []);
 
-  const renderFullscreen = (key, content) => {
-    return (
-      <div className="fixed inset-0 bg-white z-50 p-4 overflow-auto">
-        <button
-          onClick={() => setFullscreen(null)}
-          className="absolute top-2 right-2 bg-gray-200 border border-gray-400 px-2 py-1 rounded"
-        >
-         ⤶ Volver
-        </button>
-        {content}
-      </div>
-    );
-  };
+  // Actualizar predicciones de IA cada 30 segundos
+  useEffect(() => {
+    const aiInterval = setInterval(() => {
+      updatePredictions(currentPos, waypoints, progressIdx);
+    }, 30000);
 
-const [currentPos, setCurrentPos] = useState({ lat: -34.585, lon: -58.375 });
-
-const [waypoints, setWaypoints] = useState([
-  { id: 'Base', lat: -34.58, lon: -58.38 }
-]);
+    return () => clearInterval(aiInterval);
+  }, [currentPos, waypoints, progressIdx, updatePredictions]);
 
 
 useEffect(() => {
@@ -87,6 +91,12 @@ const handleAddWaypoint = (latlng) => {
         className="px-4 py-2 bg-green-600 text-white rounded shadow hover:bg-green-700"
       >
         Gestor de Planes
+      </button>
+      <button
+        onClick={() => updatePredictions(currentPos, waypoints, progressIdx)}
+        className="px-4 py-2 bg-purple-600 text-white rounded shadow hover:bg-purple-700"
+      >
+        🤖 Actualizar IA
       </button>
     </div>
     {/* FULLSCREEN (cuando aplica) */}
@@ -191,6 +201,13 @@ const handleAddWaypoint = (latlng) => {
               <h2 className="font-semibold text-lg mb-2">🧾 Consola de Mensajes</h2>
               
                 <ConsoleLog />
+            </div>
+            <div className="aiPredictions relative">
+              <AIPredictionsPanel 
+                predictions={predictions}
+                isAILoading={isAILoading}
+                aiError={aiError}
+              />
             </div>
           </div>
         </div>

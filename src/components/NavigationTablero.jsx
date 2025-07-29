@@ -267,8 +267,24 @@ function formatCoordinate(value, type) {
                       color = 'text-red-500';
                     }
                   }
-                  const dist = (wp.id === 'Base') ? haversineDistance(currentPos.lat, currentPos.lon, wp.lat, wp.lon).toFixed(2) : '--';
-                  const time = (dist && !isNaN(dist)) ? estimatedTime(dist).toFixed(2) : '--';
+                  let dist, time;
+                  if (wp.id === 'Base') {
+                    // Para la base siempre mostrar distancia desde posición actual
+                    dist = haversineDistance(currentPos.lat, currentPos.lon, wp.lat, wp.lon).toFixed(2);
+                    time = estimatedTime(parseFloat(dist)).toFixed(2);
+                  } else {
+                    // Buscar el índice real del waypoint (sin contar la base)
+                    const realIdx = wps.findIndex(w => w.id === wp.id);
+                    if (realIdx < progressIdx) {
+                      // Waypoints completados: mostrar '--'
+                      dist = '--';
+                      time = '--';
+                    } else {
+                      // Waypoint actual y próximos destinos: calcular desde posición actual
+                      dist = haversineDistance(currentPos.lat, currentPos.lon, wp.lat, wp.lon).toFixed(2);
+                      time = estimatedTime(parseFloat(dist)).toFixed(2);
+                    }
+                  }
                   return (
                     <tr key={wp.id} className="text-center">
                       <td className="border px-2 py-1">{wp.id}</td>

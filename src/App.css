@@ -23,9 +23,9 @@ html, body, #root  {
   gap: 10px;
 }
 
-.controlPanel, .consoleLog {
+.controlPanel, .consoleLog, .aiPredictions {
   width: 100%;
-  height: 50%;
+  height: 33.33%;
   min-height: 0;
   display: flex;
   flex-direction: column;
