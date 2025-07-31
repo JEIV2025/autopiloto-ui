@@ -8,8 +8,9 @@ import ConsoleLog from './components/ConsoleLog';
 import NavigationTablero from './components/NavigationTablero';
 import ControlPanel from './components/ControlPanel';
 import PlanManager from './components/PlanManager';
-import AIPredictionsPanel from './components/AIPredictionsPanel';
-import { useAIPredictions } from './hooks/useAIPredictions';
+import UnifiedAIPanel from './components/UnifiedAIPanel';
+
+import { useUnifiedAI } from './hooks/useUnifiedAI';
 
 function App() {
   const [x, setX] = useState(0);
@@ -24,13 +25,15 @@ function App() {
     { id: 'Base', lat: -34.58, lon: -58.38 }
   ]);
 
-  // Hook para predicciones de IA
+  // Hook para predicciones de IA unificada
   const { 
     predictions, 
     isAILoading, 
+    isTraining,
+    trainingProgress,
     aiError, 
     updatePredictions 
-  } = useAIPredictions();
+  } = useUnifiedAI();
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -98,6 +101,7 @@ const handleAddWaypoint = (latlng) => {
       >
         🤖 Actualizar IA
       </button>
+
     </div>
     {/* FULLSCREEN (cuando aplica) */}
     {fullscreen && (
@@ -128,6 +132,7 @@ const handleAddWaypoint = (latlng) => {
           />}
           {fullscreen === 'panel' && <ControlPanel waypoints={waypoints} setWaypoints={setWaypoints} currentPos={currentPos} progressIdx={progressIdx} setProgressIdx={setProgressIdx} />}
           {fullscreen === 'console' && <ConsoleLog />}
+
         </div>
       </div>
     )}
@@ -203,9 +208,11 @@ const handleAddWaypoint = (latlng) => {
                 <ConsoleLog />
             </div>
             <div className="aiPredictions relative">
-              <AIPredictionsPanel 
+              <UnifiedAIPanel 
                 predictions={predictions}
                 isAILoading={isAILoading}
+                isTraining={isTraining}
+                trainingProgress={trainingProgress}
                 aiError={aiError}
               />
             </div>
