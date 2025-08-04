@@ -173,24 +173,6 @@ const UnifiedAIPanel = ({ predictions, isAILoading, isTraining, trainingProgress
         </div>
       </div>
 
-      {/* Información detallada */}
-      <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-        <h5 className="font-medium mb-2 text-blue-700">ℹ️ ¿Qué se está calculando?</h5>
-        <div className="text-xs text-blue-600 space-y-1">
-          <div>
-            <strong>ETA (Tiempo de Llegada):</strong> Predice cuánto tardarás en llegar al siguiente waypoint usando IA
-          </div>
-          <div>
-            <strong>Consumo de Combustible:</strong> Estima el consumo en litros por hora basado en condiciones actuales
-          </div>
-          <div>
-            <strong>Anomalías:</strong> Detecta valores anómalos en sensores del sistema
-          </div>
-          <div>
-            <strong>Predicción Meteorológica:</strong> Analiza patrones para predecir condiciones futuras
-          </div>
-        </div>
-      </div>
 
       {/* Detalles Marítimos Especializados */}
       {(predictions.marineWeatherData || predictions.basicWeatherData) && (

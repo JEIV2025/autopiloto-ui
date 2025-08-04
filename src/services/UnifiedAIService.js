@@ -1,6 +1,7 @@
 import * as tf from '@tensorflow/tfjs';
 import WeatherService from './WeatherService';
 import MarineWeatherService from './MarineWeatherService';
+import DataNormalizer from './DataNormalizer';
 
 // SERVICIO UNIFICADO DE IA
 class UnifiedAIService {
@@ -267,8 +268,8 @@ class UnifiedAIService {
       
       if (this.scalers.fuel) {
         const normalizedInput = inputData.map((value, index) => {
-          const scaler = this.scalers.fuel[index];
-          return (value - scaler.mean) / scaler.std;
+          const featureName = this.featureNames.fuel[index];
+          return DataNormalizer.maritimeNormalize(value, featureName);
         });
         
         const prediction = this.models.fuelConsumption.predict(tf.tensor2d([normalizedInput]));
@@ -344,15 +345,30 @@ class UnifiedAIService {
   }
 
   // Normalizar datos para regresión lineal
-  normalizeData(data) {
-    const mean = data.reduce((sum, val) => sum + val, 0) / data.length;
-    const variance = data.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / data.length;
-    const std = Math.sqrt(variance);
-    
+  // Usar el nuevo sistema de normalización especializado
+  normalizeMaritimeData(data, featureNames) {
+    const normalizedData = [];
+    const metadata = {};
+
+    for (let i = 0; i < featureNames.length; i++) {
+      const featureName = featureNames[i];
+      const featureData = data.map(row => row[i]);
+      
+      // Normalizar usando el sistema especializado
+      const normalized = featureData.map(value => 
+        DataNormalizer.maritimeNormalize(value, featureName)
+      );
+      
+      normalizedData.push(normalized);
+      metadata[featureName] = {
+        method: DataNormalizer.detectNormalizationMethod(featureName),
+        range: DataNormalizer.maritimeRanges[featureName] || null
+      };
+    }
+
     return {
-      normalized: data.map(val => (val - mean) / std),
-      mean,
-      std
+      normalized: normalizedData,
+      metadata
     };
   }
 
@@ -366,16 +382,10 @@ class UnifiedAIService {
     );
     const targets = trainingData.map(row => row[type === 'eta' ? 'eta' : 'consumo']);
 
-    // Normalizar features
-    const normalizedFeatures = [];
-    this.scalers[type] = [];
-    
-    for (let i = 0; i < featureNames.length; i++) {
-      const featureData = features.map(row => row[i]);
-      const normalized = this.normalizeData(featureData);
-      normalizedFeatures.push(normalized.normalized);
-      this.scalers[type].push({ mean: normalized.mean, std: normalized.std });
-    }
+    // Normalizar features usando el sistema especializado
+    const normalizedResult = this.normalizeMaritimeData(features, featureNames);
+    const normalizedFeatures = normalizedResult.normalized;
+    this.scalers[type] = normalizedResult.metadata;
 
     // Crear modelo
     this.models[type === 'eta' ? 'etaLinear' : 'fuelConsumption'] = tf.sequential({

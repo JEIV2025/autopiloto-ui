@@ -9,6 +9,7 @@ import NavigationTablero from './components/NavigationTablero';
 import ControlPanel from './components/ControlPanel';
 import PlanManager from './components/PlanManager';
 import UnifiedAIPanel from './components/UnifiedAIPanel';
+import NormalizationStats from './components/NormalizationStats';
 
 import { useUnifiedAI } from './hooks/useUnifiedAI';
 
@@ -231,6 +232,11 @@ const handleAddWaypoint = (latlng) => {
         onClose={() => setShowPlanManager(false)}
       />
     )}
+
+
+
+    {/* Componente de Estadísticas de Normalización */}
+    <NormalizationStats />
   </div>
 );
 
