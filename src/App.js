@@ -96,13 +96,7 @@ const handleAddWaypoint = (latlng) => {
       >
         Gestor de Planes
       </button>
-      <button
-        onClick={() => updatePredictions(currentPos, waypoints, progressIdx)}
-        className="px-4 py-2 bg-purple-600 text-white rounded shadow hover:bg-purple-700"
-      >
-        🤖 Actualizar IA
-      </button>
-
+      {/* Botón de Actualizar IA eliminado */}
     </div>
     {/* FULLSCREEN (cuando aplica) */}
     {fullscreen && (
