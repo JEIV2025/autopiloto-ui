@@ -1,30 +1,39 @@
-import React, { useState } from 'react';
-import bgImg from '../images/flotanaval.jpg'; // Asegurate de tener esta imagen
+import React, { useEffect, useRef, useState } from "react";
+import WAVES from "vanta/dist/vanta.waves.min";
+import * as THREE from "three";
 
-const NavigationViewer = ({ posX = 0, posY = 0 }) => {
-  const zoom = 5; // Ampliación de la imagen
-  const scale = `scale(${zoom})`;
+export default function NavigationViewer() {
+  const vantaRef = useRef(null);
+  const [vantaEffect, setVantaEffect] = useState(null);
+
+  useEffect(() => {
+    if (!vantaEffect) {
+      setVantaEffect(
+        WAVES({
+          el: vantaRef.current,
+          THREE: THREE, // obligatorio
+          color: 0x1e90ff,   // azul mar
+          shininess: 50,
+          waveHeight: 20,
+          waveSpeed: 0.7,
+          zoom: 1,
+        })
+      );
+    }
+    return () => {
+      if (vantaEffect) vantaEffect.destroy();
+    };
+  }, [vantaEffect]);
 
   return (
-   <div className="relative w-full h-full overflow-hidden rounded-xl bg-black">
-      {/* Imagen ampliada y centrada */}
-      <div
-        className="absolute left-1/2 top-1/2"
-        style={{
-          transform: `translate(-50%, -50%) ${scale}`,
-          transformOrigin: 'center center',
-        }}
-      >
-        <img
-          src={bgImg}
-          alt="Simulación navegación"
-          className="block"
-        />
-      </div>
-
-
-    </div>
+    <div
+      ref={vantaRef}
+      style={{
+        width: "100%",
+        height: "400px",
+        borderRadius: "12px",
+        overflow: "hidden",
+      }}
+    />
   );
-};
-
-export default NavigationViewer;
+}

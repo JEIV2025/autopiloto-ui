@@ -153,7 +153,10 @@ const handleAddWaypoint = (latlng) => {
             >
               🗖
             </button>
-            <NavigationViewer posX={x} posY={y} />
+            <div style={{ width: "100%", height: "400px" }}>
+              <NavigationViewer posX={x} posY={y} />
+            </div>
+           
           </div>
         </div>
 
