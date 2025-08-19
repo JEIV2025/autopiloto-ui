@@ -136,7 +136,7 @@ const handleAddWaypoint = (latlng) => {
     {!fullscreen && (
       <>
         {/* FILA SUPERIOR */}
-        <div className="grid grid-cols-2 gap-2 h-[45vh]">
+        <div className="grid grid-cols-2 gap-2 h-[50vh]">
           <div className="rounded-xl shadow overflow-hidden relative h-full">
             <button
               onClick={() => setFullscreen('map')}
@@ -146,16 +146,15 @@ const handleAddWaypoint = (latlng) => {
             </button>
             <MapView currentPos={currentPos} waypoints={waypoints} fullscreen={fullscreen==='map'} onAddWaypoint={handleAddWaypoint} progressIdx={progressIdx} />
           </div>
-          <div className="bg-black rounded-xl shadow flex items-center justify-center relative h-full">
+          <div className="bg-white rounded-xl shadow flex items-center justify-center relative h-full overflow-hidden">
             <button
               onClick={() => setFullscreen('viewer')}
               className="backButton"
             >
               🗖
             </button>
-            <div style={{ width: "100%", height: "400px" }}>
               <NavigationViewer posX={x} posY={y} />
-            </div>
+            
            
           </div>
         </div>

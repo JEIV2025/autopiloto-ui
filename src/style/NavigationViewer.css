@@ -1,74 +1,26 @@
-.NavigationViewer {
+.navigation-wrapper {
   width: 100%;
   height: 100%;
+  cursor: grab;
   overflow: hidden;
-  background: linear-gradient(
-    to bottom,
-    #87CEEB 0%,
-    #B0E0E6 30%,
-    #E0F6FF 60%,
-    #f9f5f5 100%
-  );
   position: relative;
-  border-radius: 0.75rem;
 }
 
-/* Contenedor principal de la simulación */
-#container {
-  width: 100%;
+.navigation-scene {
+  display: flex;
   height: 100%;
-  position: relative;
-  overflow: hidden;
+  width: 6000px; /* 3 bloques AB (ajustar al tamaño de tu imagen) */
 }
 
-/* Contenedor de agua */
-#water {
-  position: absolute;
-  overflow: hidden;
-  z-index: 1;
-}
-
-/* Capas de agua */
-.box {
-  position: absolute;
+.layer {
+  flex: 1;
+  height: 100%;
   background-size: cover;
-  background-repeat: repeat-x;
-  z-index: 2;
-}
-
-/* Pájaros */
-.bird {
-  background-size: 60px 840px;
+  background-position: center;
   background-repeat: no-repeat;
-  background-position: 0 0;
-  z-index: 5;
-  position: absolute;
 }
 
-/* Brújula */
-#compass {
-  position: absolute;
-  left: 30px;
-  bottom: 30px;
-  z-index: 10;
+.mirrored {
+  transform: scaleX(-1);
+  background-position: right center;
 }
-
-#compass svg {
-  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  #compass {
-    left: 15px;
-    bottom: 20px;
-  }
-  
-  #compass svg {
-    width: 60px;
-    height: 60px;
-  }
-}
-  
-
-  
