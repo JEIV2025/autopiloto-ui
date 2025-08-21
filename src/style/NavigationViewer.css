@@ -1,26 +1,32 @@
 .navigation-wrapper {
+  position: relative;
   width: 100%;
   height: 100%;
-  cursor: grab;
   overflow: hidden;
-  position: relative;
 }
 
-.navigation-scene {
-  display: flex;
+.video-bg {
+  width: 100%;
   height: 100%;
-  width: 6000px; /* 3 bloques AB (ajustar al tamaño de tu imagen) */
+  object-fit: cover;
 }
 
-.layer {
-  flex: 1;
-  height: 100%;
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
+.compass-overlay {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  z-index: 10;
 }
 
-.mirrored {
-  transform: scaleX(-1);
-  background-position: right center;
+/* 🚤 Barco centrado */
+.boat-overlay {
+  position: absolute;
+  top: 40%;
+  left: 50%;
+  width: 100px;   /* ajustá el tamaño del barco */
+  height: auto;
+  transform: translate(-50%, -50%);
+  z-index: 5;
+  pointer-events: none; /* para no interferir con clics */
 }
+
