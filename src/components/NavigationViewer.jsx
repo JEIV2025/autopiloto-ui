@@ -2,12 +2,11 @@ import React, { useState, useEffect } from "react";
 import "../style/NavigationViewer.css";
 
 export default function NavigationViewer() {
-  const [heading, setHeading] = useState(0); // rumbo en grados (0 = Norte)
+  const [heading, setHeading] = useState(0); 
 
-  // Simulación: cambia el rumbo automáticamente cada 100ms
   useEffect(() => {
     const interval = setInterval(() => {
-      setHeading((prev) => (prev + 1) % 360); // gira 1 grado por paso
+      setHeading((prev) => (prev + 1) % 360); 
     }, 100);
     return () => clearInterval(interval);
   }, []);
@@ -27,8 +26,8 @@ export default function NavigationViewer() {
         }}
       />
 
-       {/* 🚤 Barco PNG en el centro */}
-      <img src="/barquito (3).png" alt="Barco" className="boat-overlay" />
+      
+      <img src="/barco.png" alt="Barco" className="boat-overlay" />
 
       {/* Overlay brújula */}
       <div className="compass-overlay">
@@ -61,7 +60,7 @@ export default function NavigationViewer() {
           {/* Centro */}
           <circle cx="50" cy="50" r="5" fill="white" />
 
-          {/* Letras cardinales */}
+        
           <text x="50" y="18" textAnchor="middle" fill="white" fontSize="12" fontWeight="bold">N</text>
           <text x="87" y="54" textAnchor="middle" fill="white" fontSize="12" fontWeight="bold">E</text>
           <text x="50" y="90" textAnchor="middle" fill="white" fontSize="12" fontWeight="bold">S</text>

@@ -16,9 +16,9 @@ import { useUnifiedAI } from './hooks/useUnifiedAI';
 function App() {
   const [x, setX] = useState(0);
   const [y, setY] = useState(0);
-  const [fullscreen, setFullscreen] = useState(null); // <- nuevo
-  const [progressIdx, setProgressIdx] = useState(0); // Nuevo estado para el progreso secuencial
-  const [showPlanManager, setShowPlanManager] = useState(false); // Estado para el modal de planes
+  const [fullscreen, setFullscreen] = useState(null); 
+  const [progressIdx, setProgressIdx] = useState(0); 
+  const [showPlanManager, setShowPlanManager] = useState(false); 
   
   const [currentPos, setCurrentPos] = useState({ lat: -34.585, lon: -58.375 });
 
@@ -26,7 +26,6 @@ function App() {
     { id: 'Base', lat: -34.58, lon: -58.38 }
   ]);
 
-  // Hook para predicciones de IA unificada
   const { 
     predictions, 
     isAILoading, 
@@ -96,9 +95,9 @@ const handleAddWaypoint = (latlng) => {
       >
         Gestor de Planes
       </button>
-      {/* Botón de Actualizar IA eliminado */}
+      
     </div>
-    {/* FULLSCREEN (cuando aplica) */}
+    {/* FULLSCREEN  */}
     {fullscreen && (
       <div className="fixed inset-0 bg-white z-50 p-4 flex flex-col h-full">
         <button
