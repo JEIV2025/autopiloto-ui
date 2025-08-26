@@ -2,12 +2,48 @@ import React, { useEffect, useRef, useState } from 'react';
 import { RadialGauge, LinearGauge } from 'canvas-gauges';
 import '../style/NavigationTablero.css';
 
+import io from 'socket.io-client';
+
+const socket = io('http://localhost:3001');
+
 const NavigationTablero = () => {
   const compassRef = useRef(null);
   const speedRef = useRef(null);
   const batteryRef = useRef(null);
   const rollRef = useRef(null);
 
+  const [yaw, setYaw] = useState(0);
+  const [roll, setRoll] = useState(0);
+  const [pitch, setPitch] = useState(0); 
+
+
+  
+ useEffect(() => {
+    socket.on('telemetria', (data) => {
+      try {
+        const json = JSON.parse(data); 
+      //  console.log('mensaje recibido del backend : ',json);
+          if (typeof json.yaw === 'number') {
+            setYaw(json.yaw);
+          }
+  
+          if (typeof json.roll === 'number') {
+            setRoll(json.roll);
+          }
+          if (typeof json.pitch === 'number') {
+            setPitch(json.pitch);
+          }
+      } catch (e) {
+        console.error('❌ Error parsing JSON:', e);
+      }
+    });
+  
+    return () => {
+      socket.off('telemetria');
+    };
+  }, []);
+
+//... para hacerlo aleatorio.....
   const [simData, setSimData] = useState({
     heading: 0,
     speed: 20,
@@ -26,6 +62,9 @@ const NavigationTablero = () => {
     }, 1000);
     return () => clearInterval(interval);
   }, []);
+//...........................................................
+
+const adjustedYaw = (yaw + 360) % 360;
 
   useEffect(() => {
     new RadialGauge({
@@ -51,7 +90,7 @@ const NavigationTablero = () => {
       valueBox: true,
       animationRule: "linear",
       animationDuration: 500,
-      value: simData.heading
+      value: adjustedYaw // asegura valor 0–360
     }).draw();
 
     new RadialGauge({
@@ -105,7 +144,7 @@ const NavigationTablero = () => {
       value: simData.battery
     }).draw();
 
-    new LinearGauge({
+   new LinearGauge({
       renderTo: rollRef.current,
       width: 350,
       height: 120,
@@ -143,7 +182,7 @@ const NavigationTablero = () => {
       barStroke: 0,
       barWidth: 8,
       barBeginCircle: false,
-      value: simData.roll
+      value: pitch
     }).draw();
 
   }, [simData]);
