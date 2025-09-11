@@ -30,7 +30,15 @@ const ConsoleLog = () => {
     });
 
     socket.on('serial-data', handleMessage);
-
+/*
+    socket.on('serial-data', (data) => {
+      handleMessage({
+        timestamp: new Date().toLocaleString('es-AR'),
+        type: 'data',
+        message: data,
+      });
+    });
+*/
     return () => {
       socket.off('connect');
       socket.off('disconnect');

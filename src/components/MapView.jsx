@@ -1,8 +1,10 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvent } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Polyline } from 'react-leaflet';
+import '../style/MapView.css';
+import { useTelemetry } from './TelemetryContext';
 
 // Corrección para íconos por defecto en Leaflet
 delete L.Icon.Default.prototype._getIconUrl;
@@ -15,7 +17,7 @@ L.Icon.Default.mergeOptions({
 // Eliminar baseIcon personalizado
 
 // Componente para arreglar el resize
-const MapFixer = ({ trigger }) => {
+const MapFixer = ({ trigger, seguirBarco, lat, lon }) => {
   const map = useMap();
   useEffect(() => {
     const t1 = setTimeout(() => map.invalidateSize(), 300);
@@ -25,6 +27,14 @@ const MapFixer = ({ trigger }) => {
       clearTimeout(t2);
     };
   }, [map, trigger]);
+
+    // Centrar mapa si está activado seguirBarco
+  useEffect(() => {
+    if (seguirBarco && lat && lon) {
+      map.setView([lat, lon]);
+    }
+  }, [lat, lon, seguirBarco, map]);
+
   return null;
 };
 
@@ -35,25 +45,107 @@ const AddWaypointOnClick = ({ onAdd }) => {
   return null;
 };
 
-const MapView = ({ currentPos, waypoints, fullscreen, onAddWaypoint, progressIdx }) => {
-  if (!currentPos || typeof currentPos.lat !== 'number' || typeof currentPos.lon !== 'number') {
-    return <div>Cargando mapa...</div>;
-  }
+const FeedbackClickSeguir = () => {
+  useMapEvent('click', (e) => {
+    const popup = L.popup()
+      .setLatLng(e.latlng)
+      .setContent('📍 Seguimiento Activado')
+      .openOn(e.target);
+
+    // Cerrar el popup después de 1 segundo
+    setTimeout(() => {
+      e.target.closePopup(popup);
+    }, 750);
+  });
+
+  return null;
+};
+
+
+const baseIcon = L.divIcon({
+  className: 'base-icon',
+  iconSize: [50, 50],
+  iconAnchor: [30, 30], // centro del ícono
+  popupAnchor: [0, -20], // para que el popup salga arriba
+});
+
+
+const MapView = ({ waypoints, fullscreen, onAddWaypoint, progressIdx }) => {
+  
+  const [seguirBarco, setSeguirBarco] = useState(true);
+
+  
+  const { telemetry } = useTelemetry();
+  
+  const latitud = telemetry?.lat ?? -34.5873;
+  const longitud = telemetry?.lon ?? -58.33674;
+  const rumbo = telemetry?.rumbo ?? 0;
+  const pitch = telemetry?.pitch ?? 0;
+  const roll = telemetry?.roll ?? 0;
+  const usandoValoresPorDefecto =
+    telemetry?.lat === undefined || telemetry?.lon === undefined;
+
 
   return (
+
+    <div style={{ position: 'relative', height: '100%', width: '100%' }}>
+      {/* ⚠️ Notificación si se usan coordenadas por defecto */}
+      {usandoValoresPorDefecto && (
+        <div
+          style={{
+            position: 'absolute',
+            top: 10,
+            left: 10,
+            background: 'rgba(255, 193, 7, 0.9)',
+            color: '#000',
+            padding: '6px 12px',
+            borderRadius: '4px',
+            zIndex: 1000,
+            fontWeight: 'bold',
+          }}
+        >
+          ⚠️ Mostrando ubicación inicial predeterminada
+        </div>
+      )}
+
+
     <MapContainer
       key={progressIdx} // Forzar re-montaje cuando cambia progressIdx
-      center={[currentPos.lat, currentPos.lon]}
-      zoom={14}
+      center={[latitud, longitud]}
+      zoom={10}
+      minZoom={10}
+      maxZoom={14}
       style={{ height: '100%', width: '100%' }}
     >
-      <MapFixer trigger={fullscreen} />
-      <AddWaypointOnClick onAdd={onAddWaypoint} />
+     <MapFixer trigger={fullscreen} seguirBarco={seguirBarco} lat={latitud} lon={longitud} />
+  {seguirBarco ? <FeedbackClickSeguir /> : <AddWaypointOnClick onAdd={onAddWaypoint} />}
 
-      <TileLayer
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        attribution="© OpenStreetMap contributors"
-      />
+<div
+  className={`centrar-btn ${seguirBarco ? 'activo' : ''}`}
+  onClick={() => setSeguirBarco(prev => !prev)}
+  title="Centrar mapa"
+/>
+
+
+
+<TileLayer
+  url={`http://localhost:3001/tiles/{z}/{x}/{y}.png`}
+  attribution="Mapas cacheados localmente"
+/>
+
+{/*
+<>
+  <TileLayer
+    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+    attribution="© OpenStreetMap contributors"
+  />
+  <TileLayer
+    url="https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png"
+    attribution="© OpenSeaMap contributors"
+  />
+</>
+*/}
+
 
       {/* Trazos de navegación perfectamente sincronizados con el estado secuencial */}
       {(() => {
@@ -67,7 +159,7 @@ const MapView = ({ currentPos, waypoints, fullscreen, onAddWaypoint, progressIdx
           polylines.push(
             <Polyline
               key="from-current"
-              positions={[[currentPos.lat, currentPos.lon], [wps[0].lat, wps[0].lon]]}
+              positions={[[latitud, longitud], [wps[0].lat, wps[0].lon]]}
               color={color}
               weight={4}
             />
@@ -94,16 +186,35 @@ const MapView = ({ currentPos, waypoints, fullscreen, onAddWaypoint, progressIdx
       })()}
 
       {/* Marcador de la base */}
-      {waypoints.filter(wp => wp.id === 'Base').map(wp => (
-        <Marker key={wp.id} position={[wp.lat, wp.lon]}>
-          <Popup>🏠 Base</Popup>
-        </Marker>
-      ))}
+{waypoints.filter(wp => wp.id === 'Base').map(wp => (
+  <Marker key={wp.id} position={[wp.lat, wp.lon]} icon={baseIcon}>
+    <Popup>
+      🛰️ <strong>Base de Telemetría</strong><br />
+      Lat: {wp.lat.toFixed(6)}<br />
+      Lon: {wp.lon.toFixed(6)}
+    </Popup>
+  </Marker>
+))}
+
 
       {/* Posición Actual */}
-      <Marker position={[currentPos.lat, currentPos.lon]}>
-        <Popup>📍 Posición Actual</Popup>
-      </Marker>
+      <Marker
+        position={[latitud, longitud]}
+        icon={L.divIcon({
+          className: 'boat-marker',
+          html: `<div class="boat-icon" style="transform: rotate(${rumbo}deg);"></div>`,
+          iconSize: [40, 40],
+          iconAnchor: [20, 20], // centro
+        })}
+      >
+          <Popup>
+          📍 Posición Actual<br />
+          Rumbo: {rumbo?.toFixed(2)}°<br />
+          Pitch: {pitch?.toFixed(2)}°<br />
+          Roll: {roll?.toFixed(2)}°
+        </Popup>
+        </Marker>
+
 
       {/* Puntos de la grilla */}
       {waypoints.filter(wp => wp.id !== 'Base').map((wp) => (
@@ -116,6 +227,7 @@ const MapView = ({ currentPos, waypoints, fullscreen, onAddWaypoint, progressIdx
         </Marker>
       ))}
     </MapContainer >
+    </div>
   );
 };
 

@@ -1,60 +1,161 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { useTelemetry } from './TelemetryContext';
+
 import { RadialGauge, LinearGauge } from 'canvas-gauges';
 import '../style/NavigationTablero.css';
 
-const NavigationTablero = ({ currentPos, setCurrentPos, waypoints, setWaypoints, progressIdx }) => {
+const NavigationTablero = ({waypoints, setWaypoints, progressIdx}) => {
+  //{ currentPos, setCurrentPos, waypoints, setWaypoints, progressIdx }
+  const [velocidad, setVelocidad] = useState(12); // valor simulado inicial
+
+  
+  const { telemetry } = useTelemetry();
+
+    // Simulación para el caso de que aún no haya datos
+  const rumbo = telemetry?.rumbo ?? 0;
+  const roll = telemetry?.roll ?? 0;
+  const rpm = telemetry?.rpm ?? 0;
+  const bateria = telemetry?.bateria ?? 0;
+  const temperatura = telemetry?.temperatura ?? 0;
+  const lat = telemetry?.lat ?? 0;
+  const lon = telemetry?.lon ?? 0;
+
+
+    useEffect(() => {
+    console.log('📡 Datos actualizados:', telemetry);
+  }, [telemetry]);
+
+
+
+  const termometerRef = useRef(null);
   const compassRef = useRef(null);
   const speedRef = useRef(null);
   const batteryRef = useRef(null);
   const rollRef = useRef(null);
 
-  const [simData, setSimData] = useState({
-    heading: 0,
-    speed: 20,
-    battery: 80,
-    roll: 0,
-  });
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setSimData(prev => ({
-        heading: (prev.heading + 10) % 360,
-        speed: Math.max(0, Math.min(50, prev.speed + (Math.random() * 4 - 2))),
-        battery: Math.max(0, Math.min(100, prev.battery - 0.1)),
-        roll: Math.max(-45, Math.min(45, prev.roll + (Math.random() * 6 - 3)))
-      }));
-    }, 1000);
-    return () => clearInterval(interval);
-  }, []);
+  const termometerGaugeRef = useRef(null);
+  const compassGaugeRef = useRef(null);
+  const speedGaugeRef = useRef(null);
+  const batteryGaugeRef = useRef(null);
+  const rollGaugeRef = useRef(null);
 
-  useEffect(() => {
-    new RadialGauge({
-      renderTo: compassRef.current,
-      width: 150,
-      height: 150,
-      units: "°",
-      title: "Compass",
-      minValue: 0,
-      maxValue: 360,
-      majorTicks: ["N", "NE", "E", "SE", "S", "SW", "W", "NW", "N"],
-      minorTicks: 22,
-      strokeTicks: true,
-      highlights: false,
-      colorPlate: "#1a1a1a",
-      colorMajorTicks: "#f0f0f0",
-      colorMinorTicks: "#ccc",
-      colorTitle: "#fff",
-      colorUnits: "#fff",
-      colorNumbers: "#eee",
-      colorNeedle: "rgba(255,0,0,.75)",
-      colorNeedleEnd: "#f00",
-      valueBox: true,
-      animationRule: "linear",
-      animationDuration: 500,
-      value: simData.heading
-    }).draw();
+    const [rotacionSuave, setRotacionSuave] = useState(rumbo);
+  const rumboAnteriorRef = useRef(rumbo);
 
-    new RadialGauge({
+
+
+useEffect(() => {
+
+termometerGaugeRef.current = new LinearGauge({
+    renderTo: termometerRef.current,
+    width: 90,
+    height: 300,
+    units: "°C",
+    minValue: -20,
+    startAngle: 90,
+    ticksAngle: 180,
+    valueBox: false,
+    title: "Temperatura",
+    maxValue: 90,
+    majorTicks: [
+        "-20",
+        "-10",
+        "0",
+        "10",
+        "20",
+        "30",
+        "40",
+        "50",
+        "60",
+        "70",
+        "80",
+        "90"
+    ],
+    minorTicks: 2,
+    strokeTicks: true,
+highlights: [
+    {
+        from: -20,
+        to: 20,
+        color: "rgba(0, 123, 255, 0.5)" // Azul claro = frío
+    },
+    {
+        from: 20,
+        to: 45,
+        color: "rgba(40, 167, 69, 0.5)" // Verde = normal
+    },
+    {
+        from: 45,
+        to: 60,
+        color: "rgba(255, 193, 7, 0.5)" // Amarillo = alerta
+    },
+    {
+        from: 60,
+        to: 75,
+        color: "rgba(255, 87, 34, 0.5)" // Naranja = crítico
+    },
+    {
+        from: 75,
+        to: 90,
+        color: "rgba(220, 53, 69, 0.5)" // Rojo = peligroso
+    }
+],
+
+    colorPlate: "#fffdfdff",
+    borderShadowWidth: 5,
+    borders: true,
+    needleType: "arrow",
+    needleWidth: 2,
+    needleCircleSize: 7,
+    needleCircleOuter: true,
+    needleCircleInner: false,
+    animationDuration: 1500,
+    animationRule: "linear",
+    barWidth: 10,
+    value: temperatura
+}).draw();
+  
+compassGaugeRef.current = new RadialGauge({
+  renderTo: compassRef.current,
+  minValue: 0,
+  maxValue: 360,
+  width: 200,
+  height: 200,
+  majorTicks: ["N", "NE", "E", "SE", "S", "SW", "W", "NW", "N"],
+  valueBox: false,
+  minorTicks: 22,
+  ticksAngle: 360,
+  startAngle: 180,
+  strokeTicks: false,
+  highlights: false,
+  colorPlate: "#33a",
+  colorMajorTicks: "#f5f5f5",
+  colorMinorTicks: "#ddd",
+  colorNumbers: "#ccc",
+  colorNeedle: "rgba(240, 128, 128, 1)",
+  colorNeedleEnd: "rgba(255, 160, 122, .9)",
+  colorCircleInner: "#fff",
+  colorNeedleCircleOuter: "#ccc",
+  needleCircleSize: 15,
+  needleCircleOuter: false,
+  animationRule: "linear",
+  animation: false,              // ✅ Desactivar animación para evitar saltos
+  animationDuration: 0,         // ✅ Desactivar animación para evitar saltos
+  needleType: "line",
+  needleStart: 75,
+  needleEnd: 99,
+  needleWidth: 3,
+  borders: true,
+  borderOuterWidth: 10,
+  colorBorderOuter: "#ccc",
+  title: "RUMBO",
+  fontTitleSize: 20,
+  colorTitle: "#f5f5f5",
+}).draw();
+
+
+    speedGaugeRef.current = new RadialGauge({
       renderTo: speedRef.current,
       width: 200,
       height: 200,
@@ -81,10 +182,10 @@ const NavigationTablero = ({ currentPos, setCurrentPos, waypoints, setWaypoints,
       valueBox: true,
       animationRule: "linear",
       animationDuration: 500,
-      value: simData.speed
+      value: velocidad
     }).draw();
 
-    new LinearGauge({
+    batteryGaugeRef.current =  new LinearGauge({
       renderTo: batteryRef.current,
       width: 80,
       height: 200,
@@ -102,10 +203,10 @@ const NavigationTablero = ({ currentPos, setCurrentPos, waypoints, setWaypoints,
       colorNumbers: "#eee",
       borders: false,
       barBeginCircle: false,
-      value: simData.battery
+      value: bateria
     }).draw();
 
-    new LinearGauge({
+    rollGaugeRef.current =  new LinearGauge({
       renderTo: rollRef.current,
       width: 350,
       height: 120,
@@ -143,10 +244,20 @@ const NavigationTablero = ({ currentPos, setCurrentPos, waypoints, setWaypoints,
       barStroke: 0,
       barWidth: 8,
       barBeginCircle: false,
-      value: simData.roll
+      value: roll
     }).draw();
+ }, []); 
 
-  }, [simData]);
+useEffect(() => {
+  if (termometerGaugeRef.current) termometerGaugeRef.current.value = temperatura;
+  if (compassGaugeRef.current) compassGaugeRef.current.value = rumbo;
+  if (speedGaugeRef.current) speedGaugeRef.current.value = telemetry?.velocidad ?? 12; // o una variable que represente eso
+  if (batteryGaugeRef.current) batteryGaugeRef.current.value = bateria;
+  if (rollGaugeRef.current) rollGaugeRef.current.value = roll;
+}, [rumbo, roll, bateria, velocidad, temperatura]);
+
+
+
 
 
 // Función para calcular distancia con Haversine
@@ -182,7 +293,7 @@ function estimatedTime(distanceKm, speedKmh = 50) {
   };
 // const [currentPos, setCurrentPos] = useState({ lat: -34.585, lon: -58.375 });
 
-const base = currentPos;
+//const base = currentPos;
 
 function formatCoordinate(value, type) {
   const abs = Math.abs(value).toFixed(4);
@@ -198,20 +309,53 @@ function formatCoordinate(value, type) {
 
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflowY: 'auto' }}>
+    <div style={{ background: 'green', display: 'flex', flexDirection: 'column', height: '100%', overflowY: 'auto' }}>
 
-<div style={{ width: '100%' }}>
+       {/* Instrumentos arriba (gauges) */}
+      <div style={{ width: '100%', marginTop: '2%', marginBottom: '2%'  }}>
         <div className="flex flex-row justify-center gap-4">
           <canvas ref={compassRef} />
+              <div
+                className="flex flex-col items-center justify-center p-4"
+                style={{
+                  backgroundColor: '#000',       // Fondo negro
+                  borderRadius: '8px',
+                  width: 'fit-content',
+                  minWidth: '150px',
+                }}
+              >
+                <p
+                  className="font-bold uppercase"
+                  style={{
+                    color: 'yellow',
+                    fontSize: '24px',
+                    marginBottom: '8px',
+                  }}
+                >
+                  Rumbo
+                </p>
+
+                <p
+                  style={{
+                    color: 'yellow',
+                    fontSize: '48px',
+                    fontWeight: 'bold',
+                  }}
+                >
+                  {rumbo.toFixed(2)}°
+                </p>
+              </div>
+
           <canvas ref={speedRef} />
         </div>
         <div className="flex flex-row justify-center items-center mt-4 gap-4">
+          <canvas ref={termometerRef} />          
           <canvas ref={rollRef} />
           <canvas ref={batteryRef} />
         </div>
       </div>
 
-      {/* Grilla/tablero arriba */}
+      {/* Grilla/tablero abajo */}
       <div style={{ flexShrink: 0 }}>
         <div className="bg-black text-white p-4 rounded-lg shadow-lg w-full overflow-x-auto">
           <h2 className="text-center text-lg font-bold mb-4">Mi GPS</h2>
@@ -220,15 +364,15 @@ function formatCoordinate(value, type) {
                 <span className="font-bold">📍 Posición Actual:</span>
                 <div className="flex flex-row gap-1">
                   <div className="flex items-center gap-1">
-                    <span className="text-xs text-white">{currentPos.lat >= 0 ? 'N' : 'S'}</span>
+                    <span className="text-xs text-white">{lat >= 0 ? 'N' : 'S'}</span>
                     <span className="bg-black border text-white w-24 text-sm px-1 py-1">
-                      {currentPos.lat.toFixed(4)}
+                      {lat.toFixed(6)}
                     </span>
                   </div>
                   <div className="flex items-center gap-1">
-                    <span className="text-xs text-white">{currentPos.lon >= 0 ? 'E' : 'O'}</span>
+                    <span className="text-xs text-white">{lon >= 0 ? 'E' : 'O'}</span>
                     <span className="bg-black border text-white w-24 text-sm px-1 py-1">
-                      {currentPos.lon.toFixed(4)}
+                      {lon.toFixed(6)}
                     </span>
                   </div>
                 </div>
@@ -270,7 +414,7 @@ function formatCoordinate(value, type) {
                   let dist, time;
                   if (wp.id === 'Base') {
                     // Para la base siempre mostrar distancia desde posición actual
-                    dist = haversineDistance(currentPos.lat, currentPos.lon, wp.lat, wp.lon).toFixed(2);
+                    dist = haversineDistance(lat, lon, wp.lat, wp.lon).toFixed(2);
                     time = estimatedTime(parseFloat(dist)).toFixed(2);
                   } else {
                     // Buscar el índice real del waypoint (sin contar la base)
@@ -281,7 +425,7 @@ function formatCoordinate(value, type) {
                       time = '--';
                     } else {
                       // Waypoint actual y próximos destinos: calcular desde posición actual
-                      dist = haversineDistance(currentPos.lat, currentPos.lon, wp.lat, wp.lon).toFixed(2);
+                      dist = haversineDistance(lat, lon, wp.lat, wp.lon).toFixed(2);
                       time = estimatedTime(parseFloat(dist)).toFixed(2);
                     }
                   }
@@ -302,12 +446,11 @@ function formatCoordinate(value, type) {
           </table>
         </div>
       </div>
-      {/* Instrumentos abajo (gauges) */}
+     
       
     </div>
   );
 };
-
 
 export default NavigationTablero;
 

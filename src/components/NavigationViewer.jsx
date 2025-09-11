@@ -1,33 +1,109 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import "../style/NavigationViewer.css";
+import { useTelemetry } from './TelemetryContext';
+
+
+
+
+const MAX_DESPLAZAMIENTO = 600; // máximo desplazamiento lateral del barco
+const FACTOR_MOVIMIENTO = 4; // sensibilidad del desplazamiento (mientas mayor es mas sensible)
 
 export default function NavigationViewer() {
-  const [heading, setHeading] = useState(0); 
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setHeading((prev) => (prev + 1) % 360); 
-    }, 100);
-    return () => clearInterval(interval);
-  }, []);
+
+  const { telemetry } = useTelemetry();
+
+  //const rumbo = telemetry?.rumbo ?? 0;
+  const pitch = telemetry?.pitch ?? 0;
+  const roll = telemetry?.roll ?? 0;
+
+
+  const [desplazamiento, setDesplazamiento] = useState(0);
+  const [desplazamientoY, setDesplazamientoY] = useState(0);
+  const [rotacionZ, setRotacionZ] = useState(0);
+
+  const [modoManual, setModoManual] = useState(false);
+const [rumboManual, setRumboManual] = useState(0);
+
+const rumbo = modoManual ? rumboManual : telemetry?.rumbo ?? 0;
+
+ 
+
+  const prevRumbo = useRef(rumbo);
+  const videoRef = useRef(null);
+
+
+
+  // Actualizar desplazamiento en base al cambio de rumbo
+useEffect(() => {
+  const delta = ((rumbo - prevRumbo.current + 540) % 360) - 180;  // Rango de -180 a +180
+  
+  
+  const UMBRAL_SALTO = 10; // grados máximos permitidos por muestra
+  if (Math.abs(delta) > UMBRAL_SALTO) {
+    console.warn(`⚠️ Ignorado salto abrupto de rumbo: Δ${delta.toFixed(2)}°`);
+    return; // Ignora esta actualización de rumbo
+  }
+ 
+  const nuevoDesplazamiento = desplazamiento - delta * FACTOR_MOVIMIENTO;
+  const limitado = Math.max(-MAX_DESPLAZAMIENTO, Math.min(MAX_DESPLAZAMIENTO, nuevoDesplazamiento));
+
+  setDesplazamiento(limitado);
+  prevRumbo.current = rumbo;
+}, [rumbo]);
+
+
+
+useEffect(() => {
+  if (videoRef.current) {
+    const desplazamient = Math.max(-30, Math.min(30, pitch * 2)); // Limita entre -30 y +30px
+    setDesplazamientoY(desplazamient);
+
+    const inclinacion = Math.max(-15, Math.min(15, roll * 0.5)); // Limita rotación a ±15 grados
+    setRotacionZ(inclinacion);
+
+  //  videoRef.current.style.transform = `translateY(${desplazamient}px) rotateZ(${inclinacion}deg) scale(1.2)`;
+  //  videoRef.current.style.transition = 'transform 0.5s ease';
+  }
+}, [pitch, roll]);
+
+useEffect(() => {
+  if (!modoManual) {
+    setRumboManual(telemetry?.rumbo ?? 0);
+  }
+}, [modoManual, telemetry?.rumbo]);
+
+
+
 
   return (
-    <div className="navigation-wrapper">
+    <div className="navigation-wrapper" >
       {/* Video de fondo */}
-       <video
-        src="/oceanVideo.mp4"
-        autoPlay
-        loop
-        muted
+        <video
+          ref={videoRef}
+          className="video-bg"
+          src="/oceanVideo.mp4"
+          autoPlay
+          loop
+          muted
+          
+          style={{
+            transform: `translateY(${desplazamientoY}px) rotateZ(${rotacionZ}deg) scale(1.2)`,
+            transition: 'transform 0.8s ease-in-out',
+          }}
+        />
+
+      
+      <img
+        src="/barco.png"
+        alt="Barco"
+        className="boat-overlay"
         style={{
-          width: "100%",
-          height: "100%",
-          objectFit: "cover",
+          transform: `translate(-50%, 50%) translateX(${desplazamiento}px)`,
+          transition: 'transform 0.5s ease',
         }}
       />
 
-      
-      <img src="/barco.png" alt="Barco" className="boat-overlay" />
 
       {/* Overlay brújula */}
       <div className="compass-overlay">
@@ -55,19 +131,56 @@ export default function NavigationViewer() {
             stroke="red"
             strokeWidth="3"
             strokeLinecap="round"
-            transform={`rotate(${heading} 50 50)`}
+        //    transform={`rotate(${rumbo} 50 50)`}
           />
           {/* Centro */}
           <circle cx="50" cy="50" r="5" fill="white" />
 
         
-          <text x="50" y="18" textAnchor="middle" fill="white" fontSize="12" fontWeight="bold">N</text>
-          <text x="87" y="54" textAnchor="middle" fill="white" fontSize="12" fontWeight="bold">E</text>
-          <text x="50" y="90" textAnchor="middle" fill="white" fontSize="12" fontWeight="bold">S</text>
-          <text x="15" y="54" textAnchor="middle" fill="white" fontSize="12" fontWeight="bold">O</text>
+          <g transform={`rotate(${-rumbo} 50 50)`}>
+            <text x="50" y="18" textAnchor="middle" fill="white" fontSize="12" fontWeight="bold">N</text>
+            <text x="87" y="54" textAnchor="middle" fill="white" fontSize="12" fontWeight="bold">E</text>
+            <text x="50" y="90" textAnchor="middle" fill="white" fontSize="12" fontWeight="bold">S</text>
+            <text x="15" y="54" textAnchor="middle" fill="white" fontSize="12" fontWeight="bold">O</text>
+          </g>
 
         </svg>
       </div>
+
+
+{/* Ventana de actvacion de movimiento del barco manual p/ calibrarcion */}
+<div className="absolute top-2 left-2 bg-white bg-opacity-80 p-2 rounded shadow w-40 text-sm">
+  <label className="block mb-1 font-bold text-xs">Modo Manual:</label>
+  <label className="flex items-center gap-2 mb-2">
+    <input
+      type="checkbox"
+      checked={modoManual}
+      onChange={() => setModoManual(!modoManual)}
+    />
+    <span className="text-xs">Activar</span>
+  </label>
+
+  {modoManual && (
+    <>
+      <label className="block font-bold text-xs">
+        Rumbo: {rumboManual}°
+      </label>
+      <input
+        type="range"
+        min="-180"
+        max="180"
+        value={rumboManual}
+        onChange={(e) => setRumboManual(Number(e.target.value))}
+        className="w-full h-2"
+      />
+    </>
+  )}
+</div>
+
+
+
+
+
     </div>
   );
 }

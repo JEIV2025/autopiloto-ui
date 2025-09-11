@@ -8,10 +8,7 @@ import ConsoleLog from './components/ConsoleLog';
 import NavigationTablero from './components/NavigationTablero';
 import ControlPanel from './components/ControlPanel';
 import PlanManager from './components/PlanManager';
-import UnifiedAIPanel from './components/UnifiedAIPanel';
-import NormalizationStats from './components/NormalizationStats';
 
-import { useUnifiedAI } from './hooks/useUnifiedAI';
 
 function App() {
   const [x, setX] = useState(0);
@@ -20,12 +17,12 @@ function App() {
   const [progressIdx, setProgressIdx] = useState(0); 
   const [showPlanManager, setShowPlanManager] = useState(false); 
   
-  const [currentPos, setCurrentPos] = useState({ lat: -34.585, lon: -58.375 });
+  const [currentPos, setCurrentPos] = useState({ lat: -34.5873, lon: -58.33674, rumbo: 123.5 });
 
   const [waypoints, setWaypoints] = useState([
     { id: 'Base', lat: -34.58, lon: -58.38 }
   ]);
-
+/*
   const { 
     predictions, 
     isAILoading, 
@@ -34,7 +31,7 @@ function App() {
     aiError, 
     updatePredictions 
   } = useUnifiedAI();
-
+*/
   useEffect(() => {
     const interval = setInterval(() => {
       setX(prev => prev + 10);
@@ -42,7 +39,7 @@ function App() {
     }, 500);
     return () => clearInterval(interval);
   }, []);
-
+/*
   // Actualizar predicciones de IA cada 30 segundos
   useEffect(() => {
     const aiInterval = setInterval(() => {
@@ -51,7 +48,7 @@ function App() {
 
     return () => clearInterval(aiInterval);
   }, [currentPos, waypoints, progressIdx, updatePredictions]);
-
+*/
 
 useEffect(() => {
   navigator.geolocation.getCurrentPosition(
@@ -116,7 +113,7 @@ const handleAddWaypoint = (latlng) => {
               progressIdx={progressIdx}
             />
           )}
-          {fullscreen === 'viewer' && <NavigationViewer posX={x} posY={y} />}
+          {fullscreen === 'viewer' && <NavigationViewer  />}
           {fullscreen === 'dashboard' && <NavigationTablero    
             currentPos={currentPos}
             setCurrentPos={setCurrentPos}
@@ -143,7 +140,7 @@ const handleAddWaypoint = (latlng) => {
             >
               🗖
             </button>
-            <MapView currentPos={currentPos} waypoints={waypoints} fullscreen={fullscreen==='map'} onAddWaypoint={handleAddWaypoint} progressIdx={progressIdx} />
+            <MapView  currentPos={currentPos} waypoints={waypoints} fullscreen={fullscreen==='map'} onAddWaypoint={handleAddWaypoint} progressIdx={progressIdx} />
           </div>
           <div className="bg-white rounded-xl shadow flex items-center justify-center relative h-full overflow-hidden">
             <button
@@ -152,7 +149,7 @@ const handleAddWaypoint = (latlng) => {
             >
               🗖
             </button>
-              <NavigationViewer posX={x} posY={y} />
+              <NavigationViewer  />
             
            
           </div>
@@ -203,15 +200,7 @@ const handleAddWaypoint = (latlng) => {
               
                 <ConsoleLog />
             </div>
-            <div className="aiPredictions relative">
-              <UnifiedAIPanel 
-                predictions={predictions}
-                isAILoading={isAILoading}
-                isTraining={isTraining}
-                trainingProgress={trainingProgress}
-                aiError={aiError}
-              />
-            </div>
+
           </div>
         </div>
       </>
@@ -231,7 +220,7 @@ const handleAddWaypoint = (latlng) => {
 
 
     {/* Componente de Estadísticas de Normalización */}
-    <NormalizationStats />
+  
   </div>
 );
 

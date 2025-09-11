@@ -9,6 +9,7 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+
 }
 
 .compass-overlay {
@@ -21,12 +22,12 @@
 /* Barco centrado */
 .boat-overlay {
   position: absolute;
-  top: 40%;
+  top: 30%;
   left: 50%;
-  width: 100px;   /* ajustá el tamaño del barco */
+  width: 150px;   /* ajustá el tamaño del barco */
   height: auto;
-  transform: translate(-50%, -50%);
   z-index: 5;
   pointer-events: none; /* para no interferir con clics */
+
 }
 

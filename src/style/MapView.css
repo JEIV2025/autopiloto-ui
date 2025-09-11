@@ -1,0 +1,44 @@
+.boat-icon {
+  background-image: url('../images/bote.png');
+  background-size: contain;
+  background-repeat: no-repeat;
+  width: 40px;
+  height: 40px;
+  transition: transform 0.3s linear;
+}
+
+.base-icon {
+  background-image: url('../images/base_telemetria.png');
+  background-size: contain;
+  background-repeat: no-repeat;
+  width: 40px;
+  height: 40px;
+  transition: transform 0.3s linear;
+}
+
+.centrar-btn {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  width: 48px;
+  height: 48px;
+  cursor: pointer;
+  z-index: 1000;
+  background-image: url('../images/centrar.png');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  border: none;
+  background-color: transparent;
+  opacity: 0.5;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.centrar-btn:hover {
+  transform: scale(1.1);
+}
+
+.centrar-btn.activo {
+  opacity: 1; /* más visible cuando está activado */
+  filter: drop-shadow(0 0 4px #fff); /* opcional: resalta el estado activo */
+}

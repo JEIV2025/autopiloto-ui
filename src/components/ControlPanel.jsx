@@ -1,6 +1,7 @@
 import React, { useState, useEffect  } from 'react';
 import io from 'socket.io-client';
 
+
 const socket = io('http://localhost:3001');
 
 const ControlPanel = ({ waypoints, setWaypoints, currentPos, progressIdx, setProgressIdx }) => {
@@ -9,9 +10,16 @@ const ControlPanel = ({ waypoints, setWaypoints, currentPos, progressIdx, setPro
   const [selectedWaypoint, setSelectedWaypoint] = useState(null);
   const [showWaypointForm, setShowWaypointForm] = useState(false);
   const [newWaypoint, setNewWaypoint] = useState({ lat: '', lon: '' });
+  const [showConfirm, setShowConfirm] = useState(false);
 
+
+
+  //.......................................
+  
+  
   const toggleCalibrar = () => {
     socket.emit('control-cmd', { cmd: 'calibrar' });
+  
   };
 
   // Función para agregar waypoint
@@ -93,7 +101,7 @@ const ControlPanel = ({ waypoints, setWaypoints, currentPos, progressIdx, setPro
   socket.on('telemetria', (data) => {
     try {
       const json = JSON.parse(data); 
-      console.log('mensaje recibido del backend : ',json);
+     // console.log('mensaje recibido del backend : ',json);
         if (typeof json.calibrando === 'boolean') {
           setCalibrando(json.calibrando);
         }
@@ -109,18 +117,19 @@ const ControlPanel = ({ waypoints, setWaypoints, currentPos, progressIdx, setPro
   return () => {
     socket.off('telemetria');
   };
-}, []);
+  }, []);
+
 
   return (
     <div className="w-full flex flex-row">
       {/* Mitad izquierda: botones de waypoint */}
-      <div className="w-1/2 flex flex-col justify-center">
-        <h2 className="font-semibold text-lg mb-2">Control de viaje</h2>
+      <div className="w-1/4 flex flex-col justify-center ">
+        <h2 className="font-semibold text-lg mb-2">Control de Misiòn</h2>
 
         {/* Selector de waypoint */}
         <div className="mb-3">
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Seleccionar Waypoint:
+            Editar Waypoints:
           </label>
           <select 
             value={selectedWaypoint?.id || ''} 
@@ -202,16 +211,49 @@ const ControlPanel = ({ waypoints, setWaypoints, currentPos, progressIdx, setPro
         )}
       </div>
       {/* Mitad derecha: botón de calibrado */}
-      <div className="w-1/2 flex flex-col items-center justify-center">
-        <button
-          onClick={toggleCalibrar}
-          className={`px-4 py-2 font-semibold rounded shadow-md transition-all duration-300 ${
-            calibrando ? 'bg-yellow-500' : calibrado ? 'bg-green-600' : 'bg-blue-500'
-          } text-white`}
-        >
-          {calibrando ? 'Calibrando...' : calibrado ? 'Calibrado ✅' : 'Calibrar IMU'}
-        </button>
-      </div>
+        <div className="w-1/2 flex flex-col items-center justify-start space-y-4">
+          <button
+            onClick={() => setShowConfirm(true)}
+            className={`px-4 py-2 font-semibold rounded shadow-md transition-all duration-300 ${
+              calibrando ? 'bg-yellow-500' : calibrado ? 'bg-green-600' : 'bg-blue-500'
+            } text-white`}
+          >
+            {calibrando ? 'Calibrando...' : calibrado ? 'Calibrado ✅' : 'Calibrar IMU'}
+          </button>
+
+          {showConfirm && (
+            <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+              <div className="bg-white p-6 rounded-lg shadow-xl max-w-md text-center">
+                <h2 className="text-xl font-bold text-red-600 mb-4">⚠️ Advertencia</h2>
+                <p className="mb-4 text-gray-800">
+                  Esta acción iniciará el proceso de calibrado completo de la IMU.<br />
+                  El proceso durará aproximadamente <strong>1 minuto</strong> y no debe interrumpirse.
+                </p>
+
+                <div className="flex justify-center gap-4">
+                  <button
+                    onClick={() => setShowConfirm(false)}
+                    className="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowConfirm(false);
+                      toggleCalibrar(); // llamá a tu función de calibracion
+                    }}
+                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded"
+                  >
+                    Siguiente
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+
+        </div>
+
     </div>
   );
 }
