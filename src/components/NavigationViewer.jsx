@@ -11,6 +11,7 @@ const FACTOR_MOVIMIENTO = 4; // sensibilidad del desplazamiento (mientas mayor e
 export default function NavigationViewer() {
 
 
+
   const { telemetry } = useTelemetry();
 
   //const rumbo = telemetry?.rumbo ?? 0;
@@ -25,9 +26,14 @@ export default function NavigationViewer() {
   const [modoManual, setModoManual] = useState(false);
 const [rumboManual, setRumboManual] = useState(0);
 
+
+  const [rumboCentrado, setRumboCentrado] = useState(null); // rumbo de referencia
+  const [movimientoHabilitado, setMovimientoHabilitado] = useState(false); // activa desplazamiento
+
+
 const rumbo = modoManual ? rumboManual : telemetry?.rumbo ?? 0;
 
- 
+
 
   const prevRumbo = useRef(rumbo);
   const videoRef = useRef(null);
@@ -36,10 +42,12 @@ const rumbo = modoManual ? rumboManual : telemetry?.rumbo ?? 0;
 
   // Actualizar desplazamiento en base al cambio de rumbo
 useEffect(() => {
+
+   if (!movimientoHabilitado || rumboCentrado === null) return;
   const delta = ((rumbo - prevRumbo.current + 540) % 360) - 180;  // Rango de -180 a +180
   
   
-  const UMBRAL_SALTO = 10; // grados máximos permitidos por muestra
+  const UMBRAL_SALTO = 30; // grados máximos permitidos por muestra
   if (Math.abs(delta) > UMBRAL_SALTO) {
     console.warn(`⚠️ Ignorado salto abrupto de rumbo: Δ${delta.toFixed(2)}°`);
     return; // Ignora esta actualización de rumbo
@@ -95,14 +103,61 @@ useEffect(() => {
 
       
       <img
-        src="/barco.png"
-        alt="Barco"
+        src="/boya.png"
+        alt="Boya"
         className="boat-overlay"
         style={{
           transform: `translate(-50%, 50%) translateX(${desplazamiento}px)`,
           transition: 'transform 0.5s ease',
         }}
       />
+      <img
+        src="/boya.png"
+        alt="Boya2"
+        className="boat-overlay2"
+        style={{
+          transform: `translate(-50%, 50%) translateX(${desplazamiento}px)`,
+          transition: 'transform 0.5s ease',
+        }}
+      />
+
+      <img
+        src="/boya.png"
+        alt="Boya3"
+        className="boat-overlay3"
+        style={{
+          transform: `translate(-50%, 50%) translateX(${desplazamiento}px)`,
+          transition: 'transform 0.5s ease',
+        }}
+      />
+      <img
+        src="/boya.png"
+        alt="Boya4"
+        className="boat-overlay4"
+        style={{
+          transform: `translate(-50%, 50%) translateX(${desplazamiento}px)`,
+          transition: 'transform 0.5s ease',
+        }}
+      />
+
+      <img
+      src="/proa2.png"
+      alt="Proa"
+      className="proa-overlay"
+      style={{
+        position: 'absolute',
+        bottom: '0',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        width: '550px', // ⬅️ Ajustá este valor según necesidad
+        height: ' 150px',
+        transition: 'width 0.3s ease-in-out',
+        pointerEvents: 'none', // evita interferencias con clics
+        zIndex: 20
+      }}
+    />
+
+
 
 
       {/* Overlay brújula */}
@@ -147,8 +202,6 @@ useEffect(() => {
         </svg>
       </div>
 
-
-{/* Ventana de actvacion de movimiento del barco manual p/ calibrarcion */}
 <div className="absolute top-2 left-2 bg-white bg-opacity-80 p-2 rounded shadow w-40 text-sm">
   <label className="block mb-1 font-bold text-xs">Modo Manual:</label>
   <label className="flex items-center gap-2 mb-2">
@@ -171,10 +224,31 @@ useEffect(() => {
         max="180"
         value={rumboManual}
         onChange={(e) => setRumboManual(Number(e.target.value))}
-        className="w-full h-2"
+        className="w-full h-2 mb-2"
       />
     </>
   )}
+
+  {/* NUEVO: Control de movimiento visual */}
+  <div className="mt-2 border-t pt-2">
+    <label className="block text-xs font-bold mb-1">Movimiento Visual:</label>
+    
+    <button
+      onClick={() => {
+        setRumboCentrado(rumbo); // define rumbo actual como referencia
+        setMovimientoHabilitado(true);
+        prevRumbo.current = rumbo; // asegura continuidad
+      }}
+      disabled={movimientoHabilitado}
+      className={`w-full px-2 py-1 text-xs rounded ${
+        movimientoHabilitado
+          ? "bg-gray-300 cursor-not-allowed"
+          : "bg-blue-600 text-white hover:bg-blue-700"
+      }`}
+    >
+      {movimientoHabilitado ? "Centrado" : " Centrar"}
+    </button>
+  </div>
 </div>
 
 

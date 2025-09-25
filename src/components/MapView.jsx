@@ -7,6 +7,7 @@ import '../style/MapView.css';
 import { useTelemetry } from './TelemetryContext';
 
 // Corrección para íconos por defecto en Leaflet
+
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
@@ -68,6 +69,20 @@ const baseIcon = L.divIcon({
   iconAnchor: [30, 30], // centro del ícono
   popupAnchor: [0, -20], // para que el popup salga arriba
 });
+// Icono de waypoint completado
+const iconCompletado = L.divIcon({
+  className: 'completed-icon',
+  html: `<div style="color: green; font-size: 20px;">✅</div>`,
+  iconSize: [20, 20],
+  iconAnchor: [10, 10],
+});
+
+const iconPendiente = L.divIcon({
+  className: 'pending-icon',
+  html: `<div style="color: gray; font-size: 20px;">📍</div>`,
+  iconSize: [20, 20],
+  iconAnchor: [10, 10],
+});
 
 
 const MapView = ({ waypoints, fullscreen, onAddWaypoint, progressIdx }) => {
@@ -84,6 +99,10 @@ const MapView = ({ waypoints, fullscreen, onAddWaypoint, progressIdx }) => {
   const roll = telemetry?.roll ?? 0;
   const usandoValoresPorDefecto =
     telemetry?.lat === undefined || telemetry?.lon === undefined;
+
+    const latQuery = latitud.toFixed(6);
+const lonQuery = longitud.toFixed(6);
+
 
 
   return (
@@ -112,7 +131,7 @@ const MapView = ({ waypoints, fullscreen, onAddWaypoint, progressIdx }) => {
     <MapContainer
       key={progressIdx} // Forzar re-montaje cuando cambia progressIdx
       center={[latitud, longitud]}
-      zoom={10}
+      zoom={12}
       minZoom={10}
       maxZoom={14}
       style={{ height: '100%', width: '100%' }}
@@ -128,23 +147,18 @@ const MapView = ({ waypoints, fullscreen, onAddWaypoint, progressIdx }) => {
 
 
 
+{/* Capa base: tiles de OpenStreetMap cacheados */}
 <TileLayer
-  url={`http://localhost:3001/tiles/{z}/{x}/{y}.png`}
+  url={`http://localhost:3001/tiles/{z}/{x}/{y}.png?lat=${latitud}&lon=${longitud}`}
   attribution="Mapas cacheados localmente"
 />
 
-{/*
-<>
-  <TileLayer
-    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-    attribution="© OpenStreetMap contributors"
-  />
-  <TileLayer
-    url="https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png"
-    attribution="© OpenSeaMap contributors"
-  />
-</>
-*/}
+{/* Capa extra: capa seamark (marcas náuticas) */}
+<TileLayer
+  url={`http://localhost:3001/seamark/{z}/{x}/{y}.png?lat=${latitud}&lon=${longitud}`}
+  attribution="OpenSeaMap Local"
+/>
+
 
 
       {/* Trazos de navegación perfectamente sincronizados con el estado secuencial */}
@@ -186,15 +200,31 @@ const MapView = ({ waypoints, fullscreen, onAddWaypoint, progressIdx }) => {
       })()}
 
       {/* Marcador de la base */}
-{waypoints.filter(wp => wp.id === 'Base').map(wp => (
-  <Marker key={wp.id} position={[wp.lat, wp.lon]} icon={baseIcon}>
-    <Popup>
-      🛰️ <strong>Base de Telemetría</strong><br />
-      Lat: {wp.lat.toFixed(6)}<br />
-      Lon: {wp.lon.toFixed(6)}
-    </Popup>
-  </Marker>
-))}
+{(() => {
+  const wps = waypoints.filter(wp => wp.id !== 'Base' && typeof wp.lat === 'number' && typeof wp.lon === 'number');
+  return wps.map((wp, idx) => {
+    const isCompletado = idx < progressIdx;
+    const isActual = idx === progressIdx;
+
+    return (
+      <Marker
+        key={wp.id}
+        position={[wp.lat, wp.lon]}
+        icon={isCompletado ? iconCompletado : iconPendiente}
+      >
+        <Popup>
+          <strong>{wp.id}</strong><br />
+          Lat: {wp.lat.toFixed(4)}<br />
+          Lon: {wp.lon.toFixed(4)}<br />
+          Estado: {isCompletado ? '✅ Completado' : isActual ? '🧭 En camino' : '🔜 Pendiente'}
+        </Popup>
+      </Marker>
+    );
+  });
+})()}
+
+
+
 
 
       {/* Posición Actual */}
@@ -216,16 +246,7 @@ const MapView = ({ waypoints, fullscreen, onAddWaypoint, progressIdx }) => {
         </Marker>
 
 
-      {/* Puntos de la grilla */}
-      {waypoints.filter(wp => wp.id !== 'Base').map((wp) => (
-        <Marker key={wp.id} position={[wp.lat, wp.lon]}>
-          <Popup>
-            {wp.id}<br />
-            Lat: {wp.lat.toFixed(4)}<br />
-            Lon: {wp.lon.toFixed(4)}
-          </Popup>
-        </Marker>
-      ))}
+  
     </MapContainer >
     </div>
   );

@@ -1,11 +1,10 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useLayoutEffect, useRef, useState, useEffect } from 'react';
 import { useTelemetry } from './TelemetryContext';
-
 import { RadialGauge, LinearGauge } from 'canvas-gauges';
 import '../style/NavigationTablero.css';
 
 const NavigationTablero = ({waypoints, setWaypoints, progressIdx}) => {
-  //{ currentPos, setCurrentPos, waypoints, setWaypoints, progressIdx }
+ 
   const [velocidad, setVelocidad] = useState(12); // valor simulado inicial
 
   
@@ -40,13 +39,15 @@ const NavigationTablero = ({waypoints, setWaypoints, progressIdx}) => {
   const batteryGaugeRef = useRef(null);
   const rollGaugeRef = useRef(null);
 
+
     const [rotacionSuave, setRotacionSuave] = useState(rumbo);
   const rumboAnteriorRef = useRef(rumbo);
 
+    // Montaje de gauges una sola vez – robusto ante StrictMode
+useLayoutEffect(() => {
+  
 
-
-useEffect(() => {
-
+if (!termometerGaugeRef.current) {
 termometerGaugeRef.current = new LinearGauge({
     renderTo: termometerRef.current,
     width: 90,
@@ -115,7 +116,9 @@ highlights: [
     barWidth: 10,
     value: temperatura
 }).draw();
-  
+}
+
+if (!compassGaugeRef.current) {
 compassGaugeRef.current = new RadialGauge({
   renderTo: compassRef.current,
   minValue: 0,
@@ -153,8 +156,9 @@ compassGaugeRef.current = new RadialGauge({
   fontTitleSize: 20,
   colorTitle: "#f5f5f5",
 }).draw();
+}
 
-
+if (!speedGaugeRef.current) {
     speedGaugeRef.current = new RadialGauge({
       renderTo: speedRef.current,
       width: 200,
@@ -184,7 +188,9 @@ compassGaugeRef.current = new RadialGauge({
       animationDuration: 500,
       value: velocidad
     }).draw();
+  }
 
+  if (!batteryGaugeRef.current) {
     batteryGaugeRef.current =  new LinearGauge({
       renderTo: batteryRef.current,
       width: 80,
@@ -205,7 +211,9 @@ compassGaugeRef.current = new RadialGauge({
       barBeginCircle: false,
       value: bateria
     }).draw();
+  }
 
+   if (!rollGaugeRef.current) {
     rollGaugeRef.current =  new LinearGauge({
       renderTo: rollRef.current,
       width: 350,
@@ -246,7 +254,30 @@ compassGaugeRef.current = new RadialGauge({
       barBeginCircle: false,
       value: roll
     }).draw();
- }, []); 
+  }
+
+
+
+    return () => {
+      termometerGaugeRef.current?.destroy?.();
+      compassGaugeRef.current?.destroy?.();
+      speedGaugeRef.current?.destroy?.();
+      batteryGaugeRef.current?.destroy?.();
+      rollGaugeRef.current?.destroy?.();
+    };
+
+
+
+  }, []);   
+/*
+      setTimeout(() => {
+  termometerGaugeRef.current?.draw?.();
+  compassGaugeRef.current?.draw?.();
+  speedGaugeRef.current?.draw?.();
+  batteryGaugeRef.current?.draw?.();
+  rollGaugeRef.current?.draw?.();
+}, 100); // incluso 200ms si querés asegurarte más
+*/
 
 useEffect(() => {
   if (termometerGaugeRef.current) termometerGaugeRef.current.value = temperatura;
@@ -278,13 +309,6 @@ function estimatedTime(distanceKm, speedKmh = 50) {
   return distanceKm / speedKmh;
 }
 
-
-  // const [waypoints, setWaypoints] = useState([
-  //   { id: 'Base', lat: -34.58, lon: -58.38 },
-  //   { id: 'P1', lat: -34.60, lon: -58.40 },
-  //   { id: 'P2', lat: -34.62, lon: -58.42 }
-  // ]);
-
   // Manejar cambios de coordenadas
   const handleChange = (index, field, value) => {
     const updated = [...waypoints];
@@ -306,149 +330,85 @@ function formatCoordinate(value, type) {
   return value;
 }
 
+// DISTIRBUCION DE ELEMENTOS EN GRILLA DE TABLERO DE INSTURMENTOS. 
+// LA DISTRIBUCION DE HACE EN TRES FILAS Y SIETE COLUMNAS
+/*
+Fila	Columna	Elemento
+1-2	     2	  <canvas ref={termometerRef} />
+1 	     3	  <canvas ref={compassRef} />
+1	       4	  Rumbo (display)
+1 	     5	  <canvas ref={speedRef} />
+1-2	     6	  <canvas ref={batteryRef} />
+2	      3-5	  <canvas ref={rollRef} />
 
+
+
+*/
 
   return (
-    <div style={{ background: 'green', display: 'flex', flexDirection: 'column', height: '100%', overflowY: 'auto' }}>
+        <div style={{ background: '#64778aff', 
+          border: '2px solid red',
+        display: 'grid', 
+        gridTemplateRows: '1fr 1fr 1fr', 
+        gridTemplateColumns: 'repeat(7, 1fr)', 
+        gap: '10px', 
+        height: '100%', 
+        borderRadius: '12px',
+        border: '2px solid black',
+        z: '0',
+        padding: '10px' }}>
 
-       {/* Instrumentos arriba (gauges) */}
-      <div style={{ width: '100%', marginTop: '2%', marginBottom: '2%'  }}>
-        <div className="flex flex-row justify-center gap-4">
-          <canvas ref={compassRef} />
-              <div
-                className="flex flex-col items-center justify-center p-4"
-                style={{
-                  backgroundColor: '#000',       // Fondo negro
-                  borderRadius: '8px',
-                  width: 'fit-content',
-                  minWidth: '150px',
-                }}
-              >
-                <p
-                  className="font-bold uppercase"
-                  style={{
-                    color: 'yellow',
-                    fontSize: '24px',
-                    marginBottom: '8px',
-                  }}
-                >
-                  Rumbo
-                </p>
+          {/* termometer */}
+          <div style={{ gridColumn: '2', gridRow: '1 / span 2', display: 'flex', justifyContent: 'center', alignItems: 'center', z: '50' }}>
+            <canvas ref={termometerRef} />
+          </div>
 
-                <p
-                  style={{
-                    color: 'yellow',
-                    fontSize: '48px',
-                    fontWeight: 'bold',
-                  }}
-                >
-                  {rumbo.toFixed(2)}°
-                </p>
-              </div>
+          {/* compass */}
+          <div style={{ gridColumn: '3', gridRow: '1 ', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+            <canvas ref={compassRef} />
+          </div>
 
-          <canvas ref={speedRef} />
+          {/* rumbo */}
+          <div
+            style={{
+              gridColumn: '4',
+              gridRow: '1',
+              backgroundColor: '#000',
+              borderRadius: '8px',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              minWidth: '150px',
+              height: '80%',
+            }}
+          >
+            <p style={{ color: 'yellow', fontSize: '24px', fontWeight: 'bold', marginBottom: '8px' }}>
+              Rumbo
+            </p>
+            <p style={{ color: 'yellow', fontSize: '48px', fontWeight: 'bold' }}>
+              {rumbo.toFixed(2)}°
+            </p>
+          </div>
+
+          {/* speed */}
+          <div style={{ gridColumn: '5', gridRow: '1', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+            <canvas ref={speedRef} />
+          </div>
+
+          {/* battery */}
+          <div style={{ gridColumn: '6', gridRow: '1 / span 2', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+            <canvas ref={batteryRef} />
+          </div>
+
+          {/* roll */}
+          <div style={{ gridColumn: '3 / span 3', gridRow: '2', display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80%' }}>
+            <canvas ref={rollRef} />
+          </div>
+
+
         </div>
-        <div className="flex flex-row justify-center items-center mt-4 gap-4">
-          <canvas ref={termometerRef} />          
-          <canvas ref={rollRef} />
-          <canvas ref={batteryRef} />
-        </div>
-      </div>
 
-      {/* Grilla/tablero abajo */}
-      <div style={{ flexShrink: 0 }}>
-        <div className="bg-black text-white p-4 rounded-lg shadow-lg w-full overflow-x-auto">
-          <h2 className="text-center text-lg font-bold mb-4">Mi GPS</h2>
-                      <div className="bg-gray-800 text-white p-2 rounded mb-2 text-sm">
-              <div className="flex items-center gap-2">
-                <span className="font-bold">📍 Posición Actual:</span>
-                <div className="flex flex-row gap-1">
-                  <div className="flex items-center gap-1">
-                    <span className="text-xs text-white">{lat >= 0 ? 'N' : 'S'}</span>
-                    <span className="bg-black border text-white w-24 text-sm px-1 py-1">
-                      {lat.toFixed(6)}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <span className="text-xs text-white">{lon >= 0 ? 'E' : 'O'}</span>
-                    <span className="bg-black border text-white w-24 text-sm px-1 py-1">
-                      {lon.toFixed(6)}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          <table className="w-full text-sm border border-white">
-            <thead>
-              <tr className="bg-gray-800">
-                <th className="border px-2 py-1">WP</th>
-                <th className="border px-2 py-1">LAT-LON</th>
-                <th className="border px-2 py-1">DISTANCIA (km)</th>
-                <th className="border px-2 py-1">TIEM. APROX. (h)</th>
-                <th className="border px-2 py-1">ESTADO</th>
-              </tr>
-            </thead>
-            <tbody>
-              {(() => {
-                const wps = waypoints.filter(wp => wp.id !== 'Base' && typeof wp.lat === 'number' && typeof wp.lon === 'number' && !isNaN(wp.lat) && !isNaN(wp.lon));
-                return waypoints.map((wp, idx) => {
-                  let estado = '';
-                  let color = '';
-                  if (wp.id === 'Base') {
-                    estado = 'Base';
-                    color = 'text-gray-400';
-                  } else {
-                    // Buscar el índice real del waypoint (sin contar la base)
-                    const realIdx = wps.findIndex(w => w.id === wp.id);
-                    if (realIdx < progressIdx) {
-                      estado = 'Completado';
-                      color = 'text-green-500';
-                    } else if (realIdx === progressIdx) {
-                      estado = 'En camino';
-                      color = 'text-blue-500';
-                    } else {
-                      estado = 'Próximo destino';
-                      color = 'text-red-500';
-                    }
-                  }
-                  let dist, time;
-                  if (wp.id === 'Base') {
-                    // Para la base siempre mostrar distancia desde posición actual
-                    dist = haversineDistance(lat, lon, wp.lat, wp.lon).toFixed(2);
-                    time = estimatedTime(parseFloat(dist)).toFixed(2);
-                  } else {
-                    // Buscar el índice real del waypoint (sin contar la base)
-                    const realIdx = wps.findIndex(w => w.id === wp.id);
-                    if (realIdx < progressIdx) {
-                      // Waypoints completados: mostrar '--'
-                      dist = '--';
-                      time = '--';
-                    } else {
-                      // Waypoint actual y próximos destinos: calcular desde posición actual
-                      dist = haversineDistance(lat, lon, wp.lat, wp.lon).toFixed(2);
-                      time = estimatedTime(parseFloat(dist)).toFixed(2);
-                    }
-                  }
-                  return (
-                    <tr key={wp.id} className="text-center">
-                      <td className="border px-2 py-1">{wp.id}</td>
-                      <td className="border px-2 py-1">
-                        {formatCoordinate(wp.lat, 'lat')}, {formatCoordinate(wp.lon, 'lon')}
-                      </td>
-                      <td className="border px-2 py-1">{dist}</td>
-                      <td className="border px-2 py-1">{time}</td>
-                      <td className={`border px-2 py-1 font-bold ${color}`}>{estado}</td>
-                    </tr>
-                  );
-                });
-              })()}
-            </tbody>
-          </table>
-        </div>
-      </div>
-     
-      
-    </div>
   );
 };
 

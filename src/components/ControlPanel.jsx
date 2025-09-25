@@ -1,4 +1,4 @@
-import React, { useState, useEffect  } from 'react';
+import React, { useState, useEffect, useRef  } from 'react';
 import io from 'socket.io-client';
 
 
@@ -12,6 +12,12 @@ const ControlPanel = ({ waypoints, setWaypoints, currentPos, progressIdx, setPro
   const [newWaypoint, setNewWaypoint] = useState({ lat: '', lon: '' });
   const [showConfirm, setShowConfirm] = useState(false);
 
+  const [estadoEnvio, setEstadoEnvio] = useState(null);     // Envío de misión
+  const [estadoCarga, setEstadoCarga] = useState(null);     // Carga desde el micro
+  const [showConfirmEnviar, setShowConfirmEnviar] = useState(false);
+const [showConfirmCargar, setShowConfirmCargar] = useState(false);
+const respuestaRecibidaRef = useRef(false);
+
 
 
   //.......................................
@@ -21,6 +27,62 @@ const ControlPanel = ({ waypoints, setWaypoints, currentPos, progressIdx, setPro
     socket.emit('control-cmd', { cmd: 'calibrar' });
   
   };
+/*
+socket.on('mision-descargada', (wpList) => {
+  console.log("📦 Misión recibida del micro:", wpList);
+  if (Array.isArray(wpList)) {
+    setWaypoints(wpList);
+    setEstadoCarga("cargada");
+    setTimeout(() => setEstadoCarga(null), 5000);
+  }
+});
+*/
+
+// Función para enviar la misión
+const handleConfirmEnviar = () => {
+  setShowConfirmEnviar(false);
+  setEstadoEnvio("enviando");
+
+  socket.emit('control-cmd', {
+    cmd: 'enviar-mision',
+    data: waypoints
+  });
+
+  setTimeout(() => setEstadoEnvio("enviada"), 1000); // simulación
+  setTimeout(() => setEstadoEnvio(null), 5000);
+};
+
+// Función para cargar la misión desde el micro
+const handleConfirmCargar = () => {
+  setShowConfirmCargar(false);
+  setEstadoCarga("cargando");
+  respuestaRecibidaRef.current = false;
+
+  socket.emit('control-cmd', { cmd: 'solicitar-mision' });
+
+  socket.once('mision-descargada', (wpList) => {
+    respuestaRecibidaRef.current = true;
+
+    if (Array.isArray(wpList)) {
+      setWaypoints(wpList);
+      setEstadoCarga("cargada");
+    } else {
+      setEstadoCarga("error");
+    }
+
+    setTimeout(() => setEstadoCarga(null), 5000);
+  });
+
+  setTimeout(() => {
+    if (!respuestaRecibidaRef.current) {
+      setEstadoCarga("error");
+      setTimeout(() => setEstadoCarga(null), 5000);
+    }
+  }, 5000);
+};
+
+
+
 
   // Función para agregar waypoint
   const handleAddWaypoint = () => {
@@ -119,6 +181,50 @@ const ControlPanel = ({ waypoints, setWaypoints, currentPos, progressIdx, setPro
   };
   }, []);
 
+  const enviarMision = () => {
+  setEstadoEnvio("enviando");
+
+  socket.emit('control-cmd', {
+    cmd: 'enviar-mision',
+    data: waypoints
+  });
+
+  // Simulación de confirmación exitosa
+  setTimeout(() => setEstadoEnvio("enviada"), 1000);
+  setTimeout(() => setEstadoEnvio(null), 5000);
+};
+
+const cargarMision = () => {
+  setEstadoCarga("cargando");
+  respuestaRecibidaRef.current = false;
+
+  socket.emit('control-cmd', { cmd: 'solicitar-mision' });
+
+  // Esperar respuesta del microcontrolador
+  socket.once('mision-descargada', (wpList) => {
+    respuestaRecibidaRef.current = true;
+
+    if (Array.isArray(wpList)) {
+      setWaypoints(wpList);
+      setEstadoCarga("cargada");
+    } else {
+      setEstadoCarga("error");
+    }
+
+    setTimeout(() => setEstadoCarga(null), 5000);
+  });
+
+  // Si no responde, marcar error
+  setTimeout(() => {
+    if (!respuestaRecibidaRef.current) {
+      setEstadoCarga("error");
+      setTimeout(() => setEstadoCarga(null), 5000);
+    }
+  }, 5000);
+};
+
+
+
 
   return (
     <div className="w-full flex flex-row">
@@ -209,6 +315,65 @@ const ControlPanel = ({ waypoints, setWaypoints, currentPos, progressIdx, setPro
             </div>
           </div>
         )}
+
+        {/* Modal de confirmación para ENVIAR misión */}
+        {showConfirmEnviar && (
+          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+            <div className="bg-white p-6 rounded-lg shadow-xl max-w-md text-center">
+              <h2 className="text-xl font-bold text-red-600 mb-4">⚠️ Advertencia</h2>
+              <p className="mb-4 text-gray-800">
+                Se cargará el <strong>USV</strong> con la misión actual, reemplazando la misión que tiene cargada actualmente.
+              </p>
+              <div className="flex justify-center gap-4">
+                <button
+                  onClick={() => setShowConfirmEnviar(false)}
+                  className="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={() => {
+                    setShowConfirmEnviar(false);
+                    enviarMision(); // Llama a tu función real aquí
+                  }}
+                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded"
+                >
+                  Continuar
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal de confirmación para CARGAR misión */}
+        {showConfirmCargar && (
+          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+            <div className="bg-white p-6 rounded-lg shadow-xl max-w-md text-center">
+              <h2 className="text-xl font-bold text-blue-600 mb-4">ℹ️ Atención</h2>
+              <p className="mb-4 text-gray-800">
+                Se cargará la misión que tiene el <strong>USV</strong> en este momento.
+              </p>
+              <div className="flex justify-center gap-4">
+                <button
+                  onClick={() => setShowConfirmCargar(false)}
+                  className="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={() => {
+                    setShowConfirmCargar(false);
+                    cargarMision(); // Llama a tu función real aquí
+                  }}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
+                >
+                  Continuar
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
       </div>
       {/* Mitad derecha: botón de calibrado */}
         <div className="w-1/2 flex flex-col items-center justify-start space-y-4">
@@ -250,9 +415,106 @@ const ControlPanel = ({ waypoints, setWaypoints, currentPos, progressIdx, setPro
               </div>
             </div>
           )}
-
-
         </div>
+{/* Mitad derecha: botones de carga de mision */}
+
+
+
+
+{/* Botón: Enviar Misión Actual */}
+<button
+  onClick={() => setShowConfirmEnviar(true)}
+  className={`px-4 py-2 font-semibold rounded shadow-md transition-all duration-300 ${
+    estadoEnvio === "enviada"
+      ? "bg-green-600 hover:bg-green-700"
+      : estadoEnvio === "enviando"
+      ? "bg-yellow-500 hover:bg-yellow-600"
+      : "bg-indigo-600 hover:bg-indigo-700"
+  } text-white`}
+>
+  {estadoEnvio === "enviando"
+    ? "⏳ Enviando..."
+    : estadoEnvio === "enviada"
+    ? "✅ Misión Enviada"
+    : "Enviar Misión Actual"}
+</button>
+
+{showConfirmEnviar && (
+  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div className="bg-white p-6 rounded-lg shadow-xl max-w-md text-center">
+      <h2 className="text-xl font-bold text-red-600 mb-4">⚠️ Advertencia</h2>
+      <p className="mb-4 text-gray-800">
+        Se cargará el USV con la misión actual <strong>reemplazando</strong> la misión que tiene cargada actualmente.
+      </p>
+      <div className="flex justify-center gap-4">
+        <button
+          onClick={() => setShowConfirmEnviar(false)}
+          className="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded"
+        >
+          Cancelar
+        </button>
+        <button
+          onClick={handleConfirmEnviar}
+          className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded"
+        >
+          Confirmar Envío
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+<button
+  onClick={() => setShowConfirmCargar(true)}
+  className={`px-4 py-2 font-semibold rounded shadow-md transition-all duration-300 ${
+    estadoCarga === "cargada"
+      ? "bg-green-600 hover:bg-green-700"
+      : estadoCarga === "cargando"
+      ? "bg-yellow-500 hover:bg-yellow-600"
+      : estadoCarga === "error"
+      ? "bg-red-600 hover:bg-red-700"
+      : "bg-teal-600 hover:bg-teal-700"
+  } text-white`}
+>
+  {estadoCarga === "cargando"
+    ? "⏳ Solicitando..."
+    : estadoCarga === "cargada"
+    ? "✅ Misión Cargada"
+    : estadoCarga === "error"
+    ? "❌ Sin respuesta"
+    : "Cargar Misión Actual"}
+</button>
+
+{showConfirmCargar && (
+  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div className="bg-white p-6 rounded-lg shadow-xl max-w-md text-center">
+      <h2 className="text-xl font-bold text-red-600 mb-4">⚠️ Advertencia</h2>
+      <p className="mb-4 text-gray-800">
+        Se solicitará al USV la misión cargada actualmente. Esta <strong>reemplazará</strong> la misión visible en pantalla.
+      </p>
+      <div className="flex justify-center gap-4">
+        <button
+          onClick={() => setShowConfirmCargar(false)}
+          className="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded"
+        >
+          Cancelar
+        </button>
+        <button
+          onClick={handleConfirmCargar}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
+        >
+          Confirmar Carga
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+
+
+
+
+
 
     </div>
   );

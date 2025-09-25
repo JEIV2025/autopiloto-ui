@@ -22,9 +22,42 @@
 /* Barco centrado */
 .boat-overlay {
   position: absolute;
-  top: 30%;
-  left: 50%;
-  width: 150px;   /* ajustá el tamaño del barco */
+  top: 45%;
+  left: 30%;
+  width: 30px;   /* ajustá el tamaño del barco */
+  height: auto;
+  z-index: 5;
+  pointer-events: none; /* para no interferir con clics */
+
+}
+
+.boat-overlay2 {
+  position: absolute;
+  top: 45%;
+  left: 65%;
+  width: 30px;   /* ajustá el tamaño del barco */
+  height: auto;
+  z-index: 5;
+  pointer-events: none; /* para no interferir con clics */
+
+}
+
+.boat-overlay3 {
+  position: absolute;
+  top: 40%;
+  left: 40%;
+  width: 15px;   /* ajustá el tamaño del barco */
+  height: auto;
+  z-index: 5;
+  pointer-events: none; /* para no interferir con clics */
+
+}
+
+.boat-overlay4 {
+  position: absolute;
+  top: 40%;
+  left: 55%;
+  width: 15px;   /* ajustá el tamaño del barco */
   height: auto;
   z-index: 5;
   pointer-events: none; /* para no interferir con clics */
