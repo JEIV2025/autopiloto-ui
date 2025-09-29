@@ -21,7 +21,7 @@ const WayPointsTable = ({currentPos, setCurrentPos, waypoints, setWaypoints, pro
   }, [telemetry]);
 
 
-// Función para calcular distancia con Haversine
+// Función para calcular distancia con Haversine (en km)
 function haversineDistance(lat1, lon1, lat2, lon2) {
   const R = 6371; // Radio de la Tierra en km
   const toRad = deg => deg * Math.PI / 180;
@@ -32,6 +32,11 @@ function haversineDistance(lat1, lon1, lat2, lon2) {
             Math.sin(dLon / 2) ** 2;
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
+}
+
+// Nueva función: convierte distancia en km a nudos
+function kmToNudos(distanciaKm) {
+  return distanciaKm / 1.852;
 }
 
 // Tiempo estimado en horas
@@ -107,7 +112,7 @@ function formatCoordinate(value, type) {
               <tr className="bg-gray-800">
                 <th className="border px-2 py-1">WP</th>
                 <th className="border px-2 py-1">LAT-LON</th>
-                <th className="border px-2 py-1">DISTANCIA (km)</th>
+                <th className="border px-2 py-1">DISTANCIA (nudos)</th>
                 <th className="border px-2 py-1">TIEM. APROX. (h)</th>
                 <th className="border px-2 py-1">ESTADO</th>
               </tr>
@@ -135,22 +140,24 @@ function formatCoordinate(value, type) {
                       color = 'text-red-500';
                     }
                   }
-                  let dist, time;
+                  let dist, distNudos, time;
                   if (wp.id === 'Base') {
                     // Para la base siempre mostrar distancia desde posición actual
-                    dist = haversineDistance(lat, lon, wp.lat, wp.lon).toFixed(2);
-                    time = estimatedTime(parseFloat(dist)).toFixed(2);
+                    dist = haversineDistance(lat, lon, wp.lat, wp.lon);
+                    distNudos = kmToNudos(dist).toFixed(2);
+                    time = estimatedTime(dist).toFixed(2);
                   } else {
                     // Buscar el índice real del waypoint (sin contar la base)
                     const realIdx = wps.findIndex(w => w.id === wp.id);
                     if (realIdx < progressIdx) {
                       // Waypoints completados: mostrar '--'
-                      dist = '--';
+                      distNudos = '--';
                       time = '--';
                     } else {
                       // Waypoint actual y próximos destinos: calcular desde posición actual
-                      dist = haversineDistance(lat, lon, wp.lat, wp.lon).toFixed(2);
-                      time = estimatedTime(parseFloat(dist)).toFixed(2);
+                      dist = haversineDistance(lat, lon, wp.lat, wp.lon);
+                      distNudos = kmToNudos(dist).toFixed(2);
+                      time = estimatedTime(dist).toFixed(2);
                     }
                   }
                   return (
@@ -159,7 +166,7 @@ function formatCoordinate(value, type) {
                       <td className="border px-2 py-1">
                         {formatCoordinate(wp.lat, 'lat')}, {formatCoordinate(wp.lon, 'lon')}
                       </td>
-                      <td className="border px-2 py-1">{dist}</td>
+                      <td className="border px-2 py-1">{distNudos}</td>
                       <td className="border px-2 py-1">{time}</td>
                       <td className={`border px-2 py-1 font-bold ${color}`}>{estado}</td>
                     </tr>

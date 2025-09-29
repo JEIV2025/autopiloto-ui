@@ -1,5 +1,6 @@
 html, body, #root  {
   height: 100% !important;
+  width: 100% !important;
   background: none !important;
   background-image: none !important;
 }
@@ -58,6 +59,6 @@ html, body, #root  {
   overflow: visible;
 }
 
-.menu-btn {
+/* .menu-btn {
   @apply text-left bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded;
-}
+} */

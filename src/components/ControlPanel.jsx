@@ -416,13 +416,15 @@ const cargarMision = () => {
             </div>
           )}
         </div>
+
+  <div style={{display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '25%', gap: '10px'}}>
 {/* Mitad derecha: botones de carga de mision */}
 
 
 
 
 {/* Botón: Enviar Misión Actual */}
-<button
+  <button
   onClick={() => setShowConfirmEnviar(true)}
   className={`px-4 py-2 font-semibold rounded shadow-md transition-all duration-300 ${
     estadoEnvio === "enviada"
@@ -437,7 +439,8 @@ const cargarMision = () => {
     : estadoEnvio === "enviada"
     ? "✅ Misión Enviada"
     : "Enviar Misión Actual"}
-</button>
+  </button>
+
 
 {showConfirmEnviar && (
   <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -515,7 +518,7 @@ const cargarMision = () => {
 
 
 
-
+</div>
     </div>
   );
 }

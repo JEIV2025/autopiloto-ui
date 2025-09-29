@@ -1,4 +1,3 @@
-
 import './App.css';
 import React, { useState, useEffect } from 'react';
 
@@ -9,6 +8,7 @@ import NavigationTablero from './components/NavigationTablero';
 import ControlPanel from './components/ControlPanel';
 import WayPointsTable from './components/WayPointsTable';
 import PlanManager from './components/PlanManager';
+import SideBar from './components/SideBar'; 
 
 
 function App() {
@@ -67,61 +67,13 @@ const handleAddWaypoint = (latlng) => {
 <div className="flex h-screen">
   {/* Aside lateral */}
   {mostrarAside && (
-    <aside className="w-64 bg-[#64778aff] text-white flex flex-col p-4 space-y-4">
-      {/* Logo y título */}
-      <div className="text-center">
-        <div className="mx-auto bg-white rounded-full p-2 shadow-md w-20 h-20 flex items-center justify-center mb-2">
-        <img src="./images/LogoDIIV.png" alt="Logo1" className="h-18" />
-        </div>
-        <h1 className="text-xl font-semibold">Autopiloto  -  USV</h1>
-      </div>
-
-      {/* Menú */}
-      <nav className="flex flex-col space-y-2">
-          <button onClick={() => setSeccionActiva("inicio")} className={`w-full text-left px-4 py-2 rounded transition-colors
-    ${seccionActiva === "inicio"
-      ? "bg-blue-700 text-white font-bold shadow"
-      : "bg-blue-100 text-black hover:bg-blue-200"}`}>Inicio</button>
-          <button onClick={() => setSeccionActiva("navegacion")} className={`w-full text-left px-4 py-2 rounded transition-colors
-    ${seccionActiva === "navegacion"
-      ? "bg-blue-700 text-white font-bold shadow"
-      : "bg-blue-100 text-black hover:bg-blue-200"}`}>Navegación</button>
-          <button onClick={() => setSeccionActiva("panel")} className={`w-full text-left px-4 py-2 rounded transition-colors
-    ${seccionActiva === "panel"
-      ? "bg-blue-700 text-white font-bold shadow"
-      : "bg-blue-100 text-black hover:bg-blue-200"}`}>Panel de Control</button>
-          <button onClick={() => setSeccionActiva("mision")} className={`w-full text-left px-4 py-2 rounded transition-colors
-    ${seccionActiva === "mision"
-      ? "bg-blue-700 text-white font-bold shadow"
-      : "bg-blue-100 text-black hover:bg-blue-200"}`}>Misión Actual</button>
-          <button onClick={() => {
-                   setSeccionAnterior(seccionActiva); 
-                   setShowPlanManager(true);
-                   setSeccionActiva('guardar');                   
-                    }} className={`w-full text-left px-4 py-2 rounded transition-colors
-    ${seccionActiva === "guardar"
-      ? "bg-blue-700 text-white font-bold shadow"
-      : "bg-blue-100 text-black hover:bg-blue-200"}`}>Guardar / Cargar</button>
-          <button onClick={() => setSeccionActiva("consola")}className={`w-full text-left px-4 py-2 rounded transition-colors
-    ${seccionActiva === "consola"
-      ? "bg-blue-700 text-white font-bold shadow"
-      : "bg-blue-100 text-black hover:bg-blue-200"}`}>Consola</button>
-      </nav>
-
-
-            <div className="text-center">
-
-                            {/* Descripción */}
-              <p className="text-md text-black-700 max-w-4xl text-justify -mt-2">
-                Éste es un proyecto de la JEIV - Armada Argentina  orientado al desarrollo de un sistema completo de control, navegación y telemetría 
-                para embarcaciones no tripuladas. Basado en sensores inerciales, GPS y comunicación remota. Con el objetivo de poder planificar una misión y 
-                que el vehículo tenga la capacidad cumplirla  de manera autónoma, cargándole la misión de manera encriptada o en claro. 
-              </p>
-      <div className="mx-auto bg-white rounded-full p-2 shadow-md w-20 h-20 flex items-center justify-center mb-2">
-        <img src="./images/Armada.png" alt="Logo2" className="h-18" />
-        </div>
-      </div>
-    </aside>
+    <SideBar
+      mostrarAside={mostrarAside}
+      seccionActiva={seccionActiva}
+      setSeccionActiva={setSeccionActiva}
+      setSeccionAnterior={setSeccionAnterior}
+      setShowPlanManager={setShowPlanManager} 
+    />
   )}
 
   {/* Contenido principal */}
@@ -265,7 +217,3 @@ const handleAddWaypoint = (latlng) => {
 }
 
 export default App;
-
-/*
-
-*/
