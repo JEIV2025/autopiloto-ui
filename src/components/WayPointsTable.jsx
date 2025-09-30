@@ -66,12 +66,46 @@ function formatCoordinate(value, type) {
   return value;
 }
 
+const [simulando, setSimulando] = useState(false);
+const [simulatedPath, setSimulatedPath] = useState([]);
 
-
+// Simulación de navegación aleatoria entre WP
+useEffect(() => {
+  let interval;
+  if (simulando) {
+    let idx = progressIdx;
+    let path = [{ lat: lat, lon: lon }];
+    interval = setInterval(() => {
+      const wps = waypoints.filter(w => w.id !== 'Base');
+      if (idx >= wps.length) {
+        setSimulando(false);
+        clearInterval(interval);
+        return;
+      }
+      const destino = wps[idx];
+      // Movimiento aleatorio hacia el WP
+      const deltaLat = (destino.lat - lat) * (Math.random() * 0.2 + 0.1);
+      const deltaLon = (destino.lon - lon) * (Math.random() * 0.2 + 0.1);
+      const nuevoLat = path[path.length - 1].lat + deltaLat;
+      const nuevoLon = path[path.length - 1].lon + deltaLon;
+      path.push({ lat: nuevoLat, lon: nuevoLon });
+      setSimulatedPath([...path]);
+      // Si está cerca del destino, avanza al siguiente WP
+      if (haversineDistance(nuevoLat, nuevoLon, destino.lat, destino.lon) < 0.05) {
+        idx++;
+        setProgressIdx(idx);
+        setCurrentPos({ lat: destino.lat, lon: destino.lon });
+      }
+    }, 700);
+  } else {
+    setSimulatedPath([]);
+  }
+  return () => clearInterval(interval);
+  // eslint-disable-next-line
+}, [simulando]);
 
   return (
     <div style={{background: '#64778aff', display: 'flex', flexDirection: 'column', height: '100%', overflowY: 'auto' }}>
-     
       <div style={{ flexShrink: 0 }}>
         <div className="bg-black text-white p-4 rounded-lg shadow-lg w-full overflow-x-auto">
           <h2 className="text-center text-lg font-bold mb-4">Mi GPS</h2>
@@ -92,20 +126,72 @@ function formatCoordinate(value, type) {
                 </div>
               </div>
 
-              <button
-                className="bg-green-600 text-white px-3 py-2 rounded shadow hover:bg-green-700 transition text-sm"
-                onClick={() => {
-                  const wps = waypoints.filter(w => w.id !== 'Base');
-                  if (progressIdx < wps.length) {
-                    const nextWp = wps[progressIdx];
-                    setProgressIdx(progressIdx + 1);                   // Marcar como cumplido
-                    setCurrentPos({ lat: nextWp.lat, lon: nextWp.lon }); // Mover el barco al WP
-                  }
-                }}
-              >
-                ✅ WayPoint Cumplido
-              </button>
+              <div className="flex gap-2">
+                <button
+                  className="bg-green-600 text-white px-3 py-2 rounded shadow hover:bg-green-700 transition text-sm"
+                  onClick={() => {
+                    const wps = waypoints.filter(w => w.id !== 'Base');
+                    if (progressIdx < wps.length) {
+                      const nextWp = wps[progressIdx];
+                      setProgressIdx(progressIdx + 1);
+                      setCurrentPos({ lat: nextWp.lat, lon: nextWp.lon });
+                    }
+                  }}
+                >
+                  ✅ WayPoint Cumplido
+                </button>
+                <button
+                  className={`px-3 py-2 rounded shadow text-sm ${simulando ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700'} text-white transition`}
+                  onClick={() => setSimulando(!simulando)}
+                >
+                  {simulando ? 'Detener Simulación' : 'Simular Navegación'}
+                </button>
+              </div>
             </div>
+
+          {/* Representación visual de la simulación */}
+          {simulando && simulatedPath.length > 1 && (
+            <div className="my-4">
+              <h3 className="text-center text-md font-semibold mb-2">Recorrido Simulado</h3>
+              <svg width="100%" height="60" style={{ background: '#222', borderRadius: 8 }}>
+                {simulatedPath.map((p, i) => {
+                  if (i === 0) return null;
+                  const prev = simulatedPath[i - 1];
+                  // Escalado simple para mostrar el recorrido
+                  const scale = 4000;
+                  const x1 = 30 + (prev.lon - waypoints[0].lon) * scale;
+                  const y1 = 30 - (prev.lat - waypoints[0].lat) * scale;
+                  const x2 = 30 + (p.lon - waypoints[0].lon) * scale;
+                  const y2 = 30 - (p.lat - waypoints[0].lat) * scale;
+                  return (
+                    <line
+                      key={i}
+                      x1={x1}
+                      y1={y1}
+                      x2={x2}
+                      y2={y2}
+                      stroke="#00eaff"
+                      strokeDasharray="4"
+                      strokeWidth="3"
+                      opacity={0.7}
+                    />
+                  );
+                })}
+                {/* Marca el barco */}
+                {simulatedPath.length > 0 && (
+                  <circle
+                    cx={30 + (simulatedPath[simulatedPath.length - 1].lon - waypoints[0].lon) * 4000}
+                    cy={30 - (simulatedPath[simulatedPath.length - 1].lat - waypoints[0].lat) * 4000}
+                    r="6"
+                    fill="#00eaff"
+                    stroke="#fff"
+                    strokeWidth="2"
+                  />
+                )}
+              </svg>
+              <div className="text-center text-xs text-blue-300 mt-1">Recorrido simulado (línea punteada)</div>
+            </div>
+          )}
 
           <table className="w-full text-sm border border-white">
             <thead>
@@ -177,8 +263,6 @@ function formatCoordinate(value, type) {
           </table>
         </div>
       </div>
-     
-      
     </div>
   );
 };
