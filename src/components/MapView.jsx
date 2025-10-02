@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvent } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Polyline } from 'react-leaflet';
 import '../style/MapView.css';
 import { useTelemetry } from './TelemetryContext';
+import boteImg from '../images/bote.png';
 
 // Corrección para íconos por defecto en Leaflet
 
@@ -31,7 +32,8 @@ const MapFixer = ({ trigger, seguirBarco, lat, lon }) => {
 
     // Centrar mapa si está activado seguirBarco
   useEffect(() => {
-    if (seguirBarco && lat && lon) {
+    const hasValidCoords = Number.isFinite(lat) && Number.isFinite(lon);
+    if (seguirBarco && hasValidCoords) {
       map.setView([lat, lon]);
     }
   }, [lat, lon, seguirBarco, map]);
@@ -85,16 +87,21 @@ const iconPendiente = L.divIcon({
 });
 
 
-const MapView = ({ waypoints, fullscreen, onAddWaypoint, progressIdx }) => {
+const MapView = ({ waypoints, fullscreen, onAddWaypoint, progressIdx, currentPos, simBoatHeading }) => {
   
   const [seguirBarco, setSeguirBarco] = useState(true);
+
+  // Posición inicial fija para trazar el primer tramo (no sigue al bote)
+  const initialPosRef = useRef(null);
 
   
   const { telemetry } = useTelemetry();
   
-  const latitud = telemetry?.lat ?? -34.5873;
-  const longitud = telemetry?.lon ?? -58.33674;
-  const rumbo = telemetry?.rumbo ?? 0;
+  // Usa la posición simulada si está disponible
+  const latitud = currentPos?.lat ?? -34.5873;
+  const longitud = currentPos?.lon ?? -58.33674;
+  const rumbo = simBoatHeading ?? currentPos?.rumbo ?? 0; // Usa rumbo simulado si está
+
   const pitch = telemetry?.pitch ?? 0;
   const roll = telemetry?.roll ?? 0;
   const usandoValoresPorDefecto =
@@ -103,6 +110,28 @@ const MapView = ({ waypoints, fullscreen, onAddWaypoint, progressIdx }) => {
     const latQuery = latitud.toFixed(6);
 const lonQuery = longitud.toFixed(6);
 
+
+  // Fijar posición inicial si aún no existe y restablecerla cuando progressIdx vuelve a 0
+  useEffect(() => {
+    const hasValid = Number.isFinite(latitud) && Number.isFinite(longitud);
+    if (!initialPosRef.current && hasValid) {
+      initialPosRef.current = { lat: latitud, lon: longitud };
+    }
+    if (progressIdx === 0 && hasValid) {
+      initialPosRef.current = { lat: latitud, lon: longitud };
+    }
+  }, [latitud, longitud, progressIdx]);
+
+  // Distancia Haversine (km)
+  function haversineDistance(lat1, lon1, lat2, lon2) {
+    const R = 6371;
+    const toRad = deg => deg * Math.PI / 180;
+    const dLat = toRad(lat2 - lat1);
+    const dLon = toRad(lon2 - lon1);
+    const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  }
 
 
   return (
@@ -129,7 +158,6 @@ const lonQuery = longitud.toFixed(6);
 
 
     <MapContainer
-      key={progressIdx} // Forzar re-montaje cuando cambia progressIdx
       center={[latitud, longitud]}
       zoom={12}
       minZoom={10}
@@ -144,8 +172,6 @@ const lonQuery = longitud.toFixed(6);
   onClick={() => setSeguirBarco(prev => !prev)}
   title="Centrar mapa"
 />
-
-
 
 {/* Capa base: tiles de OpenStreetMap cacheados */}
 <TileLayer
@@ -163,33 +189,42 @@ const lonQuery = longitud.toFixed(6);
 
       {/* Trazos de navegación perfectamente sincronizados con el estado secuencial */}
       {(() => {
-        const wps = waypoints.filter(wp => wp.id !== 'Base' && typeof wp.lat === 'number' && typeof wp.lon === 'number' && !isNaN(wp.lat) && !isNaN(wp.lon));
+        // Tramos entre: posición inicial fija -> WP0, y WPi -> WPi+1
+        const wps = waypoints.filter(
+          wp => wp.id !== 'Base' && typeof wp.lat === 'number' && typeof wp.lon === 'number' && !isNaN(wp.lat) && !isNaN(wp.lon)
+        );
         if (wps.length === 0) return null;
+
+        const points = initialPosRef.current ? [initialPosRef.current, ...wps] : [...wps];
+        if (points.length < 2) return null;
+
         const polylines = [];
-        // Tramo desde la posición actual al primer waypoint
-        if (wps.length > 0) {
-          let color = 'blue';
-          if (progressIdx > 0) color = 'green';
-          polylines.push(
-            <Polyline
-              key="from-current"
-              positions={[[latitud, longitud], [wps[0].lat, wps[0].lon]]}
-              color={color}
-              weight={4}
-            />
-          );
+
+        // Detectar si estamos en zona de llegada del waypoint actual
+        const idxActual = progressIdx;
+        let estaEnZona = false;
+        if (idxActual >= 0 && idxActual < points.length - 1) {
+          const toA = points[idxActual + 1];
+          const distKmActual = haversineDistance(latitud, longitud, toA.lat, toA.lon);
+          estaEnZona = Number.isFinite(distKmActual) && distKmActual < 0.05; // 50m
         }
-        // Tramos entre waypoints
-        for (let i = 0; i < wps.length - 1; i++) {
-          const from = wps[i];
-          const to = wps[i + 1];
+
+        const incluyeInicial = Boolean(initialPosRef.current);
+        for (let i = 0; i < points.length - 1; i++) {
+          const from = points[i];
+          const to = points[i + 1];
+          // Índice del waypoint de destino de este tramo dentro de wps
+          const destIdx = incluyeInicial ? i : i + 1;
+
           let color = 'red';
-          if (i < progressIdx - 1) color = 'green'; // Completados
-          else if (i === progressIdx - 1) color = 'blue'; // En camino
-          // El resto es rojo
+          if (destIdx < progressIdx) {
+            color = 'green';
+          } else if (destIdx === progressIdx) {
+            color = estaEnZona ? 'yellow' : 'blue';
+          }
           polylines.push(
             <Polyline
-              key={`wp-${i}`}
+              key={`wp-${i}-${progressIdx}-${estaEnZona ? 1 : 0}`}
               positions={[[from.lat, from.lon], [to.lat, to.lon]]}
               color={color}
               weight={4}
@@ -198,6 +233,7 @@ const lonQuery = longitud.toFixed(6);
         }
         return polylines;
       })()}
+
 
       {/* Marcador de la base */}
 {(() => {
@@ -232,21 +268,32 @@ const lonQuery = longitud.toFixed(6);
         position={[latitud, longitud]}
         icon={L.divIcon({
           className: 'boat-marker',
-          html: `<div class="boat-icon" style="transform: rotate(${rumbo}deg);"></div>`,
+          html: `<img src="${boteImg}" style="width:50px;transform:rotate(${rumbo}deg);" alt="bote" />`,
           iconSize: [40, 40],
-          iconAnchor: [20, 20], // centro
+          iconAnchor: [20, 20],
         })}
       >
-          <Popup>
+        <Popup>
           📍 Posición Actual<br />
           Rumbo: {rumbo?.toFixed(2)}°<br />
-          Pitch: {pitch?.toFixed(2)}°<br />
-          Roll: {roll?.toFixed(2)}°
         </Popup>
-        </Marker>
+    </Marker>
 
+    {/* Línea punteada entre waypoints eliminada */}
 
-  
+    {/* Recorrido simulado (estela punteada) */}
+    {/* {
+      simulatedPath && simulatedPath.length > 1 && (
+        <Polyline
+          positions={simulatedPath.map(p => [p.lat, p.lon])}
+          color="#00eaff"
+          dashArray="4"
+          weight={3}
+          opacity={0.7}
+        />
+      )
+    } */}
+
     </MapContainer >
     </div>
   );
