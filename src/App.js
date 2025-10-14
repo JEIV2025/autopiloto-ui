@@ -21,6 +21,9 @@ function App() {
   const [seccionAnterior, setSeccionAnterior] = useState("inicio");
   const [fullscreen, setFullscreen] = useState(false);
 
+  const [simulatedPath, setSimulatedPath] = useState([]);
+
+
 
   
   const [currentPos, setCurrentPos] = useState({ lat: -34.5873, lon: -58.33674, rumbo: 123.5 });
@@ -118,6 +121,7 @@ const handleAddWaypoint = (latlng) => {
                 progressIdx={progressIdx}
                 currentPos={currentPos}
                 simBoatHeading={simBoatHeading} // <-- Nuevo prop
+                simulatedPath={simulatedPath}
               />
             </div>
             <div className="row-span-2 bg-white rounded-xl shadow p-2 overflow-hidden">
@@ -129,6 +133,8 @@ const handleAddWaypoint = (latlng) => {
                 progressIdx={progressIdx}
                 setProgressIdx={setProgressIdx}
                 setSimBoatHeading={setSimBoatHeading} // <-- Nuevo prop
+                simulatedPath={simulatedPath}
+                setSimulatedPath={setSimulatedPath}
               />
             </div>
           </div>

@@ -87,7 +87,7 @@ const iconPendiente = L.divIcon({
 });
 
 
-const MapView = ({ waypoints, fullscreen, onAddWaypoint, progressIdx, currentPos, simBoatHeading }) => {
+const MapView = ({ waypoints, fullscreen, onAddWaypoint, progressIdx, currentPos, simBoatHeading, simulatedPath }) => {
   
   const [seguirBarco, setSeguirBarco] = useState(true);
 
@@ -109,6 +109,18 @@ const MapView = ({ waypoints, fullscreen, onAddWaypoint, progressIdx, currentPos
 
     const latQuery = latitud.toFixed(6);
 const lonQuery = longitud.toFixed(6);
+
+// Indexar mapas una única vez al montar
+useEffect(() => {
+  const lat = currentPos?.lat ?? -34.5873;
+  const lon = currentPos?.lon ?? -58.33674;
+
+  fetch(`http://localhost:3001/index?lat=${lat}&lon=${lon}`)
+    .then(res => res.json())
+    .then(data => console.log('Indexado seamark:', data))
+    .catch(err => console.error('Error al indexar mapas:', err));
+}, []);
+
 
 
   // Fijar posición inicial si aún no existe y restablecerla cuando progressIdx vuelve a 0
@@ -175,13 +187,13 @@ const lonQuery = longitud.toFixed(6);
 
 {/* Capa base: tiles de OpenStreetMap cacheados */}
 <TileLayer
-  url={`http://localhost:3001/tiles/{z}/{x}/{y}.png?lat=${latitud}&lon=${longitud}`}
+  url={`http://localhost:3001/tiles/{z}/{x}/{y}.png`}
   attribution="Mapas cacheados localmente"
 />
 
 {/* Capa extra: capa seamark (marcas náuticas) */}
 <TileLayer
-  url={`http://localhost:3001/seamark/{z}/{x}/{y}.png?lat=${latitud}&lon=${longitud}`}
+  url={`http://localhost:3001/seamark/{z}/{x}/{y}.png`}
   attribution="OpenSeaMap Local"
 />
 
@@ -282,17 +294,16 @@ const lonQuery = longitud.toFixed(6);
     {/* Línea punteada entre waypoints eliminada */}
 
     {/* Recorrido simulado (estela punteada) */}
-    {/* {
-      simulatedPath && simulatedPath.length > 1 && (
-        <Polyline
-          positions={simulatedPath.map(p => [p.lat, p.lon])}
-          color="#00eaff"
-          dashArray="4"
-          weight={3}
-          opacity={0.7}
-        />
-      )
-    } */}
+{simulatedPath && simulatedPath.length > 1 && (
+  <Polyline
+    positions={simulatedPath.map(p => [p.lat, p.lon])}
+    color="#0f0f0fff"
+    dashArray="4"
+    weight={3}
+    opacity={0.7}
+  />
+)}
+
 
     </MapContainer >
     </div>

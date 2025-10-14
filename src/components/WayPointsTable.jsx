@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import useTelemetry from '../hooks/useTelemetry';
 import '../style/NavigationTablero.css';
 
+
 const WayPointsTable = ({
   currentPos,
   setCurrentPos,
@@ -10,11 +11,14 @@ const WayPointsTable = ({
   progressIdx,
   setProgressIdx,
   setSimBoatHeading,
+  simulatedPath,
+  setSimulatedPath
 }) => {
-  const [velocidad, setVelocidad] = useState(500); // velocidad fija para simulación (km/h)
+  const [velocidad, setVelocidad] = useState(2000); // velocidad fija para simulación (km/h)
   const { telemetry } = useTelemetry();
   const [simulando, setSimulando] = useState(false);
 
+ 
   const rumbo = telemetry?.rumbo ?? 0;
   const lat = currentPos?.lat ?? telemetry?.lat ?? 0;
   const lon = currentPos?.lon ?? telemetry?.lon ?? 0;
@@ -97,7 +101,7 @@ useEffect(() => {
         // No incrementamos progressIdx aquí: se hace solo con el botón "WayPoint Cumplido"
       } else {
         // Movimiento en función de la velocidad (km/h → km/s)
-        const velKms = velocidad / 3600;
+        const velKms = (velocidad / 3600)/10;
         const rawFrac = velKms / distKm;
         const frac = Math.max(0, Math.min(rawFrac, 1)); // clamp [0,1]
 
@@ -106,8 +110,12 @@ useEffect(() => {
           lon: pos.lon + (destino.lon - pos.lon) * frac,
         };
         setCurrentPos(pos);
+
+        setSimulatedPath(prev => [...prev, pos]);
+
+
       }
-    }, 1000); // actualiza cada 1 seg
+    }, 100); // actualiza cada 1 seg
   } else {
     if (setSimBoatHeading) setSimBoatHeading(null);
   }
