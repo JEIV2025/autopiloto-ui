@@ -95,7 +95,7 @@ const handleAddWaypoint = (latlng) => {
         {/* Acá va el contenido principal actual */}
 
         {seccionActiva === "navegacion" && (
-          <div className="grid grid-rows-5 gap-4 h-full">
+          <div className="contenedorNavegacion grid grid-rows-5 gap-4 h-full">
             <div className="row-span-3 bg-white rounded-xl shadow p-2 overflow-hidden">
               <NavigationViewer />
             </div>
@@ -188,7 +188,7 @@ const handleAddWaypoint = (latlng) => {
               <div className="flex flex-col items-center justify-start w-full h-full px-6 py-4 space-y-6">
 
                       {/* Encabezado: Logos y título */}
-                      <div className="flex items-center justify-between w-full max-w-6xl mb-4">
+                      <div className="encabezado flex items-center justify-between w-full max-w-6xl mb-4">
                         <img src="/images/LogoDIIV.png" alt="Logo1" className="h-20" />
                         
                         <h1 className="text-4xl font-extrabold text-center text-gray-800 flex-1">
@@ -199,13 +199,13 @@ const handleAddWaypoint = (latlng) => {
                       </div>
 
                       {/* Descripción */}
-                      <p className="text-lg text-gray-700 max-w-4xl text-center -mt-2">
+                      <p className="subEncabezado text-lg text-gray-700 max-w-4xl text-center -mt-2">
                         Proyecto orientado al desarrollo de un sistema completo de control, navegación y telemetría 
                         para embarcaciones no tripuladas. Basado en sensores inerciales, GPS y comunicación remota.
                       </p>
 
                       {/* Video de demostración */}
-                      <div className="w-full max-w-7xl flex-1 rounded-xl overflow-hidden shadow-xl border border-gray-300">
+                      <div className="videoInicio w-full max-w-7xl flex-1 rounded-xl overflow-hidden shadow-xl border border-gray-300">
                         <video
                           autoPlay
                           loop

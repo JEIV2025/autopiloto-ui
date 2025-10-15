@@ -59,6 +59,29 @@ html, body, #root  {
   overflow: visible;
 }
 
-/* .menu-btn {
-  @apply text-left bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded;
-} */
+@media (min-width: 2559px) {
+  .encabezado{
+    width: 80%;
+    max-width: none;
+    height: 10%	;
+    h1{
+       font-size:50px;
+    }
+      
+    img{
+      height: 90%;
+    }
+  }
+
+  .subEncabezado{
+    font-size: 30px;
+    max-width: none;
+    width: 70%;
+  }
+  .videoInicio{
+    height: 80%;
+    width: 90%;
+    max-height: none;
+    }
+
+}
