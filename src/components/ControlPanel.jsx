@@ -252,7 +252,7 @@ const ControlPanel = ({ waypoints, setWaypoints, currentPos, progressIdx, setPro
           </div>
 
           {/* Columna central - Calibrar */}
-          <div className="w-1/2 flex flex-col items-center justify-start space-y-4">
+          <div className="w-1/2 flex flex-col items-center justify-center space-y-4">
             <button
               onClick={() => setShowConfirm(true)}
               className={`px-4 py-2 font-semibold rounded shadow-md transition-all duration-300 ${

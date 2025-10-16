@@ -9,6 +9,7 @@ import ControlPanel from './components/ControlPanel';
 import WayPointsTable from './components/WayPointsTable';
 import PlanManager from './components/PlanManager';
 import SideBar from './components/SideBar'; 
+import ConsoleState from './components/ConsoleState';
 
 
 function App() {
@@ -84,6 +85,7 @@ const handleAddWaypoint = (latlng) => {
 
       {/* Contenido principal */}
       <main className="flex-1 bg-gray-100 p-4 relative">
+        
         {/* Botón para ocultar / mostrar el menú */}
         <button
           onClick={() => setMostrarAside(prev => !prev)}
@@ -141,12 +143,18 @@ const handleAddWaypoint = (latlng) => {
         )}
 
         {seccionActiva === "panel" && (
-          <div className="grid grid-rows-2 gap-4 h-full">
+          <div className="grid grid-rows-2 gap-4 h-full w-full" >
             <div className="controlPanel relative" style={{ paddingBottom: '20px' }}>          
               <h2 className="font-semibold text-lg mb-2">🎛️ Panel de Control</h2>              
                 <ControlPanel waypoints={waypoints} setWaypoints={setWaypoints} currentPos={currentPos} progressIdx={progressIdx} setProgressIdx={setProgressIdx} />
             </div>
-            <div className="bg-white rounded-xl shadow p-2 overflow-hidden">
+            <div className="bg-white rounded-xl shadow p-2">
+              {/* Barra de estado compacta centrada por encima de la tabla */}
+              <div className="w-full flex justify-center mb-2">
+                <div style={{ width: '35%' }}>
+                  <ConsoleState />
+                </div>
+              </div>
             <WayPointsTable
                 currentPos={currentPos}
                 setCurrentPos={setCurrentPos}

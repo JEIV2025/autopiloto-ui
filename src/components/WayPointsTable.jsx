@@ -174,17 +174,19 @@ useEffect(() => {
               </button>
             </div>
           </div>
-          <table className="w-full text-sm border border-white">
-            <thead>
-              <tr className="bg-gray-800">
-                <th className="border px-2 py-1">WP</th>
-                <th className="border px-2 py-1">LAT-LON</th>
-                <th className="border px-2 py-1">DISTANCIA (nudos)</th>
-                <th className="border px-2 py-1">TIEM. APROX. (h)</th>
-                <th className="border px-2 py-1">ESTADO</th>
-              </tr>
-            </thead>
-            <tbody>
+          {/* Contenedor scrollable para que no se tapen los WPs */}
+          <div style={{ maxHeight: '45vh', overflowY: 'auto', borderRadius: '0.5rem' }}>
+            <table className="w-full text-sm border border-white" style={{ tableLayout: 'fixed' }}>
+              <thead style={{ position: 'sticky', top: 0, zIndex: 2 }}>
+                <tr className="bg-gray-800">
+                  <th className="border px-2 py-1">WP</th>
+                  <th className="border px-2 py-1">LAT-LON</th>
+                  <th className="border px-2 py-1">DISTANCIA (nudos)</th>
+                  <th className="border px-2 py-1">TIEM. APROX. (h)</th>
+                  <th className="border px-2 py-1">ESTADO</th>
+                </tr>
+              </thead>
+              <tbody>
               {(() => {
                 const wps = waypoints.filter(
                   wp =>
@@ -249,8 +251,9 @@ useEffect(() => {
                   );
                 });
               })()}
-            </tbody>
-          </table>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
