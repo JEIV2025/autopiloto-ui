@@ -277,6 +277,7 @@ useEffect(() => {
 
       {/* Posición Actual */}
       <Marker
+        className='boteImg'
         position={[latitud, longitud]}
         icon={L.divIcon({
           className: 'boat-marker',

@@ -64,3 +64,44 @@
 
 }
 
+@media (min-width: 2559px) {
+  .compass-overlay{
+    bottom: 30px;
+    left: 30px;
+  }
+  .compass-overlay svg {
+    width: 180px;
+    height: 180px;
+  }
+  .modeBox{
+    width: 25%;
+    height: 30%;
+    font-size: larger;
+    
+    label{
+      font-size: larger;
+
+      span{
+        font-size: larger;
+      }
+    }
+    input{
+      width: 10%;
+      padding: 20px;
+      
+    }
+  
+  .rangeBar{
+    width: 60%;
+    height: 20%;
+
+  }
+}
+  .botonCentrado{
+    font-size: larger;
+    height: 2.5rem;
+    padding: 2px;
+    margin-top: 25px;
+  
+  }
+}

@@ -1,9 +1,9 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import io from 'socket.io-client';
+import '../style/ConsoleState.css'
 
-// Compact status bar for connection indicators (backend, antenna/telemetry, Wi‑Fi)
 const ConsoleState = () => {
-  const [backendStatus, setBackendStatus] = useState('connecting'); // 'connected' | 'connecting' | 'disconnected'
+  const [backendStatus, setBackendStatus] = useState('connecting');
   const [lastTelemetryAt, setLastTelemetryAt] = useState(null);
   const [wifiOnline, setWifiOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
 
@@ -17,7 +17,7 @@ const ConsoleState = () => {
     const handleConnect = () => setBackendStatus('connected');
     const handleDisconnect = () => setBackendStatus('disconnected');
     const handleTelemetry = (data) => {
-      // Accept either JSON string or object
+ 
       try {
         const payload = typeof data === 'string' ? JSON.parse(data) : data;
         if (payload) setLastTelemetryAt(Date.now());
@@ -98,7 +98,7 @@ const ConsoleState = () => {
   };
 
   return (
-    <div className="w-full flex items-center gap-2 px-2 py-1 bg-black/80 backdrop-blur-sm border border-gray-200 rounded-md">
+    <div className="stateBox w-full flex items-center gap-2 px-2 py-1 bg-black/80 backdrop-blur-sm border border-gray-200 rounded-md">
       {renderPill(backendStatus, 'Servidor', '🖥️')}
       {renderPill(wifiOnline ? 'ok' : 'desconectada', 'Wi‑Fi', '📶')}
       {renderPill(antennaStatus, 'Antena', '📡')}

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import io from 'socket.io-client';
+import '../style/ControlPanel.css'
 
 const socket = io('http://localhost:3001');
 
@@ -173,7 +174,7 @@ const ControlPanel = ({ waypoints, setWaypoints, currentPos, progressIdx, setPro
       <div style={{ position: 'relative', width: '100%', zIndex: 1 }}>
         <div className="w-full flex flex-row">
           {/* Columna izquierda */}
-          <div className="w-1/4 flex flex-col justify-center">
+          <div className="leftColumn w-1/4 flex flex-col justify-center">
             <h2 className="font-semibold text-lg mb-2">Control de Misión</h2>
 
             {/* Selector de waypoint */}
@@ -252,7 +253,7 @@ const ControlPanel = ({ waypoints, setWaypoints, currentPos, progressIdx, setPro
           </div>
 
           {/* Columna central - Calibrar */}
-          <div className="w-1/2 flex flex-col items-center justify-center space-y-4">
+          <div className="centralColumn w-1/2 flex flex-col items-center justify-center space-y-4">
             <button
               onClick={() => setShowConfirm(true)}
               className={`px-4 py-2 font-semibold rounded shadow-md transition-all duration-300 ${
@@ -264,7 +265,7 @@ const ControlPanel = ({ waypoints, setWaypoints, currentPos, progressIdx, setPro
           </div>
 
           {/* Columna derecha - Enviar/Cargar misión */}
-          <div className="w-1/4 flex flex-col items-center justify-center gap-2">
+          <div className="rightColumn w-1/4 flex flex-col items-center justify-center gap-2">
             <button
               onClick={() => setShowConfirmEnviar(true)}
               className={`px-4 py-2 font-semibold rounded shadow-md transition-all duration-300 ${
@@ -308,7 +309,7 @@ const ControlPanel = ({ waypoints, setWaypoints, currentPos, progressIdx, setPro
 
       {/* Confirm calibrar */}
       {showConfirm && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+        <div className="confirmModal fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
           <div className="bg-white p-6 rounded-lg shadow-xl max-w-md text-center">
             <h2 className="text-xl font-bold text-red-600 mb-4">⚠️ Advertencia</h2>
             <p className="mb-4 text-gray-800">
@@ -329,7 +330,7 @@ const ControlPanel = ({ waypoints, setWaypoints, currentPos, progressIdx, setPro
 
       {/* Confirm enviar misión */}
       {showConfirmEnviar && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+        <div className="confirmModal fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
           <div className="bg-white p-6 rounded-lg shadow-xl max-w-md text-center">
             <h2 className="text-xl font-bold text-red-600 mb-4">⚠️ Advertencia</h2>
             <p className="mb-4 text-gray-800">
@@ -349,7 +350,7 @@ const ControlPanel = ({ waypoints, setWaypoints, currentPos, progressIdx, setPro
 
       {/* Confirm cargar misión */}
       {showConfirmCargar && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+        <div className= "confirmModal fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
           <div className="bg-white p-6 rounded-lg shadow-xl max-w-md text-center">
             <h2 className="text-xl font-bold text-blue-600 mb-4">ℹ️ Atención</h2>
             <p className="mb-4 text-gray-800">

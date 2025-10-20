@@ -79,7 +79,7 @@ const ConsoleLog = () => {
 
   {/* Botones de filtro */}
   <div className="mt-2 flex justify-center">
-    <div className="flex space-x-2">
+    <div className="botonesConsole flex space-x-2">
       <button
         onClick={() => setLogs([])}
         className="bg-red-600 hover:bg-red-700 text-white py-1 px-3 border border-red-800"

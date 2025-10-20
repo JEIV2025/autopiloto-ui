@@ -89,7 +89,7 @@ const handleAddWaypoint = (latlng) => {
         {/* Botón para ocultar / mostrar el menú */}
         <button
           onClick={() => setMostrarAside(prev => !prev)}
-          className="absolute top-2 left-2 bg-gray-800 text-white px-3 py-2 rounded hover:bg-gray-700 z-10"
+          className="bntMenu absolute top-2 left-2 bg-gray-800 text-white px-3 py-2 rounded hover:bg-gray-700 z-10"
         >
           {mostrarAside ? '⟨' : '☰'}
         </button>
@@ -148,12 +148,12 @@ const handleAddWaypoint = (latlng) => {
               <h2 className="font-semibold text-lg mb-2">🎛️ Panel de Control</h2>              
                 <ControlPanel waypoints={waypoints} setWaypoints={setWaypoints} currentPos={currentPos} progressIdx={progressIdx} setProgressIdx={setProgressIdx} />
             </div>
-            <div className="bg-white rounded-xl shadow p-2">
+            <div className="controlSection bg-white rounded-xl shadow p-2">
               {/* Barra de estado compacta centrada por encima de la tabla */}
-              <div className="w-full flex justify-center mb-2">
-                <div style={{ width: '35%' }}>
+              <div className="stateBar w-full flex justify-center mb-2"style={{ width: '100%' }}>
+               
                   <ConsoleState />
-                </div>
+                
               </div>
             <WayPointsTable
                 currentPos={currentPos}

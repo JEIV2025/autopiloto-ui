@@ -84,4 +84,21 @@ html, body, #root  {
     max-height: none;
     }
 
+  .controlSection{
+    
+    
+    justify-content: space-between;
+    div{
+      padding: 10px;
+    }
+  }
+
+  main{
+    button{
+      width: 70px;
+      height: 70px;
+      font-size: large;
+    }
+  }
+
 }

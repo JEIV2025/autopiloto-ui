@@ -14,7 +14,7 @@
   width: 40px;
   height: 40px;
   transition: transform 0.3s linear;
-}
+} 
 
 .centrar-btn {
   position: absolute;
@@ -41,4 +41,39 @@
 .centrar-btn.activo {
   opacity: 1; /* más visible cuando está activado */
   filter: drop-shadow(0 0 4px #fff); /* opcional: resalta el estado activo */
+}
+
+
+@media (min-width: 2559px) {
+  .boat-icon,
+  .base-icon {
+    width: 70px;
+    height: 70px;
+  }
+  
+  .boteImg {
+    width: 90px;
+    height: 90px;
+  }
+  
+  .boat-marker img {
+    width: 70px !important;
+    height: 70px !important;
+  }
+  
+  .centrar-btn {
+    width: 60px;
+    height: 60px;
+  }
+  
+  .completed-icon,
+  .pending-icon {
+    width: 30px !important;
+    height: 30px !important;
+  }
+  
+  .completed-icon div,
+  .pending-icon div {
+    font-size: 28px !important;
+  }
 }

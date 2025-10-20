@@ -73,3 +73,26 @@
   margin-bottom: 1rem;
   text-align: justify;
 }
+
+@media (min-width: 2559px) {
+  .sidebar {
+    width: 25%;
+    padding: 10px;
+  }
+  .sidebar-logo-img {
+    width: 8rem;
+    height: 8rem;
+  }
+  .sidebar-logo {
+    padding: 15px;
+  }
+  .sidebar-title {
+    font-size: 2rem;
+  }
+  .sidebar-btn {
+    font-size: 2.3rem;
+  }
+  .sidebar-desc p {
+    font-size: 2rem;
+  }
+}

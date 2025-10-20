@@ -1,0 +1,60 @@
+
+
+@media (min-width: 2559px) {
+  .waypoints-table-container {
+    font-size: 28px; 
+  }
+
+  .waypoints-table-container .wp-scroll {
+    max-height: 50vh; 
+  }
+
+  .waypoints-table-container th.wp-th {
+    padding: 0.5rem 0.75rem;
+    font-size: 25px;
+  }
+
+  .waypoints-table-container td.wp-td {
+    padding: 0.5rem 0.75rem;
+    font-size: 25px;
+  }
+
+  .waypoints-table-container tr.wp-tr {
+    height: 2.55rem;
+  }
+
+  .waypoints-table-container .wp-title {
+    font-size: 2rem;
+  }
+  
+  .text-center{
+    font-size: 35px;
+  }
+
+  .text{
+    font-size: 25px;
+  }
+
+  .waypoints-table-container .wp-meta {
+    font-size: 1rem;
+  }
+
+  .waypoints-table-container .wp-buttons .wp-btn {
+    font-size: 2rem;
+    padding: 0.6rem 1rem;
+  }
+  
+  .navBtns{
+    
+    button{
+      width: 100%;
+    
+      
+    
+      font-size: 30px;
+    }
+  }
+
+}
+
+

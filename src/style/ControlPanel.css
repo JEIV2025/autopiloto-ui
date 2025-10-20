@@ -1,0 +1,74 @@
+@media (min-width: 2559px) {
+   .leftColumn{
+    padding-top: 10px;
+
+    h2{
+        font-size: 30px;
+    }
+
+    div{
+        label{
+            font-size: 25px;
+        }
+        select{
+            margin-top: 15px;
+            font-size: 30px;
+        }
+        button{
+            font-size: 30px;
+        }
+    }
+   } 
+   .centralColumn{
+    
+        label{
+            font-size: 25px;
+        }
+        select{
+            margin-top: 15px;
+            font-size: 30px;
+        }
+        button{
+            font-size: 30px;
+        }
+     
+   }
+   .rightColumn{
+
+        label{
+            font-size: 25px;
+        }
+        select{
+            margin-top: 15px;
+            font-size: 30px;
+        }
+        button{
+            font-size: 30px;
+        }
+    
+   }
+   .confirmModal{
+    width: 100%;
+    div{
+        width: 100%;
+        p, h2{
+            font-size: 35px;
+        }
+        div{
+            label{
+                font-size: 25px;
+            }
+            select{
+                margin-top: 15px;
+                font-size: 30px;
+            }
+            button{
+                font-size: 30px;
+            }
+            p, h2{
+                font-size: larger;
+            }
+        }
+    }
+   }
+}

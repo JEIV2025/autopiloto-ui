@@ -346,7 +346,7 @@ Fila	Columna	Elemento
 */
 
   return (
-        <div style={{ background: '#64778aff', 
+        <div className='instrumentos'style={{ background: '#64778aff', 
           border: '2px solid red',
         display: 'grid', 
         gridTemplateRows: '1fr 1fr 1fr', 
@@ -369,7 +369,7 @@ Fila	Columna	Elemento
           </div>
 
           {/* rumbo */}
-          <div
+          <div 
             style={{
               gridColumn: '4',
               gridRow: '1',

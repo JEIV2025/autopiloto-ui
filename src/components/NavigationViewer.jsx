@@ -202,7 +202,7 @@ useEffect(() => {
         </svg>
       </div>
 
-<div className="absolute top-2 left-2 bg-white bg-opacity-80 p-2 rounded shadow w-40 text-sm">
+<div className="modeBox absolute top-2 left-2 bg-white bg-opacity-80 p-2 rounded shadow w-40 text-sm">
   <label className="block mb-1 font-bold text-xs">Modo Manual:</label>
   <label className="flex items-center gap-2 mb-2">
     <input
@@ -210,7 +210,7 @@ useEffect(() => {
       checked={modoManual}
       onChange={() => setModoManual(!modoManual)}
     />
-    <span className="text-xs">Activar</span>
+    <span className="text-xs">Activar </span>
   </label>
 
   {modoManual && (
@@ -224,7 +224,7 @@ useEffect(() => {
         max="180"
         value={rumboManual}
         onChange={(e) => setRumboManual(Number(e.target.value))}
-        className="w-full h-2 mb-2"
+        className= "rangeBar w-full h-2 mb-2"
       />
     </>
   )}
@@ -240,7 +240,7 @@ useEffect(() => {
         prevRumbo.current = rumbo; // asegura continuidad
       }}
       disabled={movimientoHabilitado}
-      className={`w-full px-2 py-1 text-xs rounded ${
+      className={ `botonCentrado w-full px-2 py-1 text-xs rounded ${
         movimientoHabilitado
           ? "bg-gray-300 cursor-not-allowed"
           : "bg-blue-600 text-white hover:bg-blue-700"

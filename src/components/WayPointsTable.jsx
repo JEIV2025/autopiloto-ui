@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import useTelemetry from '../hooks/useTelemetry';
 import '../style/NavigationTablero.css';
+import '../style/WayPointsTable.css';
 
 
 const WayPointsTable = ({
@@ -134,18 +135,18 @@ useEffect(() => {
   }
 
   return (
-    <div style={{ background: '#64778aff', display: 'flex', flexDirection: 'column', height: '100%', overflowY: 'auto' }}>
+    <div className="waypoints-table-container" style={{ background: '#64778aff', display: 'flex', flexDirection: 'column', height: '100%', overflowY: 'auto' }}>
       <div style={{ flexShrink: 0 }}>
         <div className="bg-black text-white p-4 rounded-lg shadow-lg w-full overflow-x-auto">
           <h2 className="text-center text-lg font-bold mb-4">Mi GPS</h2>
           <div className="flex justify-between items-center mb-2">
             <div className="bg-gray-800 text-white p-2 rounded text-sm">
               <div className="flex items-center gap-2">
-                <span className="font-bold">📍 Posición Actual:</span>
+                <span className="text font-bold">📍 Posición Actual:</span>
                 <div className="flex gap-1">
                   <div className="flex items-center gap-1">
-                    <span className="text-xs text-white">{currentPos.lat >= 0 ? 'N' : 'S'}</span>
-                    <span className="bg-black border text-white w-24 text-sm px-1 py-1">{currentPos.lat.toFixed(6)}</span>
+                    <span className=" text-xs text-white">{currentPos.lat >= 0 ? 'N' : 'S'}</span>
+                    <span className=" bg-black border text-white w-24 text-sm px-1 py-1">{currentPos.lat.toFixed(6)}</span>
                   </div>
                   <div className="flex items-center gap-1">
                     <span className="text-xs text-white">{currentPos.lon >= 0 ? 'E' : 'O'}</span>
@@ -154,7 +155,7 @@ useEffect(() => {
                 </div>
               </div>
             </div>
-            <div className="flex gap-2">
+            <div className="navBtns flex gap-2">
               <button
                 className="bg-green-600 text-white px-3 py-2 rounded shadow hover:bg-green-700 transition text-sm"
                 onClick={() => {
@@ -175,18 +176,18 @@ useEffect(() => {
             </div>
           </div>
           {/* Contenedor scrollable para que no se tapen los WPs */}
-          <div style={{ maxHeight: '45vh', overflowY: 'auto', borderRadius: '0.5rem' }}>
+          <div className="wp-scroll" style={{ maxHeight: '45vh', overflowY: 'auto', borderRadius: '0.5rem' }}>
             <table className="w-full text-sm border border-white" style={{ tableLayout: 'fixed' }}>
               <thead style={{ position: 'sticky', top: 0, zIndex: 2 }}>
                 <tr className="bg-gray-800">
-                  <th className="border px-2 py-1">WP</th>
-                  <th className="border px-2 py-1">LAT-LON</th>
-                  <th className="border px-2 py-1">DISTANCIA (nudos)</th>
-                  <th className="border px-2 py-1">TIEM. APROX. (h)</th>
-                  <th className="border px-2 py-1">ESTADO</th>
+                  <th className="border px-2 py-1 wp-th">WP</th>
+                  <th className="border px-2 py-1 wp-th">LAT-LON</th>
+                  <th className="border px-2 py-1 wp-th">DISTANCIA (nudos)</th>
+                  <th className="border px-2 py-1 wp-th">TIEM. APROX. (h)</th>
+                  <th className="border px-2 py-1 wp-th">ESTADO</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="wp-tbody">
               {(() => {
                 const wps = waypoints.filter(
                   wp =>
@@ -239,14 +240,14 @@ useEffect(() => {
                     }
                   }
                   return (
-                    <tr key={wp.id} className={`text-center ${rowBg}`}>
-                      <td className="border px-2 py-1">{wp.id}</td>
-                      <td className="border px-2 py-1">
+                    <tr key={wp.id} className={`text-center ${rowBg} wp-tr`}>
+                      <td className="border px-2 py-1 wp-td">{wp.id}</td>
+                      <td className="border px-2 py-1 wp-td">
                         {formatCoordinate(wp.lat, 'lat')}, {formatCoordinate(wp.lon, 'lon')}
                       </td>
-                      <td className="border px-2 py-1">{distNudos}</td>
-                      <td className="border px-2 py-1">{time}</td>
-                      <td className={`border px-2 py-1 font-bold ${color}`}>{estado}</td>
+                      <td className="border px-2 py-1 wp-td">{distNudos}</td>
+                      <td className="border px-2 py-1 wp-td">{time}</td>
+                      <td className={`border px-2 py-1 font-bold wp-td ${color}`}>{estado}</td>
                     </tr>
                   );
                 });
