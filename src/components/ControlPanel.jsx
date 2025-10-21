@@ -17,7 +17,10 @@ const ControlPanel = ({ waypoints, setWaypoints, currentPos, progressIdx, setPro
   const [showConfirmEnviar, setShowConfirmEnviar] = useState(false);
   const [showConfirmCargar, setShowConfirmCargar] = useState(false);
   const respuestaRecibidaRef = useRef(false);
-  const [tipoNorte, setTipoNorte] = useState('desactivado');
+  const [tipoNorte, setTipoNorte] = useState(() => {
+    // Cargar el valor guardado del localStorage o usar 'desactivado' por defecto
+    return localStorage.getItem('tipoNorte') || 'desactivado';
+  });
   const [mensajeReferencia, setMensajeReferencia] = useState(null);
 
   //.......................................
@@ -31,6 +34,9 @@ const ControlPanel = ({ waypoints, setWaypoints, currentPos, progressIdx, setPro
       cmd: 'referenciar',
       data: tipoNorte
     });
+    
+    // Guardar la selección en localStorage
+    localStorage.setItem('tipoNorte', tipoNorte);
     
     // Mostrar mensaje de confirmación
     setMensajeReferencia('enviado');
@@ -170,6 +176,11 @@ const ControlPanel = ({ waypoints, setWaypoints, currentPos, progressIdx, setPro
     };
   }, []);
 
+  // Guardar en localStorage cuando cambie la selección
+  useEffect(() => {
+    localStorage.setItem('tipoNorte', tipoNorte);
+  }, [tipoNorte]);
+
   return (
     <div className="w-full flex flex-row" style={{ position: 'relative', minHeight: '100vh' }}>
       {/* Fondo Armada */}
@@ -278,7 +289,7 @@ const ControlPanel = ({ waypoints, setWaypoints, currentPos, progressIdx, setPro
             </button>
 
             <div className='tipoNorte'>
-              <h2>Norte Referencia</h2>
+              <h2>🧭  Norte Referencia</h2>
               <hr style={{ border: '1px solid #ccc', margin: '10px 0',width:'100%' }} />
               <div className="flex flex-col gap-3 mt-4">
                 <label className="flex items-center gap-2 cursor-pointer">
