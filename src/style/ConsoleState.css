@@ -1,13 +1,12 @@
+.stateBox{
+    width: 40%;
+}
+
 @media (min-width: 2559px) {
     .stateBox{
         width: 40%;
         height: 170%;
-
-    
-
         position: relative;
-        
-        
         
         div{
             font-size: 25px;
