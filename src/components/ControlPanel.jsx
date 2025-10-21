@@ -17,10 +17,24 @@ const ControlPanel = ({ waypoints, setWaypoints, currentPos, progressIdx, setPro
   const [showConfirmEnviar, setShowConfirmEnviar] = useState(false);
   const [showConfirmCargar, setShowConfirmCargar] = useState(false);
   const respuestaRecibidaRef = useRef(false);
+  const [tipoNorte, setTipoNorte] = useState('desactivado');
+  const [mensajeReferencia, setMensajeReferencia] = useState(null);
 
   //.......................................
   const toggleCalibrar = () => {
     socket.emit('control-cmd', { cmd: 'calibrar' });
+  };
+
+  // Función para enviar comando de referenciar
+  const handleReferenciar = () => {
+    socket.emit('control-cmd', {
+      cmd: 'referenciar',
+      data: tipoNorte
+    });
+    
+    // Mostrar mensaje de confirmación
+    setMensajeReferencia('enviado');
+    setTimeout(() => setMensajeReferencia(null), 3000);
   };
 
   // Función para enviar la misión
@@ -262,6 +276,67 @@ const ControlPanel = ({ waypoints, setWaypoints, currentPos, progressIdx, setPro
             >
               {calibrando ? 'Calibrando...' : calibrado ? 'Calibrado ✅' : 'Calibrar IMU'}
             </button>
+
+            <div className='tipoNorte'>
+              <h2>Norte Referencia</h2>
+              <hr style={{ border: '1px solid #ccc', margin: '10px 0',width:'100%' }} />
+              <div className="flex flex-col gap-3 mt-4">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="tipoNorte"
+                    value="desactivado"
+                    checked={tipoNorte === 'desactivado'}
+                    onChange={(e) => setTipoNorte(e.target.value)}
+                    className="w-4 h-4"
+                  />
+                  <span>Desactivado</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="tipoNorte"
+                    value="magnetico"
+                    checked={tipoNorte === 'magnetico'}
+                    onChange={(e) => setTipoNorte(e.target.value)}
+                    className="w-4 h-4"
+                  />
+                  <span>Magnético</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="tipoNorte"
+                    value="declinacion"
+                    checked={tipoNorte === 'declinacion'}
+                    onChange={(e) => setTipoNorte(e.target.value)}
+                    className="w-4 h-4"
+                  />
+                  <span>Declinación</span>
+                </label>
+                <button
+                  onClick={handleReferenciar}
+                  className="bg-blue-500 text-white px-4 py-2 font-semibold rounded shadow-md hover:bg-blue-600 mt-3"
+                >
+                  Enviar
+                </button>
+              </div>
+              
+              {/* Mensaje de confirmación - Toast flotante */}
+              {mensajeReferencia && (
+                <div className="fixed top-4  z-50 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg shadow-lg ">
+                  <div className="flex items-center">
+                    <span className="text-green-500 mr-2 text-xl">✅</span>
+                    <div>
+                      <span className="font-semibold block">Referencia enviada correctamente!</span>
+                      <p className="text-sm opacity-80">
+                        Tipo: <strong>{tipoNorte.charAt(0).toUpperCase() + tipoNorte.slice(1)}</strong>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Columna derecha - Enviar/Cargar misión */}
