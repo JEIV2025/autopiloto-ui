@@ -53,7 +53,7 @@ useEffect(() => {
     return; // Ignora esta actualización de rumbo
   }
  
-  const nuevoDesplazamiento = desplazamiento - delta * FACTOR_MOVIMIENTO;
+  const nuevoDesplazamiento = desplazamiento + delta * FACTOR_MOVIMIENTO;
   const limitado = Math.max(-MAX_DESPLAZAMIENTO, Math.min(MAX_DESPLAZAMIENTO, nuevoDesplazamiento));
 
   setDesplazamiento(limitado);
