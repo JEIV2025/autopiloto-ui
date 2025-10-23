@@ -100,7 +100,11 @@ const MapView = ({ waypoints, fullscreen, onAddWaypoint, progressIdx, currentPos
   // Usa la posición simulada si está disponible
   const latitud = currentPos?.lat ?? -34.5873;
   const longitud = currentPos?.lon ?? -58.33674;
-  const rumbo = simBoatHeading ?? currentPos?.rumbo ?? 0; // Usa rumbo simulado si está
+  
+  // Determinar el rumbo según el estado:
+  // - Si hay simBoatHeading (simulando), usar ese rumbo
+  // - Si no hay simulación, usar el rumbo de telemetría del bote físico
+  const rumbo = simBoatHeading ?? telemetry?.rumbo ?? currentPos?.rumbo ?? 0;
 
   const pitch = telemetry?.pitch ?? 0;
   const roll = telemetry?.roll ?? 0;
