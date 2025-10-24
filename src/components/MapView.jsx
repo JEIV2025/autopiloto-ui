@@ -6,6 +6,7 @@ import { Polyline } from 'react-leaflet';
 import '../style/MapView.css';
 import { useTelemetry } from './TelemetryContext';
 import boteImg from '../images/bote.png';
+import baseImg from '../images/base_telemetria.png';
 
 // Corrección para íconos por defecto en Leaflet
 
@@ -67,8 +68,9 @@ const FeedbackClickSeguir = () => {
 
 const baseIcon = L.divIcon({
   className: 'base-icon',
-  iconSize: [50, 50],
-  iconAnchor: [30, 30], // centro del ícono
+  html: `<img src="${baseImg}" style="width:40px;height:40px;" alt="base" />`,
+  iconSize: [20, 20],
+  iconAnchor: [25, 25], // centro del ícono
   popupAnchor: [0, -20], // para que el popup salga arriba
 });
 // Icono de waypoint completado
@@ -252,6 +254,28 @@ useEffect(() => {
 
 
       {/* Marcador de la base */}
+{(() => {
+  const baseWp = waypoints.find(wp => wp.id === 'Base');
+  if (baseWp && typeof baseWp.lat === 'number' && typeof baseWp.lon === 'number') {
+    return (
+      <Marker
+        key="Base"
+        position={[baseWp.lat, baseWp.lon]}
+        icon={baseIcon}
+      >
+        <Popup>
+          <strong>🏠 Base</strong><br />
+          Lat: {baseWp.lat.toFixed(4)}<br />
+          Lon: {baseWp.lon.toFixed(4)}<br />
+          Estado: 🏠 Punto de partida
+        </Popup>
+      </Marker>
+    );
+  }
+  return null;
+})()}
+
+      {/* Marcadores de waypoints */}
 {(() => {
   const wps = waypoints.filter(wp => wp.id !== 'Base' && typeof wp.lat === 'number' && typeof wp.lon === 'number');
   return wps.map((wp, idx) => {
