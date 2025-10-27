@@ -92,4 +92,9 @@
         }
     }
    }
+   .tipoNorte{
+    button{
+        width: 100%;
+    }
+   }
 }   

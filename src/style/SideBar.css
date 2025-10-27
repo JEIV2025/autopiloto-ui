@@ -96,3 +96,31 @@
     font-size: 2rem;
   }
 }
+
+@media (max-width: 1023px) {
+  .sidebar-logo-img{
+    width: 3rem;  
+    height: 3rem;
+  }
+  .sidebar-logo{
+    h1{
+      font-size: 13px;
+    }
+  }
+
+  .sidebar-nav{
+    button{
+      margin: 0;
+      padding: 1;
+      align-items: center ;
+      justify-content: center;
+      font-size: 10px;
+    }
+  }
+
+  .sidebar-desc{
+    p{
+      font-size: 7px;
+    }
+  }
+}
