@@ -165,7 +165,7 @@ useEffect(() => {
                   }
                 }}
               >
-                ✅ WayPoint Cumplido
+                WayPoint Cumplido
               </button>
               <button
                 className={`px-3 py-2 rounded shadow text-sm ${simulando ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700'} text-white transition`}

@@ -158,6 +158,7 @@ useEffect(() => {
       {/* ⚠️ Notificación si se usan coordenadas por defecto */}
       {usandoValoresPorDefecto && (
         <div
+        className="text-center"
           style={{
             position: 'absolute',
             top: 10,

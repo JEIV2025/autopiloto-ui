@@ -98,3 +98,87 @@
     }
    }
 }   
+
+
+@media (max-width: 1023px) {
+    .leftColumn{
+        h2{
+            font-size: 15px;
+        }
+        div{
+            label{
+                font-size: 15px;
+            }
+            select{
+                margin-top: 15px;
+                font-size: 10px;
+            }
+            button{
+                font-size: 10px;
+                width: 100%;
+            }
+        }
+    }
+
+    .centralColumn{
+    
+        label{
+            font-size: 15px;
+        }
+        select{
+            margin-top: 15px;
+            font-size: 10px;
+        }
+        button{
+            font-size: 8px;
+            width: 30%;
+        }
+     
+   }
+   .rightColumn{
+
+    label{
+        font-size: 15px;
+    }
+    select{
+        margin-top: 15px;
+        font-size: 10px;
+    }
+    button{
+        font-size: 10px;
+        width: 100%;
+    }
+
+}
+.confirmModal{
+    width: 100%;
+    div{
+        width: 100%;
+        p, h2{
+            font-size: 15px;
+        }
+    }
+}	
+.tipoNorte{
+    height: 80%;
+
+    padding: 2px;
+    h2{
+        font-size: 15px;
+    }
+    button{
+        font-size: 10px;
+        width: 100%;
+        margin-bottom: 3px;
+    }
+    div{
+        label{
+            font-size: 15px;
+        }
+        select{
+            margin-top: 15px;
+            font-size: 10px;
+        }
+    }
+}
+}

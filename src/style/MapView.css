@@ -77,3 +77,30 @@
     font-size: 28px !important;
   }
 }
+
+@media (max-width: 1023px) {
+  .boat-icon,
+  .base-icon {
+    width: 10px;
+    height: 10px;
+  }
+  .boteImg {
+    width: 40px;
+    height: 40px;
+  }
+  .boat-marker img {
+    width: 40px !important;
+    height: 40px !important;
+  }
+  .centrar-btn {
+    width: 30px;
+    height: 30px;
+  }
+    
+  .text-center{
+    font-size: 5px;
+    font-weight:lighter;
+    width: 70%;
+    height: 20%;
+  }
+}
