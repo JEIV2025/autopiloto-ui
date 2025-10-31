@@ -166,12 +166,12 @@ const handleAddWaypoint = (latlng) => {
            </div>     
         )}
 
-        {seccionActiva === "consola" && (
+        {/* {seccionActiva === "consola" && (
             <div className="consoleLog relative">
               <h2 className="font-semibold text-lg mb-2">🧾 Consola de Mensajes</h2>                    
               <ConsoleLog />
             </div> 
-        )}
+        )} */}
 
         {seccionActiva === "guardar" && (
         <>

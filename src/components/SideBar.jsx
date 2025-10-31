@@ -33,8 +33,8 @@ const SideBar = ({
         setSeccionActiva('guardar');
       }}
         className={`sidebar-btn ${seccionActiva === "guardar" ? "active" : ""}`}>Guardar / Cargar</button>
-      <button onClick={() => setSeccionActiva("consola")}
-        className={`sidebar-btn ${seccionActiva === "consola" ? "active" : ""}`}>Consola</button>
+      {/* <button onClick={() => setSeccionActiva("consola")}
+        className={`sidebar-btn ${seccionActiva === "consola" ? "active" : ""}`}>Consola</button> */}
     </nav>
 
     <div className="sidebar-desc">
