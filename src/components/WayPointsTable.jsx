@@ -157,7 +157,7 @@ useEffect(() => {
             </div>
             <div className="navBtns flex gap-2">
               <button
-                className="bg-green-600 text-white px-3 py-2 rounded shadow hover:bg-green-700 transition text-sm"
+                className="wp-btn-completed bg-green-600 text-white px-3 py-2 rounded shadow hover:bg-green-700 transition text-sm"
                 onClick={() => {
                   const wps = waypoints.filter(w => w.id !== 'Base');
                   if (progressIdx < wps.length) {
@@ -165,13 +165,15 @@ useEffect(() => {
                   }
                 }}
               >
-                WayPoint Cumplido
+                <span className="wp-btn-text">WayPoint Cumplido</span>
+                <span className="wp-btn-icon">✓</span>
               </button>
               <button
-                className={`px-3 py-2 rounded shadow text-sm ${simulando ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700'} text-white transition`}
+                className={`wp-btn-simulate px-3 py-2 rounded shadow text-sm ${simulando ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700'} text-white transition`}
                 onClick={() => setSimulando(!simulando)}
               >
-                {simulando ? 'Detener Simulación' : 'Simular Navegación'}
+                <span className="wp-btn-text">{simulando ? 'Detener Simulación' : 'Simular Navegación'}</span>
+                <span className="wp-btn-text-mobile">Simular</span>
               </button>
             </div>
           </div>

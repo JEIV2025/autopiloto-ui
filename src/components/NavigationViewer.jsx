@@ -202,7 +202,7 @@ useEffect(() => {
         </svg>
       </div>
 
-<div className="modeBox absolute top-2 left-2 bg-white bg-opacity-80 p-2 rounded shadow w-40 text-sm">
+<div className={`modeBox absolute top-2 left-2 bg-white bg-opacity-80 p-2 rounded shadow text-sm ${modoManual ? 'expanded' : 'collapsed'}`}>
   <label className="block mb-1 font-bold text-xs">Modo Manual:</label>
   <label className="flex items-center gap-2 mb-2">
     <input
@@ -214,7 +214,7 @@ useEffect(() => {
   </label>
 
   {modoManual && (
-    <>
+    <div className="modeBox-content">
       <label className="block font-bold text-xs">
         Rumbo: {rumboManual}°
       </label>
@@ -226,7 +226,7 @@ useEffect(() => {
         onChange={(e) => setRumboManual(Number(e.target.value))}
         className= "rangeBar w-full h-2 mb-2"
       />
-    </>
+    </div>
   )}
 
   {/* NUEVO: Control de movimiento visual */}

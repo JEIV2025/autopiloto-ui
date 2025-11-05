@@ -96,11 +96,54 @@
     width: 30px;
     height: 30px;
   }
-    
+
   .text-center{
     font-size: 5px;
     font-weight:lighter;
     width: 70%;
     height: 20%;
+  }
+}
+
+@media (max-width: 431px) and (max-height: 932px) {
+  .boat-icon,
+  .base-icon {
+    width: 25px;
+    height: 25px;
+  }
+
+  .boteImg {
+    width: 35px;
+    height: 35px;
+  }
+
+  .boat-marker img {
+    width: 35px !important;
+    height: 35px !important;
+  }
+
+  .centrar-btn {
+    width: 40px;
+    height: 40px;
+    bottom: 15px;
+    right: 15px;
+  }
+
+  .completed-icon,
+  .pending-icon {
+    width: 20px !important;
+    height: 20px !important;
+  }
+
+  .completed-icon div,
+  .pending-icon div {
+    font-size: 14px !important;
+  }
+
+  .text-center {
+    font-size: 8px;
+    font-weight: lighter;
+    width: 80%;
+    height: 25%;
   }
 }

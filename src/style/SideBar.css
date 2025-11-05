@@ -153,7 +153,7 @@
     display: flex !important;
     position: fixed;
     top: 1rem;
-    left: 1rem;
+    right: 1rem;
     z-index: 1001;
     background: #64778aff;
     border: 2px solid rgba(255, 255, 255, 0.3);

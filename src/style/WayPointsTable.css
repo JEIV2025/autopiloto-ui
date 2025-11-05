@@ -1,4 +1,19 @@
+/* Estilos por defecto para botones - desktop */
+.wp-btn-completed .wp-btn-text {
+  display: inline-block;
+}
 
+.wp-btn-completed .wp-btn-icon {
+  display: none;
+}
+
+.wp-btn-simulate .wp-btn-text {
+  display: inline-block;
+}
+
+.wp-btn-simulate .wp-btn-text-mobile {
+  display: none;
+}
 
 @media (min-width: 2559px) {
   .waypoints-table-container {
@@ -94,4 +109,83 @@
         overflow-y: auto;
         border-radius: 0.5rem;
       }
+}
+
+@media (max-width: 431px) and (max-height: 932px) {
+  .waypoints-table-container {
+    font-size: 9px;
+    height: 100%;
+    width: 100%;
+  }
+
+  .waypoints-table-container .wp-scroll {
+    max-height: 70vh;
+  }
+
+  .waypoints-table-container th.wp-th {
+    padding: 0.4rem 0.5rem;
+    font-size: 9px;
+  }
+
+  .waypoints-table-container td.wp-td {
+    padding: 0.4rem 0.5rem;
+    font-size: 9px;
+  }
+
+  .waypoints-table-container tr.wp-tr {
+    height: 2rem;
+  }
+
+  .waypoints-table-container .wp-title {
+    font-size: 1rem;
+  }
+
+  .text-center {
+    font-size: 12px;
+  }
+
+  .text {
+    font-size: 10px;
+  }
+
+  .waypoints-table-container .wp-meta {
+    font-size: 0.75rem;
+  }
+
+  .waypoints-table-container .wp-buttons .wp-btn {
+    font-size: 0.9rem;
+    padding: 0.4rem 0.8rem;
+  }
+
+  .navBtns button {
+    font-size: 9px;
+    width: 100%;
+    height: 45%;
+    padding: 0.5rem;
+  }
+
+  /* Botones para mobile - mostrar solo tick verde y "Simular" */
+  .wp-btn-completed .wp-btn-text {
+    display: none;
+  }
+
+  .wp-btn-completed .wp-btn-icon {
+    display: inline-block;
+    font-size: 20px;
+    font-weight: bold;
+  }
+
+  .wp-btn-simulate .wp-btn-text {
+    display: none;
+  }
+
+  .wp-btn-simulate .wp-btn-text-mobile {
+    display: inline-block;
+  }
+
+  .wp-scroll {
+    max-height: 70vh;
+    overflow-y: auto;
+    border-radius: 0.5rem;
+  }
 }

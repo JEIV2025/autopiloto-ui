@@ -18,9 +18,22 @@
         width: 80%;
         height: 100%;
         position: relative;
-        
+
         div{
             font-size: 10px;
         }
+    }
+}
+
+@media (max-width: 431px) and (max-height: 932px) {
+    .stateBox {
+        width: 90%;
+        height: 100%;
+        position: relative;
+        margin-right: 5px;
+    }
+
+    .stateBox div {
+        font-size: 9px;
     }
 }

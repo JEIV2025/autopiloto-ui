@@ -359,17 +359,18 @@ Fila	Columna	Elemento
         padding: '10px' }}>
 
           {/* termometer */}
-          <div style={{ gridColumn: '2', gridRow: '1 / span 2', display: 'flex', justifyContent: 'center', alignItems: 'center', z: '50' }}>
+          <div className="gauge-container gauge-termometer" style={{ gridColumn: '2', gridRow: '1 / span 2', display: 'flex', justifyContent: 'center', alignItems: 'center', z: '50' }}>
             <canvas ref={termometerRef} />
           </div>
 
           {/* compass */}
-          <div style={{ gridColumn: '3', gridRow: '1 ', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          <div className="gauge-container gauge-compass" style={{ gridColumn: '3', gridRow: '1 ', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
             <canvas ref={compassRef} />
           </div>
 
           {/* rumbo */}
           <div 
+            className="rumbo-container"
             style={{
               gridColumn: '4',
               gridRow: '1',
@@ -383,26 +384,26 @@ Fila	Columna	Elemento
               height: '80%',
             }}
           >
-            <p style={{ color: 'yellow', fontSize: '24px', fontWeight: 'bold', marginBottom: '8px' }}>
+            <p className="rumbo-label" style={{ color: 'yellow', fontSize: '24px', fontWeight: 'bold', marginBottom: '8px' }}>
               Rumbo
             </p>
-            <p style={{ color: 'yellow', fontSize: '48px', fontWeight: 'bold' }}>
+            <p className="rumbo-value" style={{ color: 'yellow', fontSize: '48px', fontWeight: 'bold' }}>
               {rumbo.toFixed(2)}°
             </p>
           </div>
 
           {/* speed */}
-          <div style={{ gridColumn: '5', gridRow: '1', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          <div className="gauge-container gauge-speed" style={{ gridColumn: '5', gridRow: '1', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
             <canvas ref={speedRef} />
           </div>
 
           {/* battery */}
-          <div style={{ gridColumn: '6', gridRow: '1 / span 2', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          <div className="gauge-container gauge-battery" style={{ gridColumn: '6', gridRow: '1 / span 2', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
             <canvas ref={batteryRef} />
           </div>
 
           {/* roll */}
-          <div style={{ gridColumn: '3 / span 3', gridRow: '2', display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80%' }}>
+          <div className="gauge-container gauge-roll" style={{ gridColumn: '3 / span 3', gridRow: '2', display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80%' }}>
             <canvas ref={rollRef} />
           </div>
 
