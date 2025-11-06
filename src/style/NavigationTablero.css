@@ -42,30 +42,24 @@
     width: 100% !important;
     height: 100% !important;
     font-size: 8px;
-    padding: 1px !important;
-    gap: 1px !important;
+    padding: 2px !important;
     overflow: hidden !important;
     box-sizing: border-box;
-    display: grid !important;
-    grid-template-columns: repeat(7, 1fr) !important;
-    grid-template-rows: 1fr 1fr 1fr !important;
+    display: flex !important;
+    flex-direction: column !important;
     position: relative !important;
     z-index: 1 !important;
     isolation: isolate;
   }
 
   .instrumentos > div {
-    width: 100% !important;
-    height: 100% !important;
     font-size: 8px;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
     box-sizing: border-box;
     overflow: hidden !important;
-    min-width: 0 !important;
-    min-height: 0 !important;
-    position: relative;
+    position: absolute;
   }
 
   .instrumentos canvas {
@@ -93,84 +87,101 @@
     height: 100% !important;
   }
 
-  /* Reposicionar instrumentos para mobile */
-  /* Termómetro: mover a la izquierda (columna 1) */
-  .gauge-termometer {
-    grid-column: 1 !important;
-    grid-row: 1 / span 2 !important;
-    align-items: flex-start !important;
-    justify-content: flex-start !important;
-    padding-left: 0 !important;
-  }
-
-  /* Batería: mover a la derecha (columna 7) */
-  .gauge-battery {
-    grid-column: 7 !important;
-    grid-row: 1 / span 2 !important;
-    align-items: flex-start !important;
-    justify-content: flex-end !important;
-    padding-right: 0 !important;
-  }
-
-  /* Compass: ocupar 2 contenedores (columnas 2-3, filas 1-2) */
+  /* Reorganizar instrumentos sin grilla - layout flexible */
+  /* Compass: borde izquierdo superior */
   .gauge-compass {
-    grid-column: 2 / span 2 !important;
-    grid-row: 1 / span 2 !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: -2% !important;
+    width: 32% !important;
+    height: 55% !important;
+    overflow: visible !important;
   }
 
-  /* Speed: ocupar 2 contenedores (columnas 5-6, filas 1-2) */
-  .gauge-speed {
-    grid-column: 5 / span 2 !important;
-    grid-row: 1 / span 2 !important;
-  }
-
-  /* Rolido: mover hacia abajo (fila 3) */
-  .gauge-roll {
-    grid-column: 3 / span 3 !important;
-    grid-row: 3 !important;
-    align-items: flex-end !important;
-    padding-bottom: 0 !important;
-  }
-
-  /* Ajustes específicos para cada tipo de gauge - escalas aumentadas para llenar el espacio */
-  .gauge-termometer canvas {
-    transform: scale(0.75) !important;
-    transform-origin: left center !important;
-  }
-
-  .gauge-compass canvas {
-    transform: scale(1.1) !important;
-    transform-origin: center center !important;
-  }
-
-  .gauge-speed canvas {
-    transform: scale(1.1) !important;
-    transform-origin: center center !important;
-  }
-
-  .gauge-battery canvas {
-    transform: scale(0.75) !important;
-    transform-origin: right center !important;
-  }
-
-  .gauge-roll canvas {
-    transform: scale(0.75) !important;
-    transform-origin: center bottom !important;
-  }
-
-  /* Contenedor de rumbo optimizado para mobile */
+  /* Rumbo: centro superior */
   .rumbo-container {
-    grid-column: 4 !important;
-    grid-row: 1 !important;
-    min-width: 60px !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    height: 95% !important;
+    top: 0 !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    width: 22% !important;
+    height: 45% !important;
+    min-width: 70px !important;
+    max-width: 90px !important;
+    position: absolute !important;
     padding: 1px !important;
     box-sizing: border-box;
     display: flex !important;
     flex-direction: column !important;
     justify-content: center !important;
+  }
+
+  /* Speed: borde derecho superior */
+  .gauge-speed {
+    position: absolute !important;
+    top: 0 !important;
+    right: -2% !important;
+    width: 32% !important;
+    height: 55% !important;
+    overflow: visible !important;
+  }
+
+  /* Termómetro: esquina inferior izquierda */
+  .gauge-termometer {
+    position: absolute !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    width: 20% !important;
+    height: 40% !important;
+    align-items: flex-end !important;
+    justify-content: flex-start !important;
+  }
+
+  /* Batería: esquina inferior derecha */
+  .gauge-battery {
+    position: absolute !important;
+    bottom: 0 !important;
+    right: 0 !important;
+    width: 20% !important;
+    height: 40% !important;
+    align-items: flex-end !important;
+    justify-content: flex-end !important;
+  }
+
+  /* Rolido: parte inferior centrado - más pequeño */
+  .gauge-roll {
+    bottom: 0 !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    width: 35% !important;
+    height: 40% !important;
+    align-items: flex-end !important;
+    position: absolute !important;
+  }
+
+  /* Ajustes específicos para cada tipo de gauge - escalas optimizadas para layout flexible */
+  .gauge-termometer canvas {
+    transform: scale(0.85) !important;
+    transform-origin: left bottom !important;
+  }
+
+  .gauge-compass canvas {
+    transform: scale(1.1) !important;
+    transform-origin: left center !important;
+  }
+
+  .gauge-speed canvas {
+    transform: scale(1.1) !important;
+    transform-origin: right center !important;
+  }
+
+  .gauge-battery canvas {
+    transform: scale(0.85) !important;
+    transform-origin: right bottom !important;
+  }
+
+  .gauge-roll canvas {
+    transform: scale(1) !important;
+    transform-origin: center bottom !important;
   }
 
   .rumbo-label {
