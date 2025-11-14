@@ -15,7 +15,11 @@
     }
    
 }
-
+.tipoBtn{
+    width: 100%;
+    margin-left: 5px;
+    margin-right: 15px;
+}
 @media (min-width: 2559px) {
    .leftColumn{
     padding-top: 10px;

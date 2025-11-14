@@ -22,6 +22,35 @@ const ControlPanel = ({ waypoints, setWaypoints, currentPos, progressIdx, setPro
     return localStorage.getItem('tipoNorte') || 'desactivado';
   });
   const [mensajeReferencia, setMensajeReferencia] = useState(null);
+  const [tipoImu, setTipoImu] = useState(() => {
+    return localStorage.getItem('tipoImu') || '0';
+  });
+  const [tipoMar, setTipoMar] = useState(() => {
+    return localStorage.getItem('tipoMar') || '0';
+  });
+  const [mensajeImu, setMensajeImu] = useState(null);
+  const [mensajeMar, setMensajeMar] = useState(null);
+  const [panelImuAbierto, setPanelImuAbierto] = useState(false);
+  const [panelMarAbierto, setPanelMarAbierto] = useState(false);
+
+  // Opciones para Tipo IMU 
+  const opcionesImu = [
+    { value: 0, label: 'MEM Basica' },
+    { value: 1, label: 'MEM Calibrada' },
+    { value: 2, label: 'FOG' },
+    { value: 3, label: 'RLG' },
+    { value: 4, label: 'HRG' }
+  ];
+
+  // Opciones para Tipo Mar 
+  const opcionesMar = [
+    { value: 0, label: 'Mar 0' },
+    { value: 1, label: 'Mar 1' },
+    { value: 2, label: 'Mar 2' },
+    { value: 3, label: 'Mar 3' },
+    { value: 4, label: 'Mar 4' },
+    { value: 5, label: 'Mar 5' }
+  ];
 
   //.......................................
   const toggleCalibrar = () => {
@@ -41,6 +70,36 @@ const ControlPanel = ({ waypoints, setWaypoints, currentPos, progressIdx, setPro
     // Mostrar mensaje de confirmación
     setMensajeReferencia('enviado');
     setTimeout(() => setMensajeReferencia(null), 3000);
+  };
+
+  // Función para enviar comando de tipo IMU
+  const handleEnviarImu = () => {
+    socket.emit('control-cmd', {
+      cmd: 'tipo-imu',
+      data: parseInt(tipoImu)
+    });
+    
+    // Guardar la selección en localStorage
+    localStorage.setItem('tipoImu', tipoImu);
+    
+    // Mostrar mensaje de confirmación
+    setMensajeImu('enviado');
+    setTimeout(() => setMensajeImu(null), 3000);
+  };
+
+  // Función para enviar comando de tipo mar
+  const handleEnviarMar = () => {
+    socket.emit('control-cmd', {
+      cmd: 'tipo-mar',
+      data: parseInt(tipoMar)
+    });
+    
+    // Guardar la selección en localStorage
+    localStorage.setItem('tipoMar', tipoMar);
+    
+    // Mostrar mensaje de confirmación
+    setMensajeMar('enviado');
+    setTimeout(() => setMensajeMar(null), 3000);
   };
 
   // Función para enviar la misión
@@ -180,6 +239,14 @@ const ControlPanel = ({ waypoints, setWaypoints, currentPos, progressIdx, setPro
   useEffect(() => {
     localStorage.setItem('tipoNorte', tipoNorte);
   }, [tipoNorte]);
+
+  useEffect(() => {
+    localStorage.setItem('tipoImu', tipoImu);
+  }, [tipoImu]);
+
+  useEffect(() => {
+    localStorage.setItem('tipoMar', tipoMar);
+  }, [tipoMar]);
 
   return (
     <div className="w-full flex flex-row" style={{ position: 'relative', minHeight: '100vh' }}>
@@ -389,6 +456,108 @@ const ControlPanel = ({ waypoints, setWaypoints, currentPos, progressIdx, setPro
                 ? "❌ Sin respuesta"
                 : "Cargar Misión Actual"}
             </button>
+
+            {/* Panel Tipo IMU */}
+            <div className="mt-7 relative">
+              <button
+                onClick={() => setPanelImuAbierto(!panelImuAbierto)}
+                className="tipoBtn px-10 py-2 bg-purple-500 text-white font-semibold rounded shadow-md hover:bg-purple-600 transition-all duration-300 flex items-center justify-between"
+              >
+                <span> Tipo IMU</span>
+                <span>{panelImuAbierto ? '▼' : '▶'}</span>
+              </button>
+              {panelImuAbierto && (
+                <div className="absolute top-full left-0 mt-2 p-3 bg-white rounded border shadow-xl z-50 min-w-[200px]">
+                  <h3 className="font-semibold text-sm mb-2">Seleccionar Tipo IMU:</h3>
+                  <div className="flex flex-col gap-2">
+                    {opcionesImu.map((opcion) => (
+                      <label key={opcion.value} className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="tipoImu"
+                          value={opcion.value.toString()}
+                          checked={tipoImu === opcion.value.toString()}
+                          onChange={(e) => setTipoImu(e.target.value)}
+                          className="w-4 h-4"
+                        />
+                        <span>{opcion.label}</span>
+                      </label>
+                    ))}
+                    <button
+                      onClick={handleEnviarImu}
+                      className="bg-purple-500 text-white px-4 py-2 font-semibold rounded shadow-md hover:bg-purple-600 mt-2"
+                    >
+                      Enviar
+                    </button>
+                  </div>
+                  {/* Mensaje de confirmación */}
+                  {mensajeImu && (
+                    <div className="fixed top-4 right-4 z-50 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg shadow-lg">
+                      <div className="flex items-center">
+                        <span className="text-green-500 mr-2 text-xl">✅</span>
+                        <div>
+                          <span className="font-semibold block">Tipo IMU enviado correctamente!</span>
+                          <p className="text-sm opacity-80">
+                            {opcionesImu.find(op => op.value.toString() === tipoImu)?.label || `Opción ${tipoImu}`}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Panel Tipo Mar */}
+            <div className="mt-2 relative">
+              <button
+                onClick={() => setPanelMarAbierto(!panelMarAbierto)}
+                className="tipoBtn px-10 py-2 bg-cyan-500 text-white font-semibold rounded shadow-md hover:bg-cyan-600 transition-all duration-300 flex items-center justify-around"
+              >
+                <span>Tipo Mar </span>
+                <span>{panelMarAbierto ? '▼' : '▶'}</span>
+              </button>
+              {panelMarAbierto && (
+                <div className="absolute top-full left-0 mt-2 p-3 bg-white rounded border shadow-xl z-50 min-w-[200px]">
+                  <h3 className="font-semibold text-sm mb-2">Seleccionar Tipo Mar:</h3>
+                  <div className="flex flex-col gap-2">
+                    {opcionesMar.map((opcion) => (
+                      <label key={opcion.value} className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="tipoMar"
+                          value={opcion.value.toString()}
+                          checked={tipoMar === opcion.value.toString()}
+                          onChange={(e) => setTipoMar(e.target.value)}
+                          className="w-4 h-4"
+                        />
+                        <span>{opcion.label}</span>
+                      </label>
+                    ))}
+                    <button
+                      onClick={handleEnviarMar}
+                      className="bg-cyan-500 text-white px-4 py-2 font-semibold rounded shadow-md hover:bg-cyan-600 mt-2"
+                    >
+                      Enviar
+                    </button>
+                  </div>
+                  {/* Mensaje de confirmación */}
+                  {mensajeMar && (
+                    <div className="fixed top-4 right-4 z-50 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg shadow-lg">
+                      <div className="flex items-center">
+                        <span className="text-green-500 mr-2 text-xl">✅</span>
+                        <div>
+                          <span className="font-semibold block">Tipo Mar enviado correctamente!</span>
+                          <p className="text-sm opacity-80">
+                            {opcionesMar.find(op => op.value.toString() === tipoMar)?.label || `Opción ${tipoMar}`}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
