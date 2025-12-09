@@ -7,6 +7,7 @@ const socket = io('http://localhost:3001');
 const ControlPanel = ({ waypoints, setWaypoints, currentPos, progressIdx, setProgressIdx }) => {
   const [calibrando, setCalibrando] = useState(false);
   const [calibrado, setCalibrado] = useState(false);
+  const [showConfirmMag, setShowConfirmMag] = useState(false);
   const [selectedWaypoint, setSelectedWaypoint] = useState(null);
   const [showWaypointForm, setShowWaypointForm] = useState(false);
   const [newWaypoint, setNewWaypoint] = useState({ lat: '', lon: '' });
@@ -51,10 +52,14 @@ const ControlPanel = ({ waypoints, setWaypoints, currentPos, progressIdx, setPro
     { value: 4, label: 'Mar 4' },
     { value: 5, label: 'Mar 5' }
   ];
-
+ 
   //.......................................
   const toggleCalibrar = () => {
     socket.emit('control-cmd', { cmd: 'calibrar' });
+  };
+
+  const toggleCalibrarMagnetometro = () => {
+    socket.emit('control-cmd', { cmd: 'calibrar-magnetometro' });
   };
 
   // Función para enviar comando de referenciar
@@ -355,6 +360,13 @@ const ControlPanel = ({ waypoints, setWaypoints, currentPos, progressIdx, setPro
               {calibrando ? 'Calibrando...' : calibrado ? 'Calibrado ✅' : 'Calibrar IMU'}
             </button>
 
+            <button
+              onClick={() => setShowConfirmMag(true)}
+              className="px-4 py-2 font-semibold rounded shadow-md transition-all duration-300 bg-orange-400 hover:bg-orange-600 text-white"
+            >
+              Calibrar Magnetómetro
+            </button>
+
             <div className='tipoNorte'>
               <h2>🧭  Norte Referencia</h2>
               <hr style={{ border: '1px solid #ccc', margin: '10px 0',width:'100%' }} />
@@ -576,6 +588,28 @@ const ControlPanel = ({ waypoints, setWaypoints, currentPos, progressIdx, setPro
                 Cancelar
               </button>
               <button onClick={() => { setShowConfirm(false); toggleCalibrar(); }} className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">
+                Siguiente
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Confirm calibrar magnetómetro */}
+      {showConfirmMag && (
+        <div className="confirmModal fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="bg-white p-6 rounded-lg shadow-xl max-w-md text-center">
+            <h2 className="text-xl font-bold text-red-600 mb-4">⚠️ Advertencia</h2>
+            <p className="mb-4 text-gray-800">
+              Esta acción iniciará el proceso de calibrado del magnetómetro.  Este buscara referencia en todos los ejes y posiciones posibles, por lo que el proceso puede demorar unos minutos.<br />
+
+              No interrumpas el procedimiento una vez iniciado.
+            </p>
+            <div className="flex justify-center gap-4">
+              <button onClick={() => setShowConfirmMag(false)} className="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded">
+                Cancelar
+              </button>
+              <button onClick={() => { setShowConfirmMag(false); toggleCalibrarMagnetometro(); }} className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">
                 Siguiente
               </button>
             </div>
