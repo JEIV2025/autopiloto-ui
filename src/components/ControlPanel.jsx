@@ -23,6 +23,10 @@ const ControlPanel = ({ waypoints, setWaypoints, currentPos, progressIdx, setPro
     return localStorage.getItem('tipoNorte') || 'desactivado';
   });
   const [mensajeReferencia, setMensajeReferencia] = useState(null);
+  const [rumbo, setRumbo] = useState('');
+  const [rolido, setRolido] = useState('');
+  const [cabeceo, setCabeceo] = useState('');
+  const [mensajeOrientacion, setMensajeOrientacion] = useState(null);
   const [tipoImu, setTipoImu] = useState(() => {
     return localStorage.getItem('tipoImu') || '0';
   });
@@ -75,6 +79,32 @@ const ControlPanel = ({ waypoints, setWaypoints, currentPos, progressIdx, setPro
     // Mostrar mensaje de confirmación
     setMensajeReferencia('enviado');
     setTimeout(() => setMensajeReferencia(null), 3000);
+  };
+
+  // Función para enviar datos de orientación (rumbo, rolido, cabeceo)
+  const handleEnviarOrientacion = () => {
+    const rumboFloat = parseFloat(rumbo);
+    const rolidoFloat = parseFloat(rolido);
+    const cabeceoFloat = parseFloat(cabeceo);
+
+    // Validar que todos los valores sean números válidos
+    if (isNaN(rumboFloat) || isNaN(rolidoFloat) || isNaN(cabeceoFloat)) {
+      alert('Por favor, ingrese valores numéricos válidos para todos los campos');
+      return;
+    }
+
+    socket.emit('control-cmd', {
+      cmd: 'orientacion',
+      data: {
+        rumbo: rumboFloat,
+        rolido: rolidoFloat,
+        cabeceo: cabeceoFloat
+      }
+    });
+    
+    // Mostrar mensaje de confirmación
+    setMensajeOrientacion('enviado');
+    setTimeout(() => setMensajeOrientacion(null), 3000);
   };
 
   // Función para enviar comando de tipo IMU
@@ -421,6 +451,70 @@ const ControlPanel = ({ waypoints, setWaypoints, currentPos, progressIdx, setPro
                       <span className="font-semibold block">Referencia enviada correctamente!</span>
                       <p className="text-sm opacity-80">
                         Tipo: <strong>{tipoNorte.charAt(0).toUpperCase() + tipoNorte.slice(1)}</strong>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className='tipoNorte'>
+              <h2> Offsets</h2>
+              <hr style={{ border: '1px solid #ccc', margin: '10px 0', width: '100%' }} />
+              <div className="flex flex-col gap-3 mt-4">
+                <div>
+                  <label className="block text-sm font-medium text-white mb-1">Rumbo°</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    placeholder="0.00"
+                    value={rumbo}
+                    onChange={(e) => setRumbo(e.target.value)}
+                    className="w-full p-2 border border-gray-300 rounded text-sm text-black"
+                    onWheel={(e) => e.target.blur()}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-white mb-1">Rolido°</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    placeholder="0.00"
+                    value={rolido}
+                    onChange={(e) => setRolido(e.target.value)}
+                    className="w-full p-2 border border-gray-300 rounded text-sm text-black"
+                    onWheel={(e) => e.target.blur()}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-white mb-1">Cabeceo°</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    placeholder="0.00"
+                    value={cabeceo}
+                    onChange={(e) => setCabeceo(e.target.value)}
+                    className="w-full p-2 border border-gray-300 rounded text-sm text-black"
+                    onWheel={(e) => e.target.blur()}
+                  />
+                </div>
+                <button
+                  onClick={handleEnviarOrientacion}
+                  className="bg-blue-500 text-white px-4 py-2 font-semibold rounded shadow-md hover:bg-blue-600 mt-3"
+                >
+                  Enviar
+                </button>
+              </div>
+              
+              {/* Mensaje de confirmación - Toast flotante */}
+              {mensajeOrientacion && (
+                <div className="fixed top-4 z-50 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg shadow-lg">
+                  <div className="flex items-center">
+                    <span className="text-green-500 mr-2 text-xl">✅</span>
+                    <div>
+                      <span className="font-semibold block">Orientación enviada correctamente!</span>
+                      <p className="text-sm opacity-80">
+                        Rumbo: <strong>{rumbo}°</strong> | Rolido: <strong>{rolido}°</strong> | Cabeceo: <strong>{cabeceo}°</strong>
                       </p>
                     </div>
                   </div>

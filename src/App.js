@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 
 import MapView from './components/MapView';
 import NavigationViewer from './components/NavigationViewer';
-import ConsoleLog from './components/ConsoleLog';
 import NavigationTablero from './components/NavigationTablero';
 import ControlPanel from './components/ControlPanel';
 import WayPointsTable from './components/WayPointsTable';
@@ -20,7 +19,7 @@ function App() {
   const [mostrarAside, setMostrarAside] = useState(true);
   const [seccionActiva, setSeccionActiva] = useState("inicio");
   const [seccionAnterior, setSeccionAnterior] = useState("inicio");
-  const [fullscreen, setFullscreen] = useState(false);
+  
 
   const [simulatedPath, setSimulatedPath] = useState([]);
 
@@ -118,7 +117,6 @@ const handleAddWaypoint = (latlng) => {
             <div className="row-span-3 rounded-xl shadow overflow-hidden relative h-full">
               <MapView
                 waypoints={waypoints}
-                fullscreen={fullscreen}
                 onAddWaypoint={handleAddWaypoint}
                 progressIdx={progressIdx}
                 currentPos={currentPos}
@@ -145,25 +143,13 @@ const handleAddWaypoint = (latlng) => {
         {seccionActiva === "panel" && (
           <div className="grid grid-rows-2 gap-4 h-full w-full" >
             <div className="controlPanel relative" style={{ paddingBottom: '20px' }}>          
-              <h2 className="font-semibold text-lg mb-2">🎛️ Panel de Control</h2>              
+              <h2 className="font-semibold text-lg mb-2">🎛️ Panel de Control</h2> 
+              <div className="stateBar w-full flex justify-center mb-2"style={{ width: '100%', height: '35%' }}>
+                <ConsoleState />
+              </div>             
                 <ControlPanel waypoints={waypoints} setWaypoints={setWaypoints} currentPos={currentPos} progressIdx={progressIdx} setProgressIdx={setProgressIdx} />
             </div>
-            <div className="controlSection bg-white rounded-xl shadow p-2">
-              {/* Barra de estado compacta centrada por encima de la tabla */}
-              <div className="stateBar w-full flex justify-center mb-2"style={{ width: '100%' }}>
-               
-                  <ConsoleState />
-                
-              </div>
-            <WayPointsTable
-                currentPos={currentPos}
-                setCurrentPos={setCurrentPos}
-                waypoints={waypoints}
-                setWaypoints={setWaypoints}
-                progressIdx={progressIdx}
-              />
-            </div>
-           </div>     
+          </div>     
         )}
 
         {/* {seccionActiva === "consola" && (
