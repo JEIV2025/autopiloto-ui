@@ -8,6 +8,13 @@ const ControlPanel = ({ waypoints, setWaypoints, currentPos, progressIdx, setPro
   const [calibrando, setCalibrando] = useState(false);
   const [calibrado, setCalibrado] = useState(false);
   const [showConfirmMag, setShowConfirmMag] = useState(false);
+  const [showModalMagDatos, setShowModalMagDatos] = useState(false);
+  const [magBias, setMagBias] = useState({ x: '', y: '', z: '' });
+  const [magSoftHardIron, setMagSoftHardIron] = useState([
+    ['', '', ''],
+    ['', '', ''],
+    ['', '', '']
+  ]);
   const [selectedWaypoint, setSelectedWaypoint] = useState(null);
   const [showWaypointForm, setShowWaypointForm] = useState(false);
   const [newWaypoint, setNewWaypoint] = useState({ lat: '', lon: '' });
@@ -64,6 +71,44 @@ const ControlPanel = ({ waypoints, setWaypoints, currentPos, progressIdx, setPro
 
   const toggleCalibrarMagnetometro = () => {
     socket.emit('control-cmd', { cmd: 'calibrar-magnetometro' });
+  };
+
+  // Actualizar una celda de la matriz soft/hard iron
+  const setMagSoftHardIronCell = (row, col, value) => {
+    setMagSoftHardIron(prev => {
+      const next = prev.map(r => [...r]);
+      next[row][col] = value;
+      return next;
+    });
+  };
+
+  // Enviar datos de calibración magnetómetro (bias + corrección soft/hard iron)
+  const handleCargarDatosMagnetometro = () => {
+    const bx = parseFloat(magBias.x);
+    const by = parseFloat(magBias.y);
+    const bz = parseFloat(magBias.z);
+    if (isNaN(bx) || isNaN(by) || isNaN(bz)) {
+      alert('Ingrese valores numéricos válidos para bias X, Y, Z');
+      return;
+    }
+    const matrix = magSoftHardIron.map(row =>
+      row.map(cell => parseFloat(cell))
+    );
+    const allValid = matrix.every(row => row.every(n => !isNaN(n)));
+    if (!allValid) {
+      alert('Ingrese valores numéricos válidos en toda la matriz de corrección soft/hard iron');
+      return;
+    }
+    socket.emit('control-cmd', {
+      cmd: 'cargar-magnetometro',
+      data: {
+        bias: { x: bx, y: by, z: bz },
+        softHardIron: matrix
+      }
+    });
+    setShowModalMagDatos(false);
+    setMagBias({ x: '', y: '', z: '' });
+    setMagSoftHardIron([['', '', ''], ['', '', ''], ['', '', '']]);
   };
 
   // Función para enviar comando de referenciar
@@ -703,8 +748,56 @@ const ControlPanel = ({ waypoints, setWaypoints, currentPos, progressIdx, setPro
               <button onClick={() => setShowConfirmMag(false)} className="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded">
                 Cancelar
               </button>
-              <button onClick={() => { setShowConfirmMag(false); toggleCalibrarMagnetometro(); }} className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">
+              <button onClick={() => { setShowConfirmMag(false); setShowModalMagDatos(true); }} className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">
                 Siguiente
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal datos magnetómetro (bias + soft/hard iron) */}
+      {showModalMagDatos && (
+        <div className="confirmModal fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="modalMagDatos bg-white p-6 rounded-lg shadow-xl max-w-lg w-full text-left">
+            <h2 className="text-xl font-bold text-gray-800 mb-4">Datos de calibración magnetómetro</h2>
+
+            <div className="mb-4">
+              <p className="text-sm font-semibold text-gray-700 mb-2">Bias combinadas</p>
+              <div className="flex items-center gap-2 flex-wrap modalMagDatos-bias-row">
+                <span className="text-gray-600 w-4">X</span>
+                <input type="number" step="any" value={magBias.x} onChange={e => setMagBias(prev => ({ ...prev, x: e.target.value }))} className="border rounded px-2 py-1 w-24 text-gray-800" placeholder="0" />
+                <span className="text-gray-600 w-4">Y</span>
+                <input type="number" step="any" value={magBias.y} onChange={e => setMagBias(prev => ({ ...prev, y: e.target.value }))} className="border rounded px-2 py-1 w-24 text-gray-800" placeholder="0" />
+                <span className="text-gray-600 w-4">Z</span>
+                <input type="number" step="any" value={magBias.z} onChange={e => setMagBias(prev => ({ ...prev, z: e.target.value }))} className="border rounded px-2 py-1 w-24 text-gray-800" placeholder="0" />
+              </div>
+            </div>
+
+            <div className="mb-4">
+              <p className="text-sm font-semibold text-gray-700 mb-2">Corrección soft iron y hard iron</p>
+              <div className="space-y-2">
+                <div className="flex gap-2 items-center">
+                  <span className="flex-1 min-w-0 text-center font-semibold text-gray-600 text-sm">X</span>
+                  <span className="flex-1 min-w-0 text-center font-semibold text-gray-600 text-sm">Y</span>
+                  <span className="flex-1 min-w-0 text-center font-semibold text-gray-600 text-sm">Z</span>
+                </div>
+                {magSoftHardIron.map((row, ri) => (
+                  <div key={ri} className="flex gap-2 items-center">
+                    {row.map((cell, ci) => (
+                      <input key={ci} type="number" step="any" value={cell} onChange={e => setMagSoftHardIronCell(ri, ci, e.target.value)} className="border rounded px-2 py-1 flex-1 min-w-0 text-gray-800" placeholder="0" />
+                    ))}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2">
+              <button onClick={() => setShowModalMagDatos(false)} className="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded">
+                Cancelar
+              </button>
+              <button onClick={handleCargarDatosMagnetometro} className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">
+                Cargar datos
               </button>
             </div>
           </div>

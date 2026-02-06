@@ -296,3 +296,22 @@
     margin-bottom: 2px;
   }
 }
+
+/* Modal datos magnetómetro */
+.modalMagDatos-bias-row {
+  margin-left: 2rem;
+}
+@media (max-width: 640px) {
+  .modalMagDatos-bias-row {
+    margin-left: 8rem;
+  }
+}
+.modalMagDatos input[type="number"] {
+  -moz-appearance: textfield;
+  color: black;
+}
+.modalMagDatos input[type="number"]::-webkit-inner-spin-button,
+.modalMagDatos input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
