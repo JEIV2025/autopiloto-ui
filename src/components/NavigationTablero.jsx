@@ -1,11 +1,19 @@
 import React, { useLayoutEffect, useRef, useState, useEffect } from 'react';
 import { useTelemetry } from './TelemetryContext';
 import { RadialGauge, LinearGauge } from 'canvas-gauges';
+import io from 'socket.io-client';
 import '../style/NavigationTablero.css';
+
+const socket = io('http://localhost:3001');
 
 const NavigationTablero = ({waypoints, setWaypoints, progressIdx}) => {
  
   const [velocidad, setVelocidad] = useState(12); // valor simulado inicial
+
+  const [manualMode, setManualMode] = useState(false);
+  const [velocidadManual, setVelocidadManual] = useState('0');
+  const [giroManual, setGiroManual] = useState('0');
+  const seqRef = useRef(0);
 
   
   const { telemetry } = useTelemetry();
@@ -330,6 +338,37 @@ function formatCoordinate(value, type) {
   return value;
 }
 
+  const handleControlManual = () => {
+    alert('advertencia al pasar a control manual se desactiva la mision actual');
+    setManualMode(true);
+  };
+
+  const handleEnviarManual = () => {
+    const vel = parseFloat(velocidadManual);
+    const giro = parseFloat(giroManual);
+
+    if (isNaN(vel) || isNaN(giro)) {
+      alert('Ingrese valores numéricos válidos para velocidad y giro');
+      return;
+    }
+
+    seqRef.current += 1;
+
+    socket.emit('maniobrar-cmd', {
+      cmd: 'maniobrar',
+      seq: seqRef.current,
+      mode: 'manual',
+      enable: 1,
+      velcidad: vel,
+      giro: giro,
+      'timeout-ms': 500
+    });
+  };
+
+  const handleVolverATablero = () => {
+    setManualMode(false);
+  };
+
 // DISTIRBUCION DE ELEMENTOS EN GRILLA DE TABLERO DE INSTURMENTOS. 
 // LA DISTRIBUCION DE HACE EN TRES FILAS Y SIETE COLUMNAS
 /*
@@ -346,70 +385,131 @@ Fila	Columna	Elemento
 */
 
   return (
-        <div className='instrumentos'style={{ background: '#64778aff', 
+    <div className="navigationTableroRoot">
+      {!manualMode && (
+        <button
+          onClick={handleControlManual}
+          className="manualSwitchBtn"
+          style={{ position: 'absolute', top: 10, right: 10, zIndex: 1000 }}
+        >
+          control manual
+        </button>
+      )}
+
+      {/* Tablero de navegación (se oculta en modo manual) */}
+      <div
+        className="instrumentos"
+        style={{
+          background: '#64778aff',
           border: '2px solid red',
-        display: 'grid', 
-        gridTemplateRows: '1fr 1fr 1fr', 
-        gridTemplateColumns: 'repeat(7, 1fr)', 
-        gap: '10px', 
-        height: '100%', 
-        borderRadius: '12px',
-        border: '2px solid black',
-        z: '0',
-        padding: '10px' }}>
-
-          {/* termometer */}
-          <div className="gauge-container gauge-termometer" style={{ gridColumn: '2', gridRow: '1 / span 2', display: 'flex', justifyContent: 'center', alignItems: 'center', z: '50' }}>
-            <canvas ref={termometerRef} />
-          </div>
-
-          {/* compass */}
-          <div className="gauge-container gauge-compass" style={{ gridColumn: '3', gridRow: '1 ', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-            <canvas ref={compassRef} />
-          </div>
-
-          {/* rumbo */}
-          <div 
-            className="rumbo-container"
-            style={{
-              gridColumn: '4',
-              gridRow: '1',
-              backgroundColor: '#000',
-              borderRadius: '8px',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              minWidth: '150px',
-              height: '80%',
-            }}
-          >
-            <p className="rumbo-label" style={{ color: 'yellow', fontSize: '24px', fontWeight: 'bold', marginBottom: '8px' }}>
-              Rumbo
-            </p>
-            <p className="rumbo-value" style={{ color: 'yellow', fontSize: '48px', fontWeight: 'bold' }}>
-              {rumbo.toFixed(2)}°
-            </p>
-          </div>
-
-          {/* speed */}
-          <div className="gauge-container gauge-speed" style={{ gridColumn: '5', gridRow: '1', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-            <canvas ref={speedRef} />
-          </div>
-
-          {/* battery */}
-          <div className="gauge-container gauge-battery" style={{ gridColumn: '6', gridRow: '1 / span 2', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-            <canvas ref={batteryRef} />
-          </div>
-
-          {/* roll */}
-          <div className="gauge-container gauge-roll" style={{ gridColumn: '3 / span 3', gridRow: '2', display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80%' }}>
-            <canvas ref={rollRef} />
-          </div>
-
-
+          display: manualMode ? 'none' : 'grid',
+          gridTemplateRows: '1fr 1fr 1fr',
+          gridTemplateColumns: 'repeat(7, 1fr)',
+          gap: '10px',
+          height: '100%',
+          borderRadius: '12px',
+          border: '2px solid black',
+          z: '0',
+          padding: '10px'
+        }}
+      >
+        {/* termometer */}
+        <div className="gauge-container gauge-termometer" style={{ gridColumn: '2', gridRow: '1 / span 2', display: 'flex', justifyContent: 'center', alignItems: 'center', z: '50' }}>
+          <canvas ref={termometerRef} />
         </div>
 
+        {/* compass */}
+        <div className="gauge-container gauge-compass" style={{ gridColumn: '3', gridRow: '1 ', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          <canvas ref={compassRef} />
+        </div>
+
+        {/* rumbo */}
+        <div
+          className="rumbo-container"
+          style={{
+            gridColumn: '4',
+            gridRow: '1',
+            backgroundColor: '#000',
+            borderRadius: '8px',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            minWidth: '150px',
+            height: '80%',
+          }}
+        >
+          <p className="rumbo-label" style={{ color: 'yellow', fontSize: '24px', fontWeight: 'bold', marginBottom: '8px' }}>
+            Rumbo
+          </p>
+          <p className="rumbo-value" style={{ color: 'yellow', fontSize: '48px', fontWeight: 'bold' }}>
+            {rumbo.toFixed(2)}°
+          </p>
+        </div>
+
+        {/* speed */}
+        <div className="gauge-container gauge-speed" style={{ gridColumn: '5', gridRow: '1', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          <canvas ref={speedRef} />
+        </div>
+
+        {/* battery */}
+        <div className="gauge-container gauge-battery" style={{ gridColumn: '6', gridRow: '1 / span 2', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          <canvas ref={batteryRef} />
+        </div>
+
+        {/* roll */}
+        <div className="gauge-container gauge-roll" style={{ gridColumn: '3 / span 3', gridRow: '2', display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80%' }}>
+          <canvas ref={rollRef} />
+        </div>
+      </div>
+
+      {/* Panel control manual */}
+      <div className="manualPanel" style={{ display: manualMode ? 'flex' : 'none' }}>
+        <button className="manualBackBtn" onClick={handleVolverATablero}>
+          volver a tablero de instrumentos
+        </button>
+
+        <div className="manualDecor">
+          <div className="manualVolante" />
+          <div className="manualPalanca">
+            <div className="manualPalancaRod" />
+            <div className="manualPalancaKnob" />
+          </div>
+        </div>
+
+        <div className="manualForm">
+          <div className="manualInputs">
+            <label className="manualLabel">
+              Velocidad
+              <input
+                className="manualInput"
+                type="number"
+                step="any"
+                value={velocidadManual}
+                onChange={(e) => setVelocidadManual(e.target.value)}
+                onWheel={(e) => e.target.blur()}
+              />
+            </label>
+
+            <label className="manualLabel">
+              Giro
+              <input
+                className="manualInput"
+                type="number"
+                step="any"
+                value={giroManual}
+                onChange={(e) => setGiroManual(e.target.value)}
+                onWheel={(e) => e.target.blur()}
+              />
+            </label>
+          </div>
+
+          <button className="manualSendBtn" onClick={handleEnviarManual}>
+            Enviar
+          </button>
+        </div>
+      </div>
+    </div>
   );
 };
 

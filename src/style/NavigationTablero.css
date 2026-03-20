@@ -198,4 +198,179 @@
   }
 }
 
+/* ---- Control manual (panel nuevo) ---- */
+.navigationTableroRoot {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.manualSwitchBtn {
+  background: #111827;
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 10px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 700;
+  text-transform: lowercase;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+}
+
+.manualSwitchBtn:hover {
+  background: #0b1220;
+}
+
+.manualPanel {
+  position: absolute;
+  inset: 0;
+  background: #64778aff;
+  border-radius: 12px;
+  border: 2px solid black;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+}
+
+.manualBackBtn {
+  align-self: flex-start;
+  margin-bottom: 8px;
+  background: rgba(0, 0, 0, 0.75);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  padding: 10px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 800;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.25);
+  position: absolute;
+}
+
+.manualBackBtn:hover {
+  background: rgba(0, 0, 0, 0.9);
+}
+
+.manualDecor {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.manualVolante {
+  width: 170px;
+  height: 170px;
+  border-radius: 50%;
+  border: 14px solid #0b0f19;
+  background: radial-gradient(circle at center, #2b3445 0%, #0b0f19 70%);
+  box-shadow: inset 0 0 0 6px rgba(255, 255, 255, 0.08);
+  transform: rotate(-8deg);
+}
+
+.manualPalanca {
+  position: absolute;
+  right: 36%;
+  bottom: 2%;
+  width: 12px;
+  height: 80px;
+  background: linear-gradient(#111827, #030712);
+  border-radius: 999px;
+  transform: rotate(20deg);
+  box-shadow: 0 10px 18px rgba(66, 59, 59, 0.28);
+}
+
+.manualPalancaRod {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: linear-gradient(#111827, #0b1220);
+}
+
+.manualPalancaKnob {
+  position: absolute;
+  left: 50%;
+  top: 10px;
+  transform: translateX(-50%);
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: radial-gradient(circle at center, #ffffff 0%, #9ca3af 20%, #111827 70%);
+  border: 2px solid rgba(255, 255, 255, 0.25);
+}
+
+.manualForm {
+  width: 100%;
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 6px;
+}
+
+.manualInputs {
+  width: min(520px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.manualLabel {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: #fff;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.manualInput {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.25);
+  background: rgba(255, 255, 255, 0.9);
+  color: #111827;
+  font-weight: 700;
+  outline: none;
+}
+
+.manualInput:focus {
+  border-color: rgba(99, 102, 241, 1);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
+}
+
+.manualSendBtn {
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  padding: 12px 18px;
+  border-radius: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 10px 20px rgba(37, 99, 235, 0.35);
+  width: min(220px, 100%);
+}
+
+.manualSendBtn:hover {
+  background: #1d4ed8;
+}
+
+@media (max-width: 431px) and (max-height: 932px) {
+  .manualVolante {
+    width: 130px;
+    height: 130px;
+    border-width: 12px;
+  }
+
+  .manualPalanca {
+    right: 18%;
+    bottom: 26%;
+    height: 130px;
+  }
+}
+
  
