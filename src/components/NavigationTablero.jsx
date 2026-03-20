@@ -15,6 +15,9 @@ const NavigationTablero = ({waypoints, setWaypoints, progressIdx}) => {
   const [giroManual, setGiroManual] = useState('0');
   const seqRef = useRef(0);
 
+  // Confirmación visual al enviar el comando de maniobra (sin depender 100% del back).
+  const [manualSendStatus, setManualSendStatus] = useState({ type: 'idle', text: '' });
+
   
   const { telemetry } = useTelemetry();
 
@@ -353,16 +356,48 @@ function formatCoordinate(value, type) {
     }
 
     seqRef.current += 1;
+    const seq = seqRef.current;
 
-    socket.emit('maniobrar-cmd', {
+    setManualSendStatus({ type: 'sending', text: `Enviando maniobrar (seq ${seq})...` });
+
+    const payload = {
       cmd: 'maniobrar',
-      seq: seqRef.current,
+      seq,
       mode: 'manual',
       enable: 1,
+      // Enviamos ambas llaves para compatibilidad con backend
+      // (en tu código original era `velcidad`, pero en algunas partes podría esperarse `velocidad`).
       velcidad: vel,
+      velocidad: vel,
       giro: giro,
       'timeout-ms': 500
-    });
+    };
+    // Log reducido (sin volcar todo el paquete) para verificar que el click manda.
+    console.log('➡️ emit maniobrar-cmd:', { seq: payload.seq, vel: payload.velcidad, giro: payload.giro });
+
+    // Si el servidor implementa ack de Socket.IO, esto nos permite confirmar recepción.
+    let ackReceived = false;
+    const ackTimeoutMs = 3000;
+    const timeoutId = setTimeout(() => {
+      if (!ackReceived) {
+        setManualSendStatus({
+          type: 'warn',
+          text: `Sin ack del servidor (seq ${seq}).`
+        });
+      }
+    }, ackTimeoutMs);
+
+    // Dejamos que React pinte el estado "sending" antes de emitir (algunos acks llegan demasiado rápido).
+    setTimeout(() => {
+      socket.emit('maniobrar-cmd', payload, (ack) => {
+        ackReceived = true;
+        clearTimeout(timeoutId);
+        setManualSendStatus({
+          type: 'ok',
+          text: `Ack del servidor (seq ${seq}).`
+        });
+      });
+    }, 0);
   };
 
   const handleVolverATablero = () => {
@@ -507,6 +542,16 @@ Fila	Columna	Elemento
           <button className="manualSendBtn" onClick={handleEnviarManual}>
             Enviar
           </button>
+
+          {manualSendStatus.text && (
+            <div
+              className={`manualSendStatus ${manualSendStatus.type}`}
+              role="status"
+              aria-live="polite"
+            >
+              {manualSendStatus.text}
+            </div>
+          )}
         </div>
       </div>
     </div>
