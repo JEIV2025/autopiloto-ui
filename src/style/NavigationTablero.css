@@ -1,41 +1,456 @@
-/* Escalado de instrumentos en pantallas grandes */
+/* =========================
+   TABLERO DE NAVEGACIÓN
+   ========================= */
 
+.navigationTableroRoot {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+.instrumentos {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  box-sizing: border-box;
+  overflow: hidden;
+
+  /* fuerza layout desktop aunque en JSX haya inline styles */
+  display: grid !important;
+  grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+  grid-template-rows: minmax(210px, 1.05fr) minmax(120px, 0.65fr) minmax(230px, 1fr) !important;
+  gap: 10px !important;
+  padding: 10px !important;
+  border-radius: 12px;
+  border: 2px solid black !important;
+  background: #64778a !important;
+}
+
+.instrumentos .gauge-container,
+.instrumentos .rumbo-container,
+.instrumentos .manualDock {
+  min-width: 0;
+  min-height: 0;
+  box-sizing: border-box;
+}
+
+.instrumentos .gauge-container {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  overflow: visible !important;
+}
+
+.instrumentos canvas {
+  display: block;
+  visibility: visible;
+  opacity: 1;
+  max-width: none;
+  max-height: none;
+}
+
+/* tamaños desktop para que no desaparezcan */
+.gauge-termometer {
+  min-width: 95px;
+  min-height: 250px;
+}
+
+.gauge-compass {
+  min-width: 220px;
+  min-height: 220px;
+}
+
+.gauge-speed {
+  min-width: 220px;
+  min-height: 220px;
+}
+
+.gauge-battery {
+  min-width: 90px;
+  min-height: 230px;
+}
+
+.gauge-roll {
+  min-width: 360px;
+  min-height: 130px;
+}
+
+.rumbo-container {
+  min-width: 170px !important;
+  min-height: 150px;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+
+.rumbo-label {
+  line-height: 1;
+  margin: 0;
+}
+
+.rumbo-value {
+  line-height: 1;
+  margin: 0;
+}
+
+/* =========================
+   SECTOR MANUAL INFERIOR
+   ========================= */
+
+.manualDock {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+}
+
+.manualDockCard {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 220px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(11, 23, 34, 0.92);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.03),
+    0 10px 18px rgba(0, 0, 0, 0.16);
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  align-items: center;
+  gap: 18px;
+  padding: 18px 22px;
+  box-sizing: border-box;
+}
+
+.manualDockCard.disabled {
+  background: rgba(145, 150, 158, 0.24);
+  backdrop-filter: blur(2px);
+}
+
+.manualDockCard.disabled .manualDockVisuals,
+.manualDockCard.disabled .manualDockReadout {
+  filter: grayscale(1);
+  opacity: 0.32;
+}
+
+.manualDockVisuals {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 34px;
+}
+
+.manualDockReadout {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 12px;
+}
+
+.manualDockInputs {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.manualDockLabel {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.manualDockInput {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.22);
+  background: rgba(255, 255, 255, 0.92);
+  color: #111827;
+  font-size: 18px;
+  font-weight: 700;
+  box-sizing: border-box;
+  outline: none;
+}
+
+.manualDockStatus {
+  width: 100%;
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-weight: 800;
+  font-size: 13px;
+  box-sizing: border-box;
+  text-align: center;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+}
+
+.manualDockStatus.ok {
+  background: rgba(34, 197, 94, 0.28);
+  color: #eaffef;
+  border-color: rgba(34, 197, 94, 0.45);
+}
+
+.manualDockStatus.warn {
+  background: rgba(245, 158, 11, 0.28);
+  color: #ffe7ae;
+  border-color: rgba(245, 158, 11, 0.45);
+}
+
+.manualDockStatus.sending {
+  background: rgba(37, 99, 235, 0.32);
+  color: #ffffff;
+  border-color: rgba(37, 99, 235, 0.5);
+}
+
+.manualDockStatus.err {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ffd3d3;
+  border-color: rgba(239, 68, 68, 0.35);
+}
+
+.manualDockOverlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(170, 176, 182, 0.16);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3;
+}
+
+.manualDockEnableBtn {
+  border: none;
+  border-radius: 14px;
+  padding: 14px 22px;
+  background: linear-gradient(180deg, #1d2732 0%, #0b1220 100%);
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.28);
+}
+
+.manualDockEnableBtn:hover {
+  filter: brightness(1.05);
+}
+
+.manualDockAutoBtn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 4;
+  border: none;
+  border-radius: 12px;
+  padding: 10px 14px;
+  background: linear-gradient(180deg, #2f73ff 0%, #1d58ce 100%);
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.25);
+}
+
+.manualDockAutoBtn:hover {
+  filter: brightness(1.05);
+}
+
+/* =========================
+   SVG VOLANTE / PALANCA
+   ========================= */
+
+.manualSvgGroup {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.manualSvgTitle {
+  color: #ffffff;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+
+.manualSvgCanvas {
+  display: block;
+  height: auto;
+}
+
+.manualSvgWheel {
+  width: 170px;
+  max-width: 170px;
+}
+
+.manualSvgLever {
+  width: 110px;
+  max-width: 110px;
+}
+
+.manualSvgValue {
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+/* =========================
+   PANTALLAS MUY GRANDES
+   ========================= */
 
 @media (min-width: 2559px) {
- .instrumentos{
-  min-width: none;
-  width: 100%;
-  font-size: 50px;
-  div{
-    min-width: none;
-    width: 100%;
-    height: 100%  ;
- 
-    font-size: large;
-   
-   
+  .instrumentos {
+    font-size: 50px;
+    grid-template-rows: minmax(250px, 1.1fr) minmax(140px, 0.7fr) minmax(260px, 1fr) !important;
+  }
 
-}
- }
-}
+  .instrumentos .gauge-container canvas {
+    transform: scale(1.08);
+    transform-origin: center center;
+  }
 
-@media (max-width: 1023px) {
-  .instrumentos{
+  .manualDockCard {
+    grid-template-columns: 1fr 360px;
+    min-height: 250px;
+  }
 
-    width: 100%;
-    height: 100vh;
+  .manualSvgWheel {
+    width: 215px;
+    max-width: 215px;
+  }
 
-    font-size: 20px;
-    div{
-      width: 50%;
-      height: 50%;
-      font-size: smaller;
-    }
-    canvas{
-      transform: scale(0.5);
-    }
+  .manualSvgLever {
+    width: 140px;
+    max-width: 140px;
+  }
+
+  .manualDockInput {
+    font-size: 22px;
   }
 }
+
+/* =========================
+   TABLET / NOTEBOOK
+   ========================= */
+
+@media (max-width: 1100px) {
+  .instrumentos {
+    grid-template-rows: minmax(180px, 1fr) minmax(110px, 0.6fr) minmax(210px, 1fr) !important;
+  }
+
+  .instrumentos .gauge-container canvas {
+    transform: scale(0.88);
+    transform-origin: center center;
+  }
+
+  .gauge-termometer,
+  .gauge-battery {
+    min-height: 210px;
+  }
+
+  .gauge-compass,
+  .gauge-speed {
+    min-width: 190px;
+    min-height: 190px;
+  }
+
+  .gauge-roll {
+    min-width: 300px;
+    min-height: 115px;
+  }
+
+  .manualDockCard {
+    grid-template-columns: 1fr 260px;
+    gap: 12px;
+    padding: 14px 16px;
+  }
+
+  .manualDockVisuals {
+    gap: 22px;
+  }
+
+  .manualSvgWheel {
+    width: 145px;
+    max-width: 145px;
+  }
+
+  .manualSvgLever {
+    width: 95px;
+    max-width: 95px;
+  }
+
+  .manualDockInput {
+    font-size: 16px;
+  }
+
+  .rumbo-label {
+    font-size: 20px !important;
+  }
+
+  .rumbo-value {
+    font-size: 36px !important;
+  }
+}
+
+@media (max-width: 820px) {
+  .manualDockCard {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto;
+    gap: 10px;
+  }
+
+  .manualDockVisuals {
+    gap: 20px;
+  }
+
+  .manualDockReadout {
+    width: 100%;
+  }
+}
+
+@media (max-width: 700px) {
+  .manualSvgWheel {
+    width: 132px;
+    max-width: 132px;
+  }
+
+  .manualSvgLever {
+    width: 88px;
+    max-width: 88px;
+  }
+
+  .manualSvgTitle {
+    font-size: 15px;
+  }
+
+  .manualSvgValue {
+    font-size: 14px;
+  }
+
+  .manualDockInput {
+    font-size: 15px;
+    padding: 9px 10px;
+  }
+
+  .manualDockStatus {
+    font-size: 12px;
+  }
+}
+
+/* =========================
+   MÓVIL PEQUEÑO
+   ========================= */
 
 @media (max-width: 431px) and (max-height: 932px) {
   .instrumentos {
@@ -45,21 +460,21 @@
     padding: 2px !important;
     overflow: hidden !important;
     box-sizing: border-box;
-    display: flex !important;
-    flex-direction: column !important;
     position: relative !important;
     z-index: 1 !important;
     isolation: isolate;
+    display: block !important;
   }
 
-  .instrumentos > div {
+  .instrumentos > .gauge-container,
+  .instrumentos > .rumbo-container {
     font-size: 8px;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
     box-sizing: border-box;
     overflow: hidden !important;
-    position: absolute;
+    position: absolute !important;
   }
 
   .instrumentos canvas {
@@ -77,7 +492,6 @@
     object-fit: contain !important;
   }
 
-  /* Contenedores de gauge */
   .gauge-container {
     overflow: hidden !important;
     min-width: 0 !important;
@@ -87,18 +501,17 @@
     height: 100% !important;
   }
 
-  /* Reorganizar instrumentos sin grilla - layout flexible */
-  /* Compass: borde izquierdo superior */
   .gauge-compass {
     position: absolute !important;
     top: 0 !important;
     left: -2% !important;
     width: 32% !important;
     height: 55% !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
     overflow: visible !important;
   }
 
-  /* Rumbo: centro superior */
   .rumbo-container {
     top: 0 !important;
     left: 50% !important;
@@ -107,6 +520,7 @@
     height: 45% !important;
     min-width: 70px !important;
     max-width: 90px !important;
+    min-height: 0 !important;
     position: absolute !important;
     padding: 1px !important;
     box-sizing: border-box;
@@ -115,72 +529,75 @@
     justify-content: center !important;
   }
 
-  /* Speed: borde derecho superior */
   .gauge-speed {
     position: absolute !important;
     top: 0 !important;
     right: -2% !important;
     width: 32% !important;
     height: 55% !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
     overflow: visible !important;
   }
 
-  /* Termómetro: esquina inferior izquierda */
   .gauge-termometer {
     position: absolute !important;
-    bottom: 0 !important;
+    bottom: 36% !important;
     left: 0 !important;
     width: 20% !important;
-    height: 40% !important;
+    height: 34% !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
     align-items: flex-end !important;
     justify-content: flex-start !important;
   }
 
-  /* Batería: esquina inferior derecha */
   .gauge-battery {
     position: absolute !important;
-    bottom: 0 !important;
+    bottom: 36% !important;
     right: 0 !important;
     width: 20% !important;
-    height: 40% !important;
+    height: 34% !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
     align-items: flex-end !important;
     justify-content: flex-end !important;
   }
 
-  /* Rolido: parte inferior centrado - más pequeño */
   .gauge-roll {
-    bottom: 0 !important;
+    bottom: 36% !important;
     left: 50% !important;
     transform: translateX(-50%) !important;
     width: 35% !important;
-    height: 40% !important;
+    height: 28% !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
     align-items: flex-end !important;
     position: absolute !important;
   }
 
-  /* Ajustes específicos para cada tipo de gauge - escalas optimizadas para layout flexible */
   .gauge-termometer canvas {
-    transform: scale(0.85) !important;
+    transform: scale(0.78) !important;
     transform-origin: left bottom !important;
   }
 
   .gauge-compass canvas {
-    transform: scale(1.1) !important;
+    transform: scale(1.02) !important;
     transform-origin: left center !important;
   }
 
   .gauge-speed canvas {
-    transform: scale(1.1) !important;
+    transform: scale(1.02) !important;
     transform-origin: right center !important;
   }
 
   .gauge-battery canvas {
-    transform: scale(0.85) !important;
+    transform: scale(0.78) !important;
     transform-origin: right bottom !important;
   }
 
   .gauge-roll canvas {
-    transform: scale(1) !important;
+    transform: scale(0.9) !important;
     transform-origin: center bottom !important;
   }
 
@@ -196,216 +613,81 @@
     line-height: 1.2;
     padding: 0;
   }
-}
 
-/* ---- Control manual (panel nuevo) ---- */
-.navigationTableroRoot {
-  position: relative;
-  width: 100%;
-  height: 100%;
-}
-
-.manualSwitchBtn {
-  background: #111827;
-  color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  padding: 10px 14px;
-  border-radius: 10px;
-  cursor: pointer;
-  font-weight: 700;
-  text-transform: lowercase;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
-}
-
-.manualSwitchBtn:hover {
-  background: #0b1220;
-}
-
-.manualPanel {
-  position: absolute;
-  inset: 0;
-  background: #64778aff;
-  border-radius: 12px;
-  border: 2px solid black;
-  padding: 14px;
-  display: flex;
-  flex-direction: column;
-}
-
-.manualBackBtn {
-  align-self: flex-start;
-  margin-bottom: 8px;
-  background: rgba(0, 0, 0, 0.75);
-  color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  padding: 10px 12px;
-  border-radius: 10px;
-  cursor: pointer;
-  font-weight: 800;
-  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.25);
-  position: absolute;
-}
-
-.manualBackBtn:hover {
-  background: rgba(0, 0, 0, 0.9);
-}
-
-.manualDecor {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  overflow: hidden;
-}
-
-.manualVolante {
-  width: 170px;
-  height: 170px;
-  border-radius: 50%;
-  border: 14px solid #0b0f19;
-  background: radial-gradient(circle at center, #2b3445 0%, #0b0f19 70%);
-  box-shadow: inset 0 0 0 6px rgba(255, 255, 255, 0.08);
-  transform: rotate(-8deg);
-}
-
-.manualPalanca {
-  position: absolute;
-  right: 36%;
-  bottom: 2%;
-  width: 12px;
-  height: 80px;
-  background: linear-gradient(#111827, #030712);
-  border-radius: 999px;
-  transform: rotate(20deg);
-  box-shadow: 0 10px 18px rgba(66, 59, 59, 0.28);
-}
-
-.manualPalancaRod {
-  position: absolute;
-  inset: 0;
-  border-radius: 999px;
-  background: linear-gradient(#111827, #0b1220);
-}
-
-.manualPalancaKnob {
-  position: absolute;
-  left: 50%;
-  top: 10px;
-  transform: translateX(-50%);
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  background: radial-gradient(circle at center, #ffffff 0%, #9ca3af 20%, #111827 70%);
-  border: 2px solid rgba(255, 255, 255, 0.25);
-}
-
-.manualForm {
-  width: 100%;
-  margin-top: auto;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  padding-bottom: 6px;
-}
-
-.manualInputs {
-  width: min(520px, 100%);
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.manualLabel {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  color: #fff;
-  font-weight: 700;
-  font-size: 14px;
-}
-
-.manualInput {
-  width: 100%;
-  padding: 10px 12px;
-  border-radius: 10px;
-  border: 1px solid rgba(0, 0, 0, 0.25);
-  background: rgba(255, 255, 255, 0.9);
-  color: #111827;
-  font-weight: 700;
-  outline: none;
-}
-
-.manualInput:focus {
-  border-color: rgba(99, 102, 241, 1);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
-}
-
-.manualSendBtn {
-  background: #2563eb;
-  color: #fff;
-  border: none;
-  padding: 12px 18px;
-  border-radius: 12px;
-  font-weight: 800;
-  cursor: pointer;
-  box-shadow: 0 10px 20px rgba(37, 99, 235, 0.35);
-  width: min(220px, 100%);
-}
-
-.manualSendBtn:hover {
-  background: #1d4ed8;
-}
-
-.manualSendStatus {
-  margin-top: 10px;
-  width: 100%;
-  border-radius: 10px;
-  padding: 10px 12px;
-  font-weight: 800;
-  font-size: 13px;
-  box-sizing: border-box;
-  border: 1px solid rgba(0, 0, 0, 0.15);
-}
-
-.manualSendStatus.ok {
-  background: rgba(34, 197, 94, 0.30);
-  color: #062f16;
-  border-color: rgba(34, 197, 94, 0.55);
-}
-
-.manualSendStatus.warn {
-  background: rgba(245, 158, 11, 0.30);
-  color: #3f2d00;
-  border-color: rgba(245, 158, 11, 0.55);
-}
-
-.manualSendStatus.sending {
-  background: rgba(37, 99, 235, 0.38);
-  color: #ffffff;
-  border-color: rgba(37, 99, 235, 0.70);
-}
-
-.manualSendStatus.err {
-  background: rgba(239, 68, 68, 0.15);
-  color: #dc2626;
-  border-color: rgba(239, 68, 68, 0.35);
-}
-
-@media (max-width: 431px) and (max-height: 932px) {
-  .manualVolante {
-    width: 130px;
-    height: 130px;
-    border-width: 12px;
+  .manualDock {
+    position: absolute !important;
+    left: 50% !important;
+    bottom: 1.5% !important;
+    transform: translateX(-50%) !important;
+    width: 76% !important;
+    height: 32% !important;
+    display: flex !important;
+    overflow: visible !important;
+    z-index: 4 !important;
   }
 
-  .manualPalanca {
-    right: 18%;
-    bottom: 26%;
-    height: 130px;
+  .manualDockCard {
+    width: 100%;
+    height: 100%;
+    min-height: 0 !important;
+    grid-template-columns: 1fr !important;
+    grid-template-rows: auto auto !important;
+    gap: 8px !important;
+    padding: 10px !important;
+    border-radius: 14px;
+  }
+
+  .manualDockVisuals {
+    gap: 12px;
+  }
+
+  .manualSvgWheel {
+    width: 98px;
+    max-width: 98px;
+  }
+
+  .manualSvgLever {
+    width: 68px;
+    max-width: 68px;
+  }
+
+  .manualSvgTitle {
+    font-size: 12px;
+  }
+
+  .manualSvgValue {
+    font-size: 11px;
+  }
+
+  .manualDockInputs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .manualDockLabel {
+    font-size: 11px;
+  }
+
+  .manualDockInput {
+    font-size: 13px;
+    padding: 8px 10px;
+  }
+
+  .manualDockStatus {
+    font-size: 10px;
+    padding: 8px 10px;
+  }
+
+  .manualDockEnableBtn {
+    padding: 10px 14px;
+    font-size: 14px;
+  }
+
+  .manualDockAutoBtn {
+    top: 8px;
+    right: 8px;
+    padding: 8px 10px;
+    font-size: 11px;
   }
 }
-
- 

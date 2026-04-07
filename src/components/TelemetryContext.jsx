@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import io from 'socket.io-client';
+import socket from '../socket';
 
 const TelemetryContext = createContext();
 
@@ -11,7 +11,7 @@ export const TelemetryProvider = ({ children }) => {
   const [calibrado, setCalibrado] = useState(false);
 
   useEffect(() => {
-    const socket = io('http://localhost:3001');
+    
 
     socket.on('telemetria', (data) => {
       try {

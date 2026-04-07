@@ -95,22 +95,23 @@ const handleAddWaypoint = (latlng) => {
 
         {/* Acá va el contenido principal actual */}
 
-        {seccionActiva === "navegacion" && (
-          <div className="contenedorNavegacion grid grid-rows-5 gap-4 h-full">
-            <div className="row-span-3 bg-white rounded-xl shadow p-2 overflow-hidden">
-              <NavigationViewer />
-            </div>
-           <div className="row-span-2 bg-[#64778aff] rounded-xl shadow p-2 overflow-hidden h-full">
-              <NavigationTablero
-                currentPos={currentPos}
-                setCurrentPos={setCurrentPos}
-                waypoints={waypoints}
-                setWaypoints={setWaypoints}
-                progressIdx={progressIdx}
-              />
-            </div>
-          </div>
-        )}
+{seccionActiva === "navegacion" && (
+  <div className="contenedorNavegacion grid grid-rows-[48%_75%] gap-4 h-full min-h-0">
+    <div className="bg-white rounded-xl shadow p-2 overflow-hidden min-h-0">
+      <NavigationViewer />
+    </div>
+
+    <div className="bg-[#64778aff] rounded-xl shadow p-2 overflow-hidden min-h-0">
+      <NavigationTablero
+        currentPos={currentPos}
+        setCurrentPos={setCurrentPos}
+        waypoints={waypoints}
+        setWaypoints={setWaypoints}
+        progressIdx={progressIdx}
+      />
+    </div>
+  </div>
+)}
 
         {seccionActiva === "mision" && (
           <div className="grid grid-rows-5 gap-4 h-full">
