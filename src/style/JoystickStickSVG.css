@@ -1,0 +1,22 @@
+.manualSvgCanvas.manualSvgStick{
+  width: 260px;
+  height: 260px;
+  display: block;
+}
+
+.manualSvgGroup{
+  display: grid;
+  place-items: center;
+  gap: 8px;
+}
+
+.manualSvgTitle{
+  color: rgba(255,255,255,0.75);
+  font-weight: 900;
+  font-size: 16px;
+}
+
+.manualSvgValue{
+  color: #ffe66b;
+  font-weight: 900;
+}

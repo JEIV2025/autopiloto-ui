@@ -3,123 +3,30 @@ import { useTelemetry } from './TelemetryContext';
 import { RadialGauge, LinearGauge } from 'canvas-gauges';
 import socket from '../socket';
 import '../style/NavigationTablero.css';
+import '../style/Instrumentos.css';
 
+import { BatteryLevel } from "../instrumentos/BatteryLevel";
+import { TempLevel } from "../instrumentos/TempLevel";
+import { AltitudeVario } from "../instrumentos/AltitudeVario";
+import { AttitudeIndicator } from "../instrumentos/AttitudeIndicator";
+import { LidarRange } from "../instrumentos/LidarRange";
+import { RollInclinometer } from "../instrumentos/RollInclinometer";
+import { LeftStickSVG, RightStickSVG } from "../instrumentos/JoystickStickSVG";
 
-const VolanteSVG = ({ angle = 0, value = 0 }) => {
-  return (
-    <div className="manualSvgGroup">
-      <div className="manualSvgTitle">Volante</div>
-
-      <svg
-        className="manualSvgCanvas manualSvgWheel"
-        viewBox="0 0 260 260"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <defs>
-          <radialGradient id="wheelPlate" cx="50%" cy="40%" r="65%">
-            <stop offset="0%" stopColor="#3a3a3a" />
-            <stop offset="70%" stopColor="#171717" />
-            <stop offset="100%" stopColor="#0d0d0d" />
-          </radialGradient>
-
-          <linearGradient id="woodTone" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#d8b27a" />
-            <stop offset="50%" stopColor="#a77943" />
-            <stop offset="100%" stopColor="#7c522e" />
-          </linearGradient>
-
-          <radialGradient id="hubTone" cx="35%" cy="35%" r="70%">
-            <stop offset="0%" stopColor="#f8d39c" />
-            <stop offset="60%" stopColor="#be8b4d" />
-            <stop offset="100%" stopColor="#6f4924" />
-          </radialGradient>
-
-          <filter id="softShadow" x="-30%" y="-30%" width="160%" height="160%">
-            <feDropShadow dx="0" dy="8" stdDeviation="8" floodColor="#000" floodOpacity="0.35" />
-          </filter>
-        </defs>
-
-        <circle cx="130" cy="130" r="112" fill="url(#wheelPlate)" filter="url(#softShadow)" />
-        <circle cx="130" cy="130" r="98" fill="none" stroke="#d9dde1" strokeWidth="18" />
-        <circle cx="130" cy="130" r="87" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="2" />
-
-        <g transform={`rotate(${angle} 130 130)`}>
-          <rect x="124" y="32" width="12" height="82" rx="7" fill="url(#woodTone)" />
-          <rect x="124" y="146" width="12" height="82" rx="7" fill="url(#woodTone)" />
-          <rect x="32" y="124" width="82" height="12" rx="7" fill="url(#woodTone)" />
-          <rect x="146" y="124" width="82" height="12" rx="7" fill="url(#woodTone)" />
-
-          <circle cx="130" cy="130" r="26" fill="url(#hubTone)" stroke="#5d3c1f" strokeWidth="6" />
-          <circle cx="130" cy="130" r="8" fill="#f1d1a2" />
-        </g>
-
-        <circle cx="130" cy="130" r="118" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="3" />
-      </svg>
-
-      <div className="manualSvgValue">
-        Giro: <strong>{value}</strong>
-      </div>
-    </div>
-  );
-};
-
-const PalancaSVG = ({ levelPct = 0, value = 0 }) => {
-  const clamped = Math.max(0, Math.min(100, levelPct));
-  const knobY = 210 - clamped * 1.55;
-
-  return (
-    <div className="manualSvgGroup">
-      <div className="manualSvgTitle">Palanca</div>
-
-      <svg
-        className="manualSvgCanvas manualSvgLever"
-        viewBox="0 0 180 320"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <defs>
-          <linearGradient id="leverBody" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#223545" />
-            <stop offset="100%" stopColor="#0d141b" />
-          </linearGradient>
-
-          <linearGradient id="leverMetal" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#e5e8ec" />
-            <stop offset="100%" stopColor="#9aa4ad" />
-          </linearGradient>
-
-          <radialGradient id="leverKnob" cx="35%" cy="35%" r="70%">
-            <stop offset="0%" stopColor="#ff9d91" />
-            <stop offset="55%" stopColor="#db4f3f" />
-            <stop offset="100%" stopColor="#8c2318" />
-          </radialGradient>
-
-          <filter id="leverShadow" x="-30%" y="-30%" width="160%" height="160%">
-            <feDropShadow dx="0" dy="8" stdDeviation="8" floodColor="#000" floodOpacity="0.35" />
-          </filter>
-        </defs>
-
-        <rect x="30" y="18" width="120" height="280" rx="24" fill="url(#leverBody)" filter="url(#leverShadow)" />
-        <rect x="84" y="42" width="12" height="220" rx="6" fill="#79848d" opacity="0.85" />
-        <rect x="82" y="78" width="16" height="158" rx="8" fill="url(#leverMetal)" />
-
-        <g transform={`translate(0 ${knobY - 90})`}>
-          <rect x="83" y="76" width="14" height="72" rx="7" fill="url(#leverMetal)" />
-          <circle cx="90" cy="72" r="22" fill="url(#leverKnob)" stroke="#ffffff" strokeWidth="4" />
-        </g>
-
-        <rect x="52" y="274" width="76" height="14" rx="7" fill="rgba(255,255,255,0.12)" />
-      </svg>
-
-      <div className="manualSvgValue">
-        Velocidad: <strong>{value}</strong>
-      </div>
-    </div>
-  );
-};
+import  VolanteSVG  from "../instrumentos/VolanteSVG";
+import  PalancaSVG  from "../instrumentos/PalancaSVG";
+import switchImg from "../images/switch.png";
 
 
 const NavigationTablero = ({waypoints, setWaypoints, progressIdx}) => {
  
+
+  const [mode, setMode] = useState(() => localStorage.getItem("dashboardMode") || "superficie");
+  const isAereo = mode === "aereo";
+  useEffect(() => {
+    localStorage.setItem("dashboardMode", mode);
+  }, [mode]);
+
   const [velocidad, setVelocidad] = useState(12); // valor simulado inicial
 
   const [manualMode, setManualMode] = useState(false);
@@ -127,23 +34,32 @@ const NavigationTablero = ({waypoints, setWaypoints, progressIdx}) => {
   const [giroManual, setGiroManual] = useState('0');
   const seqRef = useRef(0);
 
+
+
+
   // Confirmación visual al enviar el comando de maniobra (sin depender 100% del back).
   const [manualSendStatus, setManualSendStatus] = useState({ type: 'idle', text: '' });
 
   //.... del joystick..............
-const SPEED_STEPS = [-1000, -950, -900, -850, -750, -650, -550, -450, -350, -300, -100, 0, 100, 300, 350, 450, 550, 650, 750, 850, 900, 950, 1000];
+const SPEED_STEPS = [0, 100, 300, 350, 450, 550, 650, 750, 850, 900, 950, 1000];
 const DEADZONE = 0.05;
 const AXIS_THRESHOLD = 0.20;
 const FORWARD_THRESHOLD = -0.20;
 const JOYSTICK_TIMEOUT_MS = 500;
-const SEND_INTERVAL_MS = 500;
+const SEND_INTERVAL_MS = 500; //intervalo de envio por telemetria
 const POLL_INTERVAL_MS = 50;
 const ANGLE_STEP = 5;
 const ANGLE_LIMIT = 90;
 const CENTER_RESET_THRESHOLD = 0.10;
+const SPEED_AXIS_STEP_THRESHOLD = 0.65; // Ru/Rd (stick derecho Y)
 
 const leverActiveRef = useRef(false);
 //const latchedSpeedRef = useRef(0);
+
+const RU_BTN = 0; // Ru
+const RD_BTN = 2; // Rd
+const RL_BTN = 3; // Rl (por si luego lo querés)
+const RR_BTN = 1; // Rr (por si luego lo querés)
 
 const pollTimerRef = useRef(null);
 const sendTimerRef = useRef(null);
@@ -154,10 +70,32 @@ const rumboCmdRef = useRef(0);
 
 const livePadRef = useRef({
   connected: false,
-  id: '',
+  id: "",
+  // Stick izquierdo (axes 0/1)
   x: 0,
-  y: 0
+  y: 0,
+  // Stick derecho (axes 2/3)
+  rx: 0,
+  ry: 0,
+
+  // UAV (normalizados: arriba positivo)
+  Lx: 0,
+  Ly: 0,
+  Rx: 0,
+  Ry: 0,
+
+  // Ru/Rd para speed steps (stick derecho arriba/abajo)
+  ru: false,
+  rd: false,
+
+  // Cámara (botones)
+  l1: false,
+  r1: false,
+  l2: 0,   // value 0..1
+  r2: 0
 });
+const prevRuRef = useRef(false);
+const prevRdRef = useRef(false);
 
 /*
 velocidadProgramada = lo que eliges con botones
@@ -175,7 +113,11 @@ const [joystickData, setJoystickData] = useState({
   rumboObjetivo: 0,
   palancaActiva: false,
   enabled: false,
-  id: ''
+  id: '',
+  Lx: 0,
+  Ly: 0,
+  Rx: 0,
+  Ry: 0
 });
 
 const { telemetry } = useTelemetry();
@@ -183,12 +125,16 @@ const { telemetry } = useTelemetry();
 const lastTelemetryRef = useRef({
   rumbo: 0,
   roll: 0,
+  pitch: 0,
   rpm: 0,
   bateria: 0,
   temperatura: 0,
   lat: 0,
   lon: 0,
-  velocidad: 0
+  velocidad: 0,
+  altura: 0,
+  distancia: 0,
+  presion: 0
 });
 
 const safeTelemetry = useMemo(() => {
@@ -211,129 +157,283 @@ const safeTelemetry = useMemo(() => {
 
 const rumbo = safeTelemetry.rumbo;
 const roll = safeTelemetry.roll;
+const pitch = safeTelemetry.pitch; 
 const rpm = safeTelemetry.rpm;
 const bateria = safeTelemetry.bateria;
 const temperatura = safeTelemetry.temperatura;
 const lat = safeTelemetry.lat;
 const lon = safeTelemetry.lon;
+const altura = safeTelemetry.altura;
+
+const distancia = safeTelemetry.distancia;
+const presion = safeTelemetry.presion;
+
 const velocidadTelemetria = safeTelemetry.velocidad;
+
+  const isAereoRef = useRef(isAereo);
+useEffect(() => { isAereoRef.current = isAereo; }, [isAereo]);
+
+
+
+const lastAltRef = useRef({ alt: 0, t: 0, vz: 0 });
+const [vario, setVario] = useState(0);
+useEffect(() => {
+  // usá timestamp si viene en ms; si no, usa Date.now()
+  const t = Number(safeTelemetry.timestamp);
+  const alt = Number(altura) || 0;
+
+  const prev = lastAltRef.current;
+  const dt = (t - prev.t) / 1000; // s
+
+  if (prev.t > 0 && dt > 0.02 && dt < 1.0) {
+    const vz = (alt - prev.alt) / dt;
+    const vzFilt = prev.vz * 0.8 + vz * 0.2;
+    lastAltRef.current = { alt, t, vz: vzFilt };
+    setVario(vzFilt);
+  } else {
+    lastAltRef.current = { alt, t, vz: prev.vz };
+  }
+}, [altura, safeTelemetry.timestamp]);
+
+
 
 
 useEffect(() => {
-  if (termometerGaugeRef.current) termometerGaugeRef.current.value = temperatura;
+ // if (termometerGaugeRef.current) termometerGaugeRef.current.value = temperatura;
   if (compassGaugeRef.current) compassGaugeRef.current.value = rumbo;
   if (speedGaugeRef.current) speedGaugeRef.current.value = velocidadTelemetria;
-  if (batteryGaugeRef.current) batteryGaugeRef.current.value = bateria;
+ // if (batteryGaugeRef.current) batteryGaugeRef.current.value = bateria;
   if (rollGaugeRef.current) rollGaugeRef.current.value = roll;
-}, [rumbo, roll, bateria, temperatura, velocidadTelemetria]);
+}, [rumbo, roll, velocidadTelemetria, altura]);
 
 
 useEffect(() => {
   if (!manualMode) {
-    if (pollTimerRef.current) {
-      clearInterval(pollTimerRef.current);
-      pollTimerRef.current = null;
-    }
-
-    if (sendTimerRef.current) {
-      clearInterval(sendTimerRef.current);
-      sendTimerRef.current = null;
-    }
-
+    // si saliste del modo manual, por las dudas limpia refs (opcional)
+    if (pollTimerRef.current) clearInterval(pollTimerRef.current);
+    pollTimerRef.current = null;
+    if (sendTimerRef.current) clearInterval(sendTimerRef.current);
+    sendTimerRef.current = null;
     return;
   }
 
+
 pollTimerRef.current = setInterval(() => {
   const pads = navigator.getGamepads ? navigator.getGamepads() : [];
-  const gp = pads && pads[0];
+  const gp = Array.from(pads).find((p) => p && p.connected) || null;
 
   if (!gp) {
     livePadRef.current = {
       connected: false,
-      id: '',
-      x: 0,
-      y: 0
+      id: "",
+      x: 0, y: 0,
+      Lx: 0, Ly: 0,
+      Rx: 0, Ry: 0,
+      ru: false, rd: false,
+      l1: false, r1: false, l2: 0, r2: 0
     };
     return;
   }
 
+  const dz = (v) => (Math.abs(v) < DEADZONE ? 0 : v);
+
+  // ===== Stick izquierdo (analógico) =====
   const rawX = gp.axes?.[0] ?? 0;
   const rawY = gp.axes?.[1] ?? 0;
 
-  const x = Math.abs(rawX) < DEADZONE ? 0 : rawX;
-  const y = Math.abs(rawY) < DEADZONE ? 0 : rawY;
+  const x = dz(rawX);       // USV usa esto tal cual (FORWARD_THRESHOLD suele ser negativo)
+  const y = dz(rawY);
 
+  // UAV: arriba positivo => invertimos Y
+  const Lx = x;
+  const Ly = dz(-rawY);
+
+  // ===== "Stick derecho" de tu joystick: llega como BOTONES =====
+  // Mapeo confirmado por vos:
+  const Ru = !!gp.buttons?.[0]?.pressed; // arriba
+  const Rr = !!gp.buttons?.[1]?.pressed; // derecha
+  const Rd = !!gp.buttons?.[2]?.pressed; // abajo
+  const Rl = !!gp.buttons?.[3]?.pressed; // izquierda
+
+  // Para USV: Ru/Rd cambian el escalón de velocidad (solo en USV)
+  const ru = Ru;
+  const rd = Rd;
+
+  if (!isAereoRef.current) {
+    if (ru && !prevRuRef.current) {
+      speedIndexRef.current = Math.min(speedIndexRef.current + 1, SPEED_STEPS.length - 1);
+      console.log("RU -> speedIndex", speedIndexRef.current, "prog", SPEED_STEPS[speedIndexRef.current]);
+    }
+    if (rd && !prevRdRef.current) {
+      speedIndexRef.current = Math.max(speedIndexRef.current - 1, 0);
+      console.log("RD -> speedIndex", speedIndexRef.current, "prog", SPEED_STEPS[speedIndexRef.current]);
+    }
+  }
+  prevRuRef.current = ru;
+  prevRdRef.current = rd;
+
+  // UAV: stick derecho “digital” desde botones (tu esquema):
+  // X lateral: Rr=+1, Rl=-1
+  const uavRx = (Rr ? 1 : 0) + (Rl ? -1 : 0);
+  // Y forward/back: Ru=+1 (avanza), Rd=-1 (retrocede)
+  const uavRy = (Ru ? 1 : 0) + (Rd ? -1 : 0);
+
+  // Si algún día tu joystick trae stick derecho analógico real:
+  const rawRX = gp.axes?.[2] ?? 0;
+  const rawRY = gp.axes?.[3] ?? 0;
+  const rx = dz(rawRX);
+  const ry = dz(rawRY);
+
+  const haveRightStickAnalog = (Math.abs(rx) > 0.08) || (Math.abs(ry) > 0.08);
+
+  // Rx/Ry finales para UAV
+  const Rx = haveRightStickAnalog ? rx : uavRx;
+  const Ry = haveRightStickAnalog ? dz(-rawRY) : uavRy; // arriba positivo si es analógico
+
+  // ===== Cámara (L1/R1 zoom, L2/R2 tilt) =====
   const l1 = !!gp.buttons?.[4]?.pressed;
   const r1 = !!gp.buttons?.[5]?.pressed;
-
-  if (r1 && !prevR1Ref.current) {
-    speedIndexRef.current = Math.min(speedIndexRef.current + 1, SPEED_STEPS.length - 1);
-  }
-
-  if (l1 && !prevL1Ref.current) {
-    speedIndexRef.current = Math.max(speedIndexRef.current - 1, 0);
-  }
-
-  prevL1Ref.current = l1;
-  prevR1Ref.current = r1;
+  const l2 = gp.buttons?.[6]?.value ?? (gp.buttons?.[6]?.pressed ? 1 : 0);
+  const r2 = gp.buttons?.[7]?.value ?? (gp.buttons?.[7]?.pressed ? 1 : 0);
 
   livePadRef.current = {
     connected: true,
-    id: gp.id || '',
+    id: gp.id || "",
+
+    // USV
     x: Number(x.toFixed(3)),
-    y: Number(y.toFixed(3))
+    y: Number(y.toFixed(3)),
+
+    // UAV
+    Lx: Number(Lx.toFixed(3)),
+    Ly: Number(Ly.toFixed(3)),
+    Rx: Number(Rx.toFixed(3)),
+    Ry: Number(Ry.toFixed(3)),
+
+    // speed steps triggers (USV)
+    ru,
+    rd,
+
+    // cámara
+    l1,
+    r1,
+    l2,
+    r2
   };
 }, POLL_INTERVAL_MS);
 
+
 sendTimerRef.current = setInterval(() => {
-  const { connected, x, y, id } = livePadRef.current;
+  const live = livePadRef.current;
 
-  if (!connected) {
-    leverActiveRef.current = false;
+if (!live.connected) {
+  leverActiveRef.current = false;
 
+  setJoystickData(prev => ({
+    ...prev,
+    connected: false,
+    updatedAt: Date.now(),
+    id: "",
+    enabled: false,
+    // opcional: dejar sticks en 0 para que vuelvan al centro
+    Lx: 0, Ly: 0, Rx: 0, Ry: 0,
+    x: 0, y: 0,
+    velocidad: 0,
+    giro: 0,
+    palancaActiva: false,
+  }));
+
+  setManualSendStatus({ type: "warn", text: "Joystick no detectado." });
+  return;
+}
+
+  // Cámara (común a USV/UAV)
+  const cam_zoom = (live.r1 ? 1 : 0) + (live.l1 ? -1 : 0);              // R1 zoom+ / L1 zoom-
+  const cam_tilt = (live.r2 > 0.5 ? 1 : 0) + (live.l2 > 0.5 ? -1 : 0);  // R2 tilt+ / L2 tilt-
+
+  // ======================
+  // UAV (dron)
+  // ======================
+  if (isAereoRef.current) {
+    const payload = buildJoystickPayloadAll({
+      mode: "uav",
+      uav_Lx: live.Lx,
+      uav_Ly: live.Ly,
+      uav_Rx: live.Rx, // <- en tu caso viene de botones 0/1/2/3 (digital)
+      uav_Ry: live.Ry,
+      cam_zoom,
+      cam_tilt
+    });
+
+    // DEBUG (opcional): ver si realmente cambia cuando apretás Ru/Rd/Rl/Rr
+    // console.log("UAV payload:", payload);
+
+    socket.emit("joystick-cmd", payload);
+
+    // para visualizar sticks en UI
     setJoystickData((prev) => ({
       ...prev,
-      connected: false,
+      connected: true,
       updatedAt: Date.now(),
-      x: 0,
-      y: 0,
-      id: '',
-      velocidad: 0,
-      palancaActiva: false
+      id: live.id,
+      Lx: live.Lx,
+      Ly: live.Ly,
+      Rx: live.Rx,
+      Ry: live.Ry,
+      enabled: true
     }));
 
     setManualSendStatus({
-      type: 'warn',
-      text: 'Joystick no detectado.'
+      type: "ok",
+      text: `UAV | L(${Number(live.Lx).toFixed(2)},${Number(live.Ly).toFixed(2)}) R(${Number(live.Rx).toFixed(2)},${Number(live.Ry).toFixed(2)}) | Cam z:${cam_zoom} t:${cam_tilt}`
     });
 
     return;
   }
 
+  // ======================
+  // USV (lancha) - tu lógica original
+  // ======================
+  const x = live.x;
+  const y = live.y;
+
   const velocidadProgramada = SPEED_STEPS[speedIndexRef.current];
 
-const palancaAdelante = y <= FORWARD_THRESHOLD;
-const giroActivo = Math.abs(x) >= AXIS_THRESHOLD;
-const palancaCentrada = Math.abs(x) <= CENTER_RESET_THRESHOLD;
+  const palancaAdelante = y <= FORWARD_THRESHOLD;
+  const palancaAtras = y >= Math.abs(FORWARD_THRESHOLD);
+  const giroActivo = Math.abs(x) >= AXIS_THRESHOLD;
+  const palancaCentrada = Math.abs(x) <= CENTER_RESET_THRESHOLD;
 
-const palancaActiva = palancaAdelante || giroActivo;
+  const palancaActiva = palancaAdelante || palancaAtras || giroActivo;
+  leverActiveRef.current = palancaActiva;
 
-leverActiveRef.current = palancaActiva;
+  let velocidadCmd = 0;
 
-const velocidadCmd = palancaActiva ? velocidadProgramada : 0;
+  if (palancaAdelante) {
+    velocidadCmd = velocidadProgramada;
+  } else if (palancaAtras) {
+    velocidadCmd = -velocidadProgramada;
+  } else if (giroActivo) {
+    velocidadCmd = velocidadProgramada;
+  }
 
-// Si vuelves a "adelante recto", reinicia el rumbo a 0
-if (palancaAdelante && palancaCentrada) {
-  rumboCmdRef.current = 0;
-} else if (x <= -AXIS_THRESHOLD) {
-  rumboCmdRef.current = Math.max(rumboCmdRef.current - ANGLE_STEP, -ANGLE_LIMIT);
-} else if (x >= AXIS_THRESHOLD) {
-  rumboCmdRef.current = Math.min(rumboCmdRef.current + ANGLE_STEP, ANGLE_LIMIT);
-}
+  if (palancaAdelante && palancaCentrada) {
+    rumboCmdRef.current = 0;
+  } else if (x <= -AXIS_THRESHOLD) {
+    rumboCmdRef.current = Math.max(rumboCmdRef.current - ANGLE_STEP, -ANGLE_LIMIT);
+  } else if (x >= AXIS_THRESHOLD) {
+    rumboCmdRef.current = Math.min(rumboCmdRef.current + ANGLE_STEP, ANGLE_LIMIT);
+  }
 
-  const payload = buildJoystickPayload(rumboCmdRef.current, velocidadCmd);
+  const payload = buildJoystickPayloadAll({
+    mode: "usv",
+    usv_rumbo: rumboCmdRef.current,
+    usv_velocidad: velocidadCmd,
+    cam_zoom,
+    cam_tilt
+  });
 
-  socket.emit('joystick-cmd', payload);
+  socket.emit("joystick-cmd", payload);
 
   setJoystickData({
     connected: true,
@@ -347,15 +447,15 @@ if (palancaAdelante && palancaCentrada) {
     rumboObjetivo: rumboCmdRef.current,
     palancaActiva,
     enabled: true,
-    id
+    id: live.id
   });
 
   setVelocidadManual(String(velocidadProgramada));
   setGiroManual(String(rumboCmdRef.current));
 
   setManualSendStatus({
-    type: 'ok',
-    text: `Joystick activo | vel. configurada ${velocidadProgramada} | vel. enviada ${velocidadCmd} | giro ${rumboCmdRef.current}°`
+    type: "ok",
+    text: `USV | velConf ${velocidadProgramada} | vel ${velocidadCmd} | giro ${rumboCmdRef.current}° | Cam z:${cam_zoom} t:${cam_tilt}`
   });
 }, SEND_INTERVAL_MS);
 
@@ -370,7 +470,7 @@ if (palancaAdelante && palancaCentrada) {
       sendTimerRef.current = null;
     }
   };
-}, [manualMode]);
+}, [manualMode, isAereo]);
   //...................................
 
 
@@ -385,7 +485,7 @@ useEffect(() => {
   const compassRef = useRef(null);
   const speedRef = useRef(null);
   const batteryRef = useRef(null);
-  const rollRef = useRef(null);
+ // const rollRef = useRef(null);
 
 
   const termometerGaugeRef = useRef(null);
@@ -401,76 +501,6 @@ useEffect(() => {
 useLayoutEffect(() => {
   
 
-if (!termometerGaugeRef.current) {
-termometerGaugeRef.current = new LinearGauge({
-    renderTo: termometerRef.current,
-    width: 90,
-    height: 300,
-    units: "°C",
-    minValue: -20,
-    startAngle: 90,
-    ticksAngle: 180,
-    valueBox: false,
-    title: "Temperatura",
-    maxValue: 90,
-    majorTicks: [
-        "-20",
-        "-10",
-        "0",
-        "10",
-        "20",
-        "30",
-        "40",
-        "50",
-        "60",
-        "70",
-        "80",
-        "90"
-    ],
-    minorTicks: 2,
-    strokeTicks: true,
-highlights: [
-    {
-        from: -20,
-        to: 20,
-        color: "rgba(0, 123, 255, 0.5)" // Azul claro = frío
-    },
-    {
-        from: 20,
-        to: 45,
-        color: "rgba(40, 167, 69, 0.5)" // Verde = normal
-    },
-    {
-        from: 45,
-        to: 60,
-        color: "rgba(255, 193, 7, 0.5)" // Amarillo = alerta
-    },
-    {
-        from: 60,
-        to: 75,
-        color: "rgba(255, 87, 34, 0.5)" // Naranja = crítico
-    },
-    {
-        from: 75,
-        to: 90,
-        color: "rgba(220, 53, 69, 0.5)" // Rojo = peligroso
-    }
-],
-
-    colorPlate: "#fffdfdff",
-    borderShadowWidth: 5,
-    borders: true,
-    needleType: "arrow",
-    needleWidth: 2,
-    needleCircleSize: 7,
-    needleCircleOuter: true,
-    needleCircleInner: false,
-    animationDuration: 1500,
-    animationRule: "linear",
-    barWidth: 10,
-    value: temperatura
-}).draw();
-}
 
 if (!compassGaugeRef.current) {
 compassGaugeRef.current = new RadialGauge({
@@ -544,85 +574,20 @@ if (!speedGaugeRef.current) {
     }).draw();
   }
 
-  if (!batteryGaugeRef.current) {
-    batteryGaugeRef.current =  new LinearGauge({
-      renderTo: batteryRef.current,
-      width: 80,
-      height: 200,
-      units: "%",
-      title: "Batería",
-      minValue: 0,
-      maxValue: 100,
-      majorTicks: [0, 20, 40, 60, 80, 100],
-      minorTicks: 2,
-      colorPlate: "#2e2e2e",
-      colorBarProgress: "lime",
-      colorBar: "#444",
-      colorTitle: "#fff",
-      colorUnits: "#fff",
-      colorNumbers: "#eee",
-      borders: false,
-      barBeginCircle: false,
-      value: bateria
-    }).draw();
-  }
-
-   if (!rollGaugeRef.current) {
-    rollGaugeRef.current =  new LinearGauge({
-      renderTo: rollRef.current,
-      width: 350,
-      height: 120,
-      units: "°",
-      title: "Rolido",
-      minValue: -50,
-      maxValue: 50,
-      majorTicks: [-50, -40, -30, -20, -10, 0, 10, 20, 30, 40, 50],
-      minorTicks: 5,
-      strokeTicks: true,
-      ticksWidth: 15,
-      ticksWidthMinor: 7.5,
-      highlights: [
-        { from: -50, to: 0, color: "rgba(0,0, 255, .3)" },
-        { from: 0, to: 50, color: "rgba(255, 0, 0, .3)" }
-      ],
-      colorMajorTicks: "#ffe66a",
-      colorMinorTicks: "#ffe66a",
-      colorTitle: "#eee",
-      colorUnits: "#ccc",
-      colorNumbers: "#eee",
-      colorPlate: "#2465c0",
-      colorPlateEnd: "#327ac0",
-      borderShadowWidth: 0,
-      borders: false,
-      borderRadius: 10,
-      needleType: "arrow",
-      needleWidth: 3,
-      animationDuration: 1500,
-      animationRule: "linear",
-      colorNeedle: "#222",
-      colorNeedleEnd: "",
-      colorBarProgress: "#327ac0",
-      colorBar: "#f5f5f5",
-      barStroke: 0,
-      barWidth: 8,
-      barBeginCircle: false,
-      value: roll
-    }).draw();
-  }
-
-
 
     return () => {
-      termometerGaugeRef.current?.destroy?.();
+    //  termometerGaugeRef.current?.destroy?.();
       compassGaugeRef.current?.destroy?.();
       speedGaugeRef.current?.destroy?.();
-      batteryGaugeRef.current?.destroy?.();
-      rollGaugeRef.current?.destroy?.();
+    //  batteryGaugeRef.current?.destroy?.();
+    //  rollGaugeRef.current?.destroy?.();
     };
 
 
 
   }, []);   
+
+
 /*
       setTimeout(() => {
   termometerGaugeRef.current?.draw?.();
@@ -648,6 +613,17 @@ function haversineDistance(lat1, lon1, lat2, lon2) {
             Math.sin(dLon / 2) ** 2;
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
+}
+
+function toDMS(deg, isLat) {
+  const abs = Math.abs(deg);
+  const d = Math.floor(abs);
+  const minFloat = (abs - d) * 60;
+  const m = Math.floor(minFloat);
+  const s = (minFloat - m) * 60;
+
+  const hemi = isLat ? (deg >= 0 ? "N" : "S") : (deg >= 0 ? "E" : "W");
+  return `${d}° ${m}′ ${s.toFixed(2)}″ ${hemi}`;
 }
 
 // Tiempo estimado en horas
@@ -690,39 +666,61 @@ const handleControlManual = () => {
   setVelocidadManual('0');
   setGiroManual('0');
 
-  setJoystickData({
-    connected: false,
-    updatedAt: Date.now(),
-    cambioActual: SPEED_STEPS.indexOf(0),
-    velocidadProgramada: 0,
-    velocidad: 0,
-    giro: 0,
-    x: 0,
-    y: 0,
-    rumboObjetivo: 0,
-    palancaActiva: false,
-    enabled: true,
-    id: ''
-  });
+setJoystickData(prev => ({
+  ...prev,
+  connected: false,
+  updatedAt: Date.now(),
+  cambioActual: SPEED_STEPS.indexOf(0),
+  velocidadProgramada: 0,
+  velocidad: 0,
+  giro: 0,
+  x: 0,
+  y: 0,
+  rumboObjetivo: 0,
+  palancaActiva: false,
+  enabled: true,
+  id: '',
+  Lx: 0,
+  Ly: 0,
+  Rx: 0,
+  Ry: 0,
+}));
 
-  const payload = buildJoystickPayload(0, 0);
+const neutralPayload = buildJoystickPayloadAll({
+  mode: isAereo ? "uav" : "usv",
 
-  socket.emit('joystick-cmd', payload, (ack) => {
-    if (ack?.ok) {
-      setManualSendStatus({
-        type: 'ok',
-        text: 'Control manual habilitado | rumbo 0 | velocidad 0'
-      });
-    } else {
-      setManualSendStatus({
-        type: 'warn',
-        text: 'Control manual habilitado, pero no se pudo enviar al backend.'
-      });
-    }
-  });
+  // USV neutral
+  usv_rumbo: 0,
+  usv_velocidad: 0,
+
+  // UAV neutral
+  uav_Lx: 0,
+  uav_Ly: 0,
+  uav_Rx: 0,
+  uav_Ry: 0,
+
+  // Cámara neutral
+  cam_zoom: 0,
+  cam_tilt: 0,
+});
+
+
+socket.emit("joystick-cmd", neutralPayload, (ack) => {
+  if (ack?.ok) {
+    setManualSendStatus({
+      type: "ok",
+      text: `Control manual habilitado (${isAereo ? "UAV" : "USV"}) | neutral enviado`,
+    });
+  } else {
+    setManualSendStatus({
+      type: "warn",
+      text: "Control manual habilitado, pero no se pudo enviar al backend.",
+        });
+      }
+    });
 };
 
-  const handleEnviarManual = () => {
+const handleEnviarManual = () => {
     const vel = parseFloat(velocidadManual);
     const giro = parseFloat(giroManual);
 
@@ -821,20 +819,25 @@ const handleVolverATablero = () => {
   setGiroManual('0');
   setManualSendStatus({ type: 'idle', text: 'Modo automático.' });
 
-  setJoystickData({
-    connected: false,
-    updatedAt: Date.now(),
-    cambioActual: SPEED_STEPS.indexOf(0),
-    velocidadProgramada: 0,
-    velocidad: 0,
-    giro: 0,
-    x: 0,
-    y: 0,
-    rumboObjetivo: 0,
-    palancaActiva: false,
-    enabled: false,
-    id: ''
-  });
+setJoystickData(prev => ({
+  ...prev,
+  connected: false,
+  updatedAt: Date.now(),
+  cambioActual: SPEED_STEPS.indexOf(0),
+  velocidadProgramada: 0,
+  velocidad: 0,
+  giro: 0,
+  x: 0,
+  y: 0,
+  rumboObjetivo: 0,
+  palancaActiva: false,
+  enabled: false,
+  id: '',
+  Lx: 0,
+  Ly: 0,
+  Rx: 0,
+  Ry: 0,
+}));
 };
 // DISTIRBUCION DE ELEMENTOS EN GRILLA DE TABLERO DE INSTURMENTOS. 
 // LA DISTRIBUCION DE HACE EN TRES FILAS Y SIETE COLUMNAS
@@ -874,21 +877,51 @@ function applyDeadzone(value, deadzone = DEADZONE) {
   return Math.abs(value) < deadzone ? 0 : value;
 }
 
-function buildJoystickPayload(rumboCmd, velocidadCmd) {
+
+function buildJoystickPayloadAll({
+  mode, // "usv" | "uav"
+  usv_rumbo = 0,
+  usv_velocidad = 0,
+  uav_Lx = 0,
+  uav_Ly = 0,
+  uav_Rx = 0,
+  uav_Ry = 0,
+  cam_zoom = 0, // -1/0/+1
+  cam_tilt = 0  // -1/0/+1
+}) {
   seqRef.current += 1;
 
+  const toInt100 = (v) => {
+    const n = Number(v) || 0;
+    const scaled = Math.abs(n) <= 1.2 ? n * 100 : n; // acepta [-1..1] o [-100..100]
+    return Math.max(-100, Math.min(100, Math.round(scaled)));
+  };
+
   return {
-    cmd: 'joystick',
+    cmd: "joystick",
     data: {
-      rumbo: Math.round(rumboCmd),
-      velocidad: Math.round(velocidadCmd),
       seq: seqRef.current,
-      mode: 'manual',
+      mode: mode === "uav" ? "uav" : "usv",
       enable: 1,
-      timeout_ms: JOYSTICK_TIMEOUT_MS
+      timeout_ms: JOYSTICK_TIMEOUT_MS,
+
+      // USV
+      usv_rumbo: Math.round(usv_rumbo),
+      usv_velocidad: Math.round(usv_velocidad),
+
+      // UAV
+      uav_Lx: toInt100(uav_Lx),
+      uav_Ly: toInt100(uav_Ly),
+      uav_Rx: toInt100(uav_Rx),
+      uav_Ry: toInt100(uav_Ry),
+
+      // Cámara (común)
+      cam_zoom: Math.max(-1, Math.min(1, cam_zoom)),
+      cam_tilt: Math.max(-1, Math.min(1, cam_tilt)),
     }
   };
 }
+
 
 function emitJoystickCommand(payload, onOk) {
   socket.emit('joystick-cmd', payload, (ack) => {
@@ -906,23 +939,26 @@ return (
       <div
         className="gauge-container gauge-termometer"
         style={{
-          gridColumn: '2',
-          gridRow: '1 / span 2',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center'
+          gridColumn: "1",
+          gridRow: "1",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          minWidth: 0,
+          minHeight: 0,
         }}
       >
-        <canvas ref={termometerRef} />
+        <TempLevel value={temperatura} min={-20} max={90} />
       </div>
 
-      {/* compass */}
+
+       {/* compass */}
       <div
         className="gauge-container gauge-compass"
         style={{
-          gridColumn: '3',
+          gridColumn: '2 / span 2',
           gridRow: '1',
-          display: 'flex',
+          display: isAereo ? "none" : "flex",
           justifyContent: 'center',
           alignItems: 'center'
         }}
@@ -930,50 +966,54 @@ return (
         <canvas ref={compassRef} />
       </div>
 
-      {/* rumbo */}
-      <div
-        className="rumbo-container"
-        style={{
-          gridColumn: '4',
-          gridRow: '1',
-          backgroundColor: '#000',
-          borderRadius: '8px',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          minWidth: '150px',
-          height: '80%'
-        }}
-      >
-        <p
-          className="rumbo-label"
+     {/* ---------------------------------------------- */} 
+
+
+
+
+        <div
+          className="celda-4-1"
           style={{
-            color: 'yellow',
-            fontSize: '24px',
-            fontWeight: 'bold',
-            marginBottom: '8px'
+            gridColumn: '4',
+            gridRow: '1',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '10px',
+            minWidth: 0,
+            minHeight: 0,
           }}
         >
-          Rumbo
-        </p>
-        <p
-          className="rumbo-value"
-          style={{
-            color: 'yellow',
-            fontSize: '48px',
-            fontWeight: 'bold'
-          }}
-        >
-          {rumbo.toFixed(2)}°
-        </p>
-      </div>
+          <div className="rumbo-container"> 
+                    <p
+                  className="rumbo-label"
+                  style={{
+                    color: 'yellow',
+                    fontSize: '24px',
+                    fontWeight: 'bold',
+                    marginBottom: '8px'
+                  }}
+                >
+                  Rumbo
+                </p>
+                <p
+                  className="rumbo-value"
+                  style={{
+                    color: 'yellow',
+                    fontSize: '48px',
+                    fontWeight: 'bold'
+                  }}
+                >
+                  {rumbo.toFixed(2)}°
+                </p>
+          </div>
+
+        </div>  
 
       {/* speed */}
       <div
         className="gauge-container gauge-speed"
         style={{
-          gridColumn: '5',
+          gridColumn: '5 / span 2',
           gridRow: '1',
           display: 'flex',
           justifyContent: 'center',
@@ -987,74 +1027,243 @@ return (
       <div
         className="gauge-container gauge-battery"
         style={{
-          gridColumn: '6',
-          gridRow: '1 / span 2',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center'
+
+          gridColumn: "1",
+          gridRow: "3",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          minWidth: 0,
+          minHeight: 0,
         }}
       >
-        <canvas ref={batteryRef} />
+        <BatteryLevel value={bateria} width={160} height={80} orientation="horizontal"/>
       </div>
 
-      {/* roll */}
+
+{/* sector manual inferior */}
+
       <div
-        className="gauge-container gauge-roll"
+        className="modeSwitchCell"
         style={{
-          gridColumn: '3 / span 3',
-          gridRow: '2',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          height: '80%'
+          gridColumn: "7",
+          gridRow: "3",
+          justifySelf: "center",
+          alignSelf: "center",
         }}
       >
-        <canvas ref={rollRef} />
+          <button
+            type="button"
+            className={`modeSwitchBtn ${isAereo ? "aereo" : "superficie"}`}
+            onClick={() => setMode(isAereo ? "superficie" : "aereo")}
+            aria-pressed={isAereo}
+            title={isAereo ? "Modo dron aéreo" : "Modo superficie"}
+          >
+            <img className="modeSwitchImg" src={switchImg} alt="Selector modo USV/UAV" />
+            <div className="modeSwitchLabels">
+              <span className={!isAereo ? "active" : ""}>USV</span>
+              <span className={isAereo ? "active" : ""}>UAV</span>
+            </div>
+          </button>
       </div>
 
-      {/* sector manual inferior */}
+       {isAereo ? (
+        <>
+          {/* instrumentos de dron aéreo */}
+          {/* ejemplo: Altura, Vario, actitud, etc */}
+
+
       <div
         className="manualDock"
         style={{
-          gridColumn: '2 / span 5',
-          gridRow: '3'
+          gridColumn: '3 / span 3',
+          gridRow: '2 / span 2'
         }}
       >
+          <div className={`manualDockCard ${manualMode ? 'active' : 'disabled'}`}>
+            {manualMode && (
+              <button className="manualDockAutoBtn" onClick={handleVolverATablero}>
+                automático
+              </button>
+            )}
+
+          <div className="manualDockVisuals">
+              <LeftStickSVG yaw={joystickData.Lx ?? 0} climb={joystickData.Ly ?? 0} />
+              <RightStickSVG lateral={joystickData.Rx ?? 0} forward={joystickData.Ry ?? 0} />
+          </div>
+          {!manualMode && (
+              <div className="manualDockOverlay">
+                <button className="manualDockEnableBtn" onClick={handleControlManual}>
+                  control manual
+                </button>
+              </div>
+          )}
+          </div>
+      </div>
+
+
+
+
+          {/* ACTITUD grande: fila 1, columnas 2 a 5 */}
+          <div style={{ gridColumn: "3 / span 3", gridRow: "1", display: "flex", justifyContent: "center", alignItems: "center" }}>
+            <AttitudeIndicator rollDeg={roll} pitchDeg={pitch} size={200} />
+          </div>
+
+          {/* ALTURA + VARIO: fila 1, columna 6 */}
+          <div style={{ gridColumn: "2 / span 2", gridRow: "1", display: "flex", justifyContent: "center", alignItems: "center" }}>
+            <AltitudeVario altM={altura} varioMs={vario} altMax={50} varioMax={5} />
+          </div>
+
+          {/* LIDAR: fila 2, columnas 1 a 2 */}
+          <div style={{ gridColumn: "1 / span 2", gridRow: "2", display: "flex", justifyContent: "center", alignItems: "center" }}>
+            <LidarRange distCm={distancia} maxCm={300} />
+          </div>
+
+        <div
+            className="celda-4-1"
+            style={{
+              gridColumn: "7",
+              gridRow: "1 / span 2",   
+            }}
+          >
+              <div className="panel gps-container">
+                <p className="panel-label">GPS</p>
+                <p className="panel-value panel-value--small">{toDMS(lat, true)}</p>
+                <p className="panel-value panel-value--small">{toDMS(lon, false)}</p>
+              </div>
+
+              <div className="rumbo-container"> 
+                        <p
+                      className="rumbo-label"
+                      style={{
+                        color: 'yellow',
+                        fontSize: '24px',
+                        fontWeight: 'bold',
+                        marginBottom: '8px'
+                      }}
+                    >
+                      Rumbo
+                    </p>
+                    <p
+                      className="rumbo-value"
+                      style={{
+                        color: 'yellow',
+                        fontSize: '48px',
+                        fontWeight: 'bold'
+                      }}
+                    >
+                      {rumbo.toFixed(2)}°
+                    </p>
+              </div>
+
+              <div className="panel gps-container">
+                <p className="panel-label">Presión</p>
+                <p className="panel-value">{presion.toFixed(1)} hPa</p>
+              </div>
+          </div>
+        </>
+      ) : (
+        <>
+          {/* instrumentos de superficie (tu layout actual) */}
+
+
+      
+      <div
+        className="manualDock"
+        style={{
+          gridColumn: '3 / span 3',
+          gridRow: '2 / span 2'
+        }}
+      >
+
+
         <div className={`manualDockCard ${manualMode ? 'active' : 'disabled'}`}>
           {manualMode && (
             <button className="manualDockAutoBtn" onClick={handleVolverATablero}>
-              volver automático
+              automático
             </button>
           )}
 
-          <div className="manualDockVisuals">
-            <VolanteSVG angle={volanteVisualDeg} value={joystickData.giro} />
-            <PalancaSVG levelPct={palancaVisualPct} value={joystickData.velocidad} />
-          </div>
+              <div className="manualDockVisuals">
+                {isAereo ? (
+                  <>
+              <LeftStickSVG yaw={joystickData.Lx ?? 0} climb={joystickData.Ly ?? 0} />
+              <RightStickSVG lateral={joystickData.Rx ?? 0} forward={joystickData.Ry ?? 0} />
+                  </>
+                ) : (
+                  <>
+                    <VolanteSVG angle={volanteVisualDeg} value={joystickData.giro} />
+                    <PalancaSVG levelPct={palancaVisualPct} value={joystickData.velocidad} />
+                  </>
+                )}
+              </div>
 
-          <div className="manualDockReadout">
-            <div className="manualDockInputs">
-              <label className="manualDockLabel">
-                Velocidad
-                <input
-                  className="manualDockInput"
-                  type="number"
-                  step="any"
-                  value={velocidadManual}
-                  readOnly
-                />
-              </label>
+              <div className="manualDockReadout">
+              <div className="manualDockInputs">
+                    {isAereo ? (
+                        <>
+                          <div className="manualDockMetricHead">
+                            <span>Lx (Yaw)</span>
+                            <span className="manualDockMetricNum">{(joystickData.Lx ?? 0).toFixed(2)}</span>      </div>
+                          <div className="manualDockMetricHead">
+                            <span>Ly (Sube/Baja)</span>
+                            <span className="manualDockMetricNum">{(joystickData.Ly ?? 0).toFixed(2)}</span>      </div>
+                          <div className="manualDockMetricHead">
+                            <span>Rx (Lateral)</span>
+                            <span className="manualDockMetricNum">{(joystickData.Rx ?? 0).toFixed(2)}</span>      </div>
+                          <div className="manualDockMetricHead">
+                            <span>Ry (Avanza/Retro)</span>
+                            <span className="manualDockMetricNum">{(joystickData.Ry ?? 0).toFixed(2)}</span>      </div>
+                        </>
+                      ) : (
+                        <>
+                                  <div className="manualDockMetric">
+                                    <div className="manualDockMetricHead">
+                                      <span>Velocidad</span>
+                                      <span className="manualDockMetricNum">{velocidadManual}</span>
+                                    </div>
+                                    <div className="manualDockBar">
+                                      <div
+                                        className="manualDockBarFill"
+                                        style={{width: `${Math.min(100, Math.max(0, Number(velocidadManual)))}%` }}
+                                      />
+                                    </div>
+                                  </div>
 
-              <label className="manualDockLabel">
-                Giro
-                <input
-                  className="manualDockInput"
-                  type="number"
-                  step="any"
-                  value={giroManual}
-                  readOnly
-                />
-              </label>
+                                  <div className="manualDockMetric">
+                                    <div className="manualDockMetricHead">
+                                      <span>Giro</span>
+                                      <span className="manualDockMetricNum">{giroManual}</span>
+                                    </div>
+
+                                    <div className="manualDockBarCenter">
+                                      <div className="manualDockBarZero" />
+
+                                      {/* fill a izquierda (negativo) */}
+                                      <div
+                                        className="manualDockBarFillLeft"
+                                        style={{
+                                          width: `${(Math.min(90, Math.abs(Math.min(0, Number(giroManual) || 0))) / 90) * 50}%`
+                                        }}
+                                      />
+
+                                      {/* fill a derecha (positivo) */}
+                                      <div
+                                        className="manualDockBarFillRight"
+                                        style={{
+                                          width: `${(Math.min(90, Math.max(0, Number(giroManual) || 0)) / 90) * 50}%`
+                                        }}
+                                      />
+                                    </div>
+
+                                    <div className="manualDockMetricFoot">
+                                      <span>-90</span>
+                                      <span>0</span>
+                                      <span>+90</span>
+                                    </div>
+                                  </div>
+                        </>
+                      )}
             </div>
 
             <div
@@ -1063,30 +1272,54 @@ return (
               aria-live="polite"
             >
               {joystickData.connected
-                ? `Joystick conectado | Cambio ${joystickData.cambioActual} | MotorL ${joystickData.motorL} | MotorR ${joystickData.motorR}`
+                ? `Joystick conectado `
                 : 'Joystick desconectado'}
             </div>
 
-            {manualSendStatus.text && (
-              <div
-                className={`manualDockStatus ${manualSendStatus.type}`}
-                role="status"
-                aria-live="polite"
-              >
-                {manualSendStatus.text}
-              </div>
-            )}
           </div>
 
-          {!manualMode && (
-            <div className="manualDockOverlay">
-              <button className="manualDockEnableBtn" onClick={handleControlManual}>
-                control manual
-              </button>
-            </div>
-          )}
+              {!manualMode && (
+                <div className="manualDockOverlay">
+                  <button className="manualDockEnableBtn" onClick={handleControlManual}>
+                    control manual
+                  </button>
+                </div>
+              )}
         </div>
-      </div>
+      </div>         
+
+
+          <div style={{ gridColumn: "1 / span 2", gridRow: "2", display:"flex", justifyContent:"center", alignItems:"center" }}>
+            <RollInclinometer rollDeg={roll} />
+          </div>
+
+          <div
+            className="celda-4-1"
+            style={{
+              gridColumn: "7",
+              gridRow: "1 / span 2",   
+            }}
+          >
+            <div className="panel gps-container">
+              <p className="panel-label">GPS</p>
+              <p className="panel-value panel-value--small">{toDMS(lat, true)}</p>
+              <p className="panel-value panel-value--small">{toDMS(lon, false)}</p>
+            </div>
+
+            <div className="panel gps-container">
+              <p className="panel-label">Obstáculo</p>
+              <p className="panel-value">Dist: {distancia.toFixed(0)} cm</p>
+            </div>
+
+            <div className="panel gps-container">
+              <p className="panel-label">Presión</p>
+              <p className="panel-value">{presion.toFixed(1)} hPa</p>
+            </div>
+          </div>
+                  </>
+                )}
+
+
     </div>
   </div>
 );

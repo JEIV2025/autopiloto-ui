@@ -33,6 +33,7 @@ const ControlPanel = ({ waypoints, setWaypoints, currentPos, progressIdx, setPro
   const [rumbo, setRumbo] = useState('');
   const [rolido, setRolido] = useState('');
   const [cabeceo, setCabeceo] = useState('');
+  const [altura, setAltura] = useState(0);
   const [mensajeOrientacion, setMensajeOrientacion] = useState(null);
   const [tipoImu, setTipoImu] = useState(() => {
     return localStorage.getItem('tipoImu') || '0';
@@ -151,6 +152,28 @@ const ControlPanel = ({ waypoints, setWaypoints, currentPos, progressIdx, setPro
     setMensajeOrientacion('enviado');
     setTimeout(() => setMensajeOrientacion(null), 3000);
   };
+
+  const handleEnviarAltura = () => {
+
+    if (altura  < 0 ) {
+      alert('Por favor, ingrese valores numéricos válidos para todos los campos');
+      return;
+    }else{
+    socket.emit('control-cmd', {
+      cmd: 'altura',
+      data: parseInt(altura)
+    });
+
+        // Guardar la selección en localStorage
+    localStorage.setItem('altura', altura);
+
+      // Mostrar mensaje de confirmación
+    setMensajeImu('enviado');
+    setTimeout(() => setMensajeImu(null), 3000);  
+
+    }
+
+  }
 
   // Función para enviar comando de tipo IMU
   const handleEnviarImu = () => {
@@ -443,8 +466,36 @@ const ControlPanel = ({ waypoints, setWaypoints, currentPos, progressIdx, setPro
             </button>
 
             <div className='tipoNorte'>
+              <h2> Calibrar Barometro </h2>
+              <hr style={{ border: '1px solid #ccc', margin: '5px 0', width: '100%' }} />
+              <div className="flex flex-col gap-3 mt-4">
+                <div>
+                  <label className="block text-sm font-medium text-white mb-1">Altura Relativa (cmts)</label>
+                  <input
+                    type="number"
+                    step="1"
+                    placeholder="0 cmts"
+                    value={altura}
+                    onChange={(e) => setAltura(e.target.value)}
+                    className="w-full p-2 border border-gray-300 rounded text-sm text-black"
+                    onWheel={(e) => e.target.blur()}
+                  />
+                </div>
+
+                <button
+                  onClick={handleEnviarAltura}
+                  className="bg-blue-500 text-white px-4 py-2 font-semibold rounded shadow-md hover:bg-blue-600 mt-3"
+                >
+                  Enviar
+                </button>
+              </div>
+              
+             </div>
+
+
+            <div className='tipoNorte'>
               <h2>🧭  Norte Referencia</h2>
-              <hr style={{ border: '1px solid #ccc', margin: '10px 0',width:'100%' }} />
+              <hr style={{ border: '1px solid #ccc', margin: '5px 0',width:'100%' }} />
               <div className="flex flex-col gap-3 mt-4">
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
@@ -505,7 +556,7 @@ const ControlPanel = ({ waypoints, setWaypoints, currentPos, progressIdx, setPro
 
             <div className='tipoNorte'>
               <h2> Offsets</h2>
-              <hr style={{ border: '1px solid #ccc', margin: '10px 0', width: '100%' }} />
+              <hr style={{ border: '1px solid #ccc', margin: '5px 0', width: '100%' }} />
               <div className="flex flex-col gap-3 mt-4">
                 <div>
                   <label className="block text-sm font-medium text-white mb-1">Rumbo°</label>
