@@ -4,7 +4,15 @@ import '../style/ControlPanel.css'
 
 const socket = io('http://localhost:3001');
 
-const ControlPanel = ({ waypoints, setWaypoints, currentPos, progressIdx, setProgressIdx }) => {
+const ControlPanel = ({ waypoints, 
+                        setWaypoints, 
+                        currentPos, 
+                        progressIdx, 
+                        setProgressIdx,
+                        setMisionCargadaEnVehiculo,
+                        distanciasSeguridad,
+                        setDistanciasSeguridad 
+                      }) => {
   const [calibrando, setCalibrando] = useState(false);
   const [calibrado, setCalibrado] = useState(false);
   const [showConfirmMag, setShowConfirmMag] = useState(false);
@@ -46,6 +54,19 @@ const ControlPanel = ({ waypoints, setWaypoints, currentPos, progressIdx, setPro
   const [panelImuAbierto, setPanelImuAbierto] = useState(false);
   const [panelMarAbierto, setPanelMarAbierto] = useState(false);
 
+  //distancias de seguridad....
+const [distMin, setDistMin] = useState(
+  (distanciasSeguridad?.distmin ?? 40) / 100
+);
+
+const [distMax, setDistMax] = useState(
+  (distanciasSeguridad?.distmax ?? 200) / 100
+);
+
+const [sonidoSeguridad, setSonidoSeguridad] = useState(
+  distanciasSeguridad?.sonido ?? true
+);
+const [estadoDistancias, setEstadoDistancias] = useState(null);
   // Opciones para Tipo IMU 
   const opcionesImu = [
     { value: 0, label: 'MEM Basica' },
@@ -82,6 +103,42 @@ const ControlPanel = ({ waypoints, setWaypoints, currentPos, progressIdx, setPro
       return next;
     });
   };
+
+  //.. funcion para seguridad........
+const enviarDistanciasSeguridad = () => {
+
+  // Convertir metros → centímetros enteros
+  const distMinCm = Math.round(parseFloat(distMin) * 100);
+  const distMaxCm = Math.round(parseFloat(distMax) * 100);
+
+  const data = {
+    distmin: distMinCm,
+    distmax: distMaxCm,
+    sonido: sonidoSeguridad
+  };
+ setEstadoDistancias("enviando");
+  setDistanciasSeguridad(data);
+
+  socket.emit('control-cmd', {
+    cmd: 'distSeguridad',
+    data
+  });
+
+  setTimeout(() => {
+    setEstadoDistancias("enviado");
+  }, 300);
+
+  setTimeout(() => {
+    setEstadoDistancias(null);
+  }, 2000);
+};
+
+useEffect(() => {
+  setDistMin((distanciasSeguridad?.distmin ?? 40) / 100);
+  setDistMax((distanciasSeguridad?.distmax ?? 200) / 100);
+  setSonidoSeguridad(distanciasSeguridad?.sonido ?? true);
+}, [distanciasSeguridad]);
+
 
   // Enviar datos de calibración magnetómetro (bias + corrección soft/hard iron)
   const handleCargarDatosMagnetometro = () => {
@@ -215,7 +272,10 @@ const ControlPanel = ({ waypoints, setWaypoints, currentPos, progressIdx, setPro
       data: waypoints
     });
 
-    setTimeout(() => setEstadoEnvio("enviada"), 1000); // simulación
+   setTimeout(() => {
+    setEstadoEnvio("enviada");
+    setMisionCargadaEnVehiculo(true);
+  }, 1000);
     setTimeout(() => setEstadoEnvio(null), 5000);
   };
 
@@ -227,7 +287,7 @@ const ControlPanel = ({ waypoints, setWaypoints, currentPos, progressIdx, setPro
 
     socket.emit('control-cmd', { cmd: 'solicitar-mision' });
 
-    socket.once('mision-descargada', (wpList) => {
+    socket.on('mision-descargada', (wpList) => {
       respuestaRecibidaRef.current = true;
 
       if (Array.isArray(wpList)) {
@@ -237,7 +297,10 @@ const ControlPanel = ({ waypoints, setWaypoints, currentPos, progressIdx, setPro
         setEstadoCarga("error");
       }
 
-      setTimeout(() => setEstadoCarga(null), 5000);
+      setTimeout(() => {
+        setEstadoCarga(null);
+        setMisionCargadaEnVehiculo(true);
+        }, 5000);
     });
 
     setTimeout(() => {
@@ -445,6 +508,49 @@ const ControlPanel = ({ waypoints, setWaypoints, currentPos, progressIdx, setPro
                 </div>
               </div>
             )}
+
+            <div className="w-full bg-gray-800 rounded-xl p-4 shadow-lg border border-gray-600">
+     
+            <button
+              onClick={() => setShowConfirmEnviar(true)}
+              className={`px-4 py-2 font-semibold rounded shadow-md transition-all duration-300 ${
+                estadoEnvio === "enviada"
+                  ? "bg-green-600 hover:bg-green-700"
+                  : estadoEnvio === "enviando"
+                  ? "bg-yellow-500 hover:bg-yellow-600"
+                  : "bg-indigo-600 hover:bg-indigo-700"
+              } text-white`}
+            >
+              {estadoEnvio === "enviando"
+                ? "⏳ Enviando..."
+                : estadoEnvio === "enviada"
+                ? "✅ Misión Enviada"
+                : "Enviar Misión Actual"}
+            </button>
+
+            <button
+              onClick={() => setShowConfirmCargar(true)}
+              className={`px-4 py-2 font-semibold rounded shadow-md transition-all duration-300 ${
+                estadoCarga === "cargada"
+                  ? "bg-green-600 hover:bg-green-700"
+                  : estadoCarga === "cargando"
+                  ? "bg-yellow-500 hover:bg-yellow-600"
+                  : estadoCarga === "error"
+                  ? "bg-red-600 hover:bg-red-700"
+                  : "bg-teal-600 hover:bg-teal-700"
+              } text-white`}
+            >
+              {estadoCarga === "cargando"
+                ? "⏳ Solicitando..."
+                : estadoCarga === "cargada"
+                ? "✅ Misión Cargada"
+                : estadoCarga === "error"
+                ? "❌ Sin respuesta"
+                : "Cargar Misión Actual"}
+            </button>
+
+            </div>
+
           </div>
 
           {/* Columna central - Calibrar */}
@@ -621,43 +727,82 @@ const ControlPanel = ({ waypoints, setWaypoints, currentPos, progressIdx, setPro
 
           {/* Columna derecha - Enviar/Cargar misión */}
           <div className="rightColumn w-1/4 flex flex-col items-center justify-center gap-2">
-            <button
-              onClick={() => setShowConfirmEnviar(true)}
-              className={`px-4 py-2 font-semibold rounded shadow-md transition-all duration-300 ${
-                estadoEnvio === "enviada"
-                  ? "bg-green-600 hover:bg-green-700"
-                  : estadoEnvio === "enviando"
-                  ? "bg-yellow-500 hover:bg-yellow-600"
-                  : "bg-indigo-600 hover:bg-indigo-700"
-              } text-white`}
+            
+          {/* Panel Distancias de Seguridad */}
+          <div className="w-full bg-gray-800 rounded-xl p-4 shadow-lg border border-gray-600">
+
+            <h3 className="text-white text-lg font-bold text-center mb-4">
+              🚨 Distancias de Seguridad
+            </h3>
+
+            <div className="relative flex flex-col items-center">
+
+              {/* Distancia máxima */}
+              <div className="mb-4 flex flex-col items-center">
+                <label className="text-cyan-300 font-semibold text-sm mb-1">
+                  Distancia Seguridad [m]
+                </label>
+
+                <input
+                  type="number"
+                  value={distMax}
+                  onChange={(e) => setDistMax(e.target.value)}
+                  className="w-28 text-center text-lg border rounded px-2 py-1 bg-black text-white"
+                />
+              </div>
+
+              {/* Silueta barco */}
+
+              {/* Distancia mínima */}
+              <div className="mt-4 flex flex-col items-center">
+                <label className="text-red-400 font-semibold text-sm mb-1">
+                  Distancia Crítica [m]
+                </label>
+
+                <input
+                  type="number"
+                  value={distMin}
+                  onChange={(e) => setDistMin(e.target.value)}
+                  className="w-28 text-center text-lg border rounded px-2 py-1 bg-black text-white"
+                />
+              </div>
+
+              {/* Sonido */}
+              <button
+                onClick={() => setSonidoSeguridad(prev => !prev)}
+                className={`mt-5 px-4 py-2 rounded-lg text-sm font-bold transition-all duration-300 ${
+                  sonidoSeguridad
+                    ? 'bg-green-600 hover:bg-green-700 text-white'
+                    : 'bg-gray-600 hover:bg-gray-700 text-white'
+                }`}
+              >
+                {sonidoSeguridad ? '🔊 Alarma Habilitada' : '🔇 Alarma Deshabilitada'}
+              </button>
+
+              {/* Botón enviar */}
+              <button
+              onClick={enviarDistanciasSeguridad}
+              className={`px-4 py-2 rounded font-semibold text-white transition-all ${
+                estadoDistancias === "enviado"
+                  ? "bg-green-600"
+                  : estadoDistancias === "enviando"
+                  ? "bg-yellow-500"
+                  : "bg-blue-600 hover:bg-blue-700"
+              }`}
             >
-              {estadoEnvio === "enviando"
+              {estadoDistancias === "enviando"
                 ? "⏳ Enviando..."
-                : estadoEnvio === "enviada"
-                ? "✅ Misión Enviada"
-                : "Enviar Misión Actual"}
+                : estadoDistancias === "enviado"
+                ? "✅ Distancias Enviadas"
+                : "📡 Enviar Distancias"}
             </button>
 
-            <button
-              onClick={() => setShowConfirmCargar(true)}
-              className={`px-4 py-2 font-semibold rounded shadow-md transition-all duration-300 ${
-                estadoCarga === "cargada"
-                  ? "bg-green-600 hover:bg-green-700"
-                  : estadoCarga === "cargando"
-                  ? "bg-yellow-500 hover:bg-yellow-600"
-                  : estadoCarga === "error"
-                  ? "bg-red-600 hover:bg-red-700"
-                  : "bg-teal-600 hover:bg-teal-700"
-              } text-white`}
-            >
-              {estadoCarga === "cargando"
-                ? "⏳ Solicitando..."
-                : estadoCarga === "cargada"
-                ? "✅ Misión Cargada"
-                : estadoCarga === "error"
-                ? "❌ Sin respuesta"
-                : "Cargar Misión Actual"}
-            </button>
+            </div>
+          </div>
+                      
+            
+            
+
 
             {/* Panel Tipo IMU */}
             <div className="mt-7 relative">

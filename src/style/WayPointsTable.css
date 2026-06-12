@@ -71,6 +71,104 @@
   }
 
 }
+
+.gpsWarningOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.gpsWarningModal {
+  width: 420px;
+  max-width: 90%;
+  background: #1f2937;
+  border: 2px solid #f59e0b;
+  border-radius: 14px;
+  padding: 24px;
+  text-align: center;
+  box-shadow: 0 0 30px rgba(0,0,0,0.5);
+}
+
+.gpsWarningTitle {
+  color: #f59e0b;
+  font-size: 24px;
+  font-weight: 800;
+  margin-bottom: 16px;
+}
+
+.gpsWarningText {
+  color: white;
+  font-size: 15px;
+  line-height: 1.5;
+  margin-bottom: 20px;
+}
+
+.gpsWarningBtn {
+  background: #f59e0b;
+  color: black;
+  font-weight: 700;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 22px;
+  cursor: pointer;
+}
+
+.gpsWarningBtn:hover {
+  background: #d97706;
+}
+
+.gpsStatusBox {
+  background: #000;
+  border: 1px solid #374151;
+  border-radius: 10px;
+  padding: 12px;
+  margin: 14px 0;
+  text-align: left;
+}
+
+.gpsStatusRow {
+  display: grid;
+  grid-template-columns: 145px 80px 1fr;
+  gap: 8px;
+  align-items: center;
+  color: white;
+  font-size: 14px;
+  margin-bottom: 6px;
+}
+
+.gpsStatusRow span {
+  color: #e5e7eb;
+}
+
+.gpsStatusRow strong {
+  font-weight: 900;
+  text-align: center;
+}
+
+.gpsStatusRow em {
+  color: #facc15;
+  font-style: normal;
+  font-size: 13px;
+}
+
+.gpsValueOk {
+  color: #22c55e;
+}
+
+.gpsValueBad {
+  color: #ef4444;
+}
+
+.gpsFinalRow {
+  border-top: 1px solid #374151;
+  padding-top: 8px;
+  margin-top: 8px;
+}
+
 @media (max-width: 1023px) {
 
   .text-center{

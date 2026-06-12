@@ -5,30 +5,30 @@
 .navigationTableroRoot {
   position: relative;
   width: 100%;
-  height: 100%;
-  min-height: 100%;
+  height: auto;
+  min-height: max-content;
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
+  overflow: visible;
 }
-
 .instrumentos {
   position: relative;
   width: 100%;
-  height: 100%;
-  min-height: 0;
+  height: auto;
+  min-height: max-content;
   box-sizing: border-box;
-  overflow: hidden;
+  overflow: visible;
 
-  /* fuerza layout desktop aunque en JSX haya inline styles */
-  display: grid !important;
-  grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
-  grid-template-rows: minmax(210px, 1.05fr) minmax(120px, 0.65fr) minmax(230px, 1fr) !important;
-  gap: 10px !important;
-  padding: 10px !important;
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  grid-template-rows: auto auto auto auto;
+
+  gap: 10px;
+  padding: 10px;
   border-radius: 12px;
-  border: 2px solid black !important;
-  background: #64778a !important;
+  border: 2px solid black;
+  background: #64778a;
 }
 
 .instrumentos .gauge-container,
@@ -54,17 +54,7 @@
   max-height: none;
 }
 
-.rumbo-container{
-  display: flex;
-  flex-direction: column;
-  align-items: center;      /* centra horizontal */
-  justify-content: center;  /* centra vertical */
-  text-align: center;       /* centra el texto */
 
-  background: #000;
-  border-radius: 8px;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
-}
 /* Celda que contiene los 3 paneles */
 .celda-4-1{
   display: flex;
@@ -74,7 +64,262 @@
   min-height: 0;
 }
 
+.side-instruments {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+}
 
+.side-panel {
+  width: 190px;
+  min-width: 190px;
+  min-height: 95px;
+  box-sizing: border-box;
+}
+
+.side-panel .panel-value--small {
+  font-size: 28px;
+}
+
+.side-panel .rumbo-value {
+  font-size: 42px;
+}
+
+/* ============================= */
+/* DISPLAY USV - CORRECCIÓN RUMBO */
+/* ============================= */
+
+.correccion-rumbo-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.correccion-display {
+  background: #000;
+  border: 2px solid #444;
+  border-radius: 14px;
+  padding: 8px 12px;
+  min-width: 165px;
+  text-align: center;
+}
+
+.correccion-display.active {
+  border-color: #00ff66;
+  box-shadow: 0 0 12px rgba(0, 255, 0, 0.35);
+}
+
+.correccion-title {
+  color: #00ff66;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.correccion-value {
+  color: #00ff66;
+  font-size: 38px;
+  font-weight: 900;
+  font-family: monospace;
+  line-height: 1;
+}
+
+.correccion-subtitle {
+  color: #777;
+  font-size: 14px;
+  font-weight: 800;
+  margin-top: 3px;
+}
+
+.correccion-subtitle.active {
+  color: #00ff66;
+  text-shadow: 0 0 8px #00ff66;
+}
+
+.correccion-info {
+  color: #aaa;
+  font-size: 11px;
+  margin-top: 3px;
+}
+
+.correccion-arrow {
+  color: #666;
+  font-size: 38px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.correccion-arrow.active {
+  color: #00ff66;
+  text-shadow: 0 0 12px #00ff66;
+}
+
+.rumbo-container {
+  background: #000;
+  border: 2px solid #666;
+  border-radius: 14px;
+
+  width: 165px;          /* mismo ancho que correccion-display */
+  min-width: 165px;
+  height: 110px;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+  box-sizing: border-box;
+}
+
+.rumbo-label {
+  color: yellow;
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+
+.rumbo-value {
+  color: yellow;
+  font-size: 42px;
+  font-weight: bold;
+  line-height: 1;
+  font-family: monospace;
+}
+
+/* ============================= */
+/* DISPLAY UAV - ALTURA + RUMBO */
+/* ============================= */
+
+.attitude-central {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  max-height: 175px;
+  margin-bottom: 2px;
+}
+
+.correccion-uav-scale {
+  transform: scale(0.82);
+  transform-origin: top center;
+}
+
+.correccion-uav-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  width: 100%;
+}
+
+.correccion-uav-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.correccion-uav-display {
+  background: #000;
+  border: 2px solid #444;
+  border-radius: 16px;
+  min-width: 300px;
+  min-height: 125px;
+  padding: 10px 16px;
+  text-align: center;
+}
+
+.correccion-uav-display.active {
+  border-color: #00ff66;
+  box-shadow:
+    0 0 12px rgba(0, 255, 0, 0.25),
+    0 0 12px rgba(0, 200, 255, 0.25);
+}
+
+.uav-values {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.uav-value-block {
+  min-width: 78px;
+}
+
+.uav-label {
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.uav-number {
+  font-size: 48px;
+  font-weight: 900;
+  line-height: 1;
+  font-family: monospace;
+}
+
+.uav-unit {
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.uav-value-block.altitude .uav-label,
+.uav-value-block.altitude .uav-number,
+.uav-value-block.altitude .uav-unit {
+  color: #00d9ff;
+}
+
+.uav-value-block.heading .uav-label,
+.uav-value-block.heading .uav-number,
+.uav-value-block.heading .uav-unit {
+  color: #00ff66;
+}
+
+.uav-separator {
+  color: #aaa;
+  font-size: 38px;
+  font-weight: 700;
+}
+
+.uav-arrow-up,
+.uav-arrow-down {
+  color: #666;
+  font-size: 36px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.uav-arrow-up.active,
+.uav-arrow-down.active {
+  color: #00d9ff;
+  text-shadow: 0 0 14px #00d9ff;
+}
+
+.uav-bottom-info {
+  display: flex;
+  justify-content: space-around;
+  gap: 20px;
+  margin-top: 5px;
+  font-size: 12px;
+  font-weight: 800;
+  color: #777;
+}
+
+.uav-bottom-info .alt-ok {
+  color: #00d9ff;
+  text-shadow: 0 0 8px #00d9ff;
+}
+
+.uav-bottom-info .rumbo-ok {
+  color: #00ff66;
+  text-shadow: 0 0 8px #00ff66;
+}
 
 /* Panel genérico (sirve para GPS / Obstáculo / Presión / Rumbo si querés) */
 .panel{
@@ -111,15 +356,17 @@
   line-height: 1.1;
 }
 
-/* Para strings largos como DMS */
-.panel-value--small{
-  font-size: 20px;
-  font-weight: 700;
-}
+
 /* =========================
    SECTOR MANUAL INFERIOR
    ========================= */
 
+
+/*******************************************/
+
+
+
+/**********************************/
 .manualDock {
   width: 100%;
   height: 100%;
@@ -132,9 +379,9 @@
 .manualDockCard {
   position: relative;
   width: 100%;
-  height: auto;             /* antes 100% */
-  max-height: 100%;         /* para no desbordar la celda */
-  min-height: 0;            /* antes 220px */
+  height: auto;             
+  max-height: 100%;         
+  min-height: 0;            
   border-radius: 18px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   background: rgba(11, 23, 34, 0.92);
@@ -145,8 +392,8 @@
   display: grid;
   grid-template-columns: 1fr 260px;  /* antes 300px */
   align-items: center;
-  gap: 12px;                /* antes 18px */
-  padding: 12px 16px;       /* antes 18px 22px */
+  gap: 12px;                
+  padding: 12px 16px;      
 }
 
 .manualDockCard.disabled {
@@ -379,6 +626,72 @@
   line-height: 1;
 }
 
+/*******************************************************/
+
+/* ===================================== */
+/* COMPACTACION MODO UAV */
+/* ===================================== */
+
+.manualDockUAV {
+  transform: translateY(75px) scale(0.78);
+  transform-origin: top center;
+  z-index: 3;
+}
+
+.manualDockUAV .manualDockCard {
+  grid-template-columns: 1fr 160px;
+  gap: 4px;
+  padding: 4px 8px;
+  max-height: 210px;
+}
+
+.manualDockUAV .manualDockVisuals {
+  gap: 8px;
+  transform: scale(1);
+  transform-origin: center center;
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.manualDockUAV .manualDockReadout {
+  gap: 4px;
+  transform: scale(0.85);
+  transform-origin: center center;
+}
+
+.manualDockUAV .manualDockAutoBtn {
+  top: auto;
+  bottom: 8px;
+  right: 8px;
+  padding: 5px 9px;
+  font-size: 11px;
+  z-index: 80;
+}
+
+/* Evita que el overlay tape el botón automático */
+.manualDockCard.active .manualDockOverlay {
+  display: none;
+}
+
+.manualDockAutoBtn {
+  z-index: 999;
+  pointer-events: auto;
+}
+
+.manualDockCard.active .manualDockOverlay {
+  display: none;
+  pointer-events: none;
+}
+
+.manualDockOverlay {
+  pointer-events: auto;
+}
+
+.manualDockCard.active {
+  pointer-events: auto;
+}
+
+
 /* =========================
    SVG VOLANTE / PALANCA
    ========================= */
@@ -421,44 +734,43 @@
 }
 
 /* =========================
-   PANTALLAS MUY GRANDES
+   VENTANA DE OBSTACULOS
    ========================= */
 
-@media (min-width: 2559px) {
-  .instrumentos {
-    font-size: 50px;
-    grid-template-rows: minmax(250px, 1.1fr) minmax(140px, 0.7fr) minmax(260px, 1fr) !important;
-  }
+.obstacle-panel {
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+}
 
-  .instrumentos .gauge-container canvas {
-    transform: scale(1.08);
-    transform-origin: center center;
-  }
+.obstacle-panel.segura {
+  background: rgba(0, 80, 0, 0.55);
+  border-color: limegreen;
+}
 
-  .manualDockCard {
-    grid-template-columns: 1fr 360px;
-    min-height: 250px;
-  }
+.obstacle-panel.alerta {
+  background: rgba(255, 165, 0, 0.45);
+  border-color: orange;
+  box-shadow: 0 0 15px orange;
+}
 
-  .manualSvgWheel {
-    width: 215px;
-    max-width: 215px;
-  }
+.obstacle-panel.critica {
+  background: rgba(255, 0, 0, 0.45);
+  border-color: red;
+  box-shadow: 0 0 25px red;
+  animation: blinkDanger 0.7s infinite;
+}
 
-  .manualSvgLever {
-    width: 140px;
-    max-width: 140px;
-  }
-
-  .manualDockInput {
-    font-size: 22px;
-  }
+@keyframes blinkDanger {
+  0% { opacity: 1; }
+  50% { opacity: 0.55; }
+  100% { opacity: 1; }
 }
 
 
 
+
 /*
-switch inferior
+switch inferior seleccion UAV  USV  
 
 */
 .modeSwitchBtn{
@@ -496,354 +808,5 @@ switch inferior
   color: #ffe66b; /* amarillo */
 }
 
-/* =========================
-   TABLET / NOTEBOOK
-   ========================= */
 
-@media (max-width: 1100px) {
-  .instrumentos {
-    grid-template-rows: minmax(180px, 1fr) minmax(110px, 0.6fr) minmax(210px, 1fr) !important;
-  }
 
-  .instrumentos .gauge-container canvas {
-    transform: scale(0.88);
-    transform-origin: center center;
-  }
-
-  .gauge-termometer,
-  .gauge-battery {
-    min-height: 210px;
-  }
-
-  .gauge-compass,
-  .gauge-speed {
-    min-width: 190px;
-    min-height: 190px;
-  }
-
-  .gauge-roll {
-    min-width: 300px;
-    min-height: 115px;
-  }
-
-  .manualDockCard {
-    grid-template-columns: 1fr 260px;
-    gap: 12px;
-    padding: 14px 16px;
-  }
-
-  .manualDockVisuals {
-    gap: 22px;
-  }
-
-  .manualSvgWheel {
-    width: 145px;
-    max-width: 145px;
-  }
-
-  .manualSvgLever {
-    width: 95px;
-    max-width: 95px;
-  }
-
-  .manualDockInput {
-    font-size: 16px;
-  }
-
-  .rumbo-label {
-    font-size: 20px !important;
-  }
-
-  .rumbo-value {
-    font-size: 36px !important;
-  }
-}
-
-@media (max-width: 820px) {
-  .manualDockCard {
-    grid-template-columns: 1fr;
-    grid-template-rows: auto auto;
-    gap: 10px;
-  }
-
-  .manualDockVisuals {
-    gap: 20px;
-  }
-
-  .manualDockReadout {
-    width: 100%;
-  }
-}
-
-@media (max-width: 700px) {
-  .manualSvgWheel {
-    width: 132px;
-    max-width: 132px;
-  }
-
-  .manualSvgLever {
-    width: 88px;
-    max-width: 88px;
-  }
-
-  .manualSvgTitle {
-    font-size: 15px;
-  }
-
-  .manualSvgValue {
-    font-size: 14px;
-  }
-
-  .manualDockInput {
-    font-size: 15px;
-    padding: 9px 10px;
-  }
-
-  .manualDockStatus {
-    font-size: 12px;
-  }
-}
-
-/* =========================
-   MÓVIL PEQUEÑO
-   ========================= */
-
-@media (max-width: 431px) and (max-height: 932px) {
-  .instrumentos {
-    width: 100% !important;
-    height: 100% !important;
-    font-size: 8px;
-    padding: 2px !important;
-    overflow: hidden !important;
-    box-sizing: border-box;
-    position: relative !important;
-    z-index: 1 !important;
-    isolation: isolate;
-    display: block !important;
-  }
-
-  .instrumentos > .gauge-container,
-  .instrumentos > .rumbo-container {
-    font-size: 8px;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    box-sizing: border-box;
-    overflow: hidden !important;
-    position: absolute !important;
-  }
-
-  .instrumentos canvas {
-    transform-origin: center center !important;
-    width: 100% !important;
-    height: 100% !important;
-    max-width: 100% !important;
-    max-height: 100% !important;
-    display: block !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    position: relative !important;
-    z-index: 1 !important;
-    margin: 0 auto !important;
-    object-fit: contain !important;
-  }
-
-  .gauge-container {
-    overflow: hidden !important;
-    min-width: 0 !important;
-    min-height: 0 !important;
-    position: relative;
-    width: 100% !important;
-    height: 100% !important;
-  }
-
-  .gauge-compass {
-    position: absolute !important;
-    top: 0 !important;
-    left: -2% !important;
-    width: 32% !important;
-    height: 55% !important;
-    min-width: 0 !important;
-    min-height: 0 !important;
-    overflow: visible !important;
-  }
-
-  .rumbo-container {
-    top: 0 !important;
-    left: 50% !important;
-    transform: translateX(-50%) !important;
-    width: 22% !important;
-    height: 45% !important;
-    min-width: 70px !important;
-    max-width: 90px !important;
-    min-height: 0 !important;
-    position: absolute !important;
-    padding: 1px !important;
-    box-sizing: border-box;
-    display: flex !important;
-    flex-direction: column !important;
-    justify-content: center !important;
-  }
-
-  .gauge-speed {
-    position: absolute !important;
-    top: 0 !important;
-    right: -2% !important;
-    width: 32% !important;
-    height: 55% !important;
-    min-width: 0 !important;
-    min-height: 0 !important;
-    overflow: visible !important;
-  }
-
-  .gauge-termometer {
-    position: absolute !important;
-    bottom: 36% !important;
-    left: 0 !important;
-    width: 20% !important;
-    height: 34% !important;
-    min-width: 0 !important;
-    min-height: 0 !important;
-    align-items: flex-end !important;
-    justify-content: flex-start !important;
-  }
-
-  .gauge-battery {
-    position: absolute !important;
-    bottom: 36% !important;
-    right: 0 !important;
-    width: 20% !important;
-    height: 34% !important;
-    min-width: 0 !important;
-    min-height: 0 !important;
-    align-items: flex-end !important;
-    justify-content: flex-end !important;
-  }
-
-  .gauge-roll {
-    bottom: 36% !important;
-    left: 50% !important;
-    transform: translateX(-50%) !important;
-    width: 35% !important;
-    height: 28% !important;
-    min-width: 0 !important;
-    min-height: 0 !important;
-    align-items: flex-end !important;
-    position: absolute !important;
-  }
-
-  .gauge-termometer canvas {
-    transform: scale(0.78) !important;
-    transform-origin: left bottom !important;
-  }
-
-  .gauge-compass canvas {
-    transform: scale(1.02) !important;
-    transform-origin: left center !important;
-  }
-
-  .gauge-speed canvas {
-    transform: scale(1.02) !important;
-    transform-origin: right center !important;
-  }
-
-  .gauge-battery canvas {
-    transform: scale(0.78) !important;
-    transform-origin: right bottom !important;
-  }
-
-  .gauge-roll canvas {
-    transform: scale(0.9) !important;
-    transform-origin: center bottom !important;
-  }
-
-  .rumbo-label {
-    font-size: 13px !important;
-    margin-bottom: 3px !important;
-    line-height: 1.2;
-    padding: 0;
-  }
-
-  .rumbo-value {
-    font-size: 26px !important;
-    line-height: 1.2;
-    padding: 0;
-  }
-
-  .manualDock {
-    position: absolute !important;
-    left: 50% !important;
-    bottom: 1.5% !important;
-    transform: translateX(-50%) !important;
-    width: 76% !important;
-    height: 32% !important;
-    display: flex !important;
-    overflow: visible !important;
-    z-index: 4 !important;
-  }
-
-  .manualDockCard {
-    width: 100%;
-    height: 100%;
-    min-height: 0 !important;
-    grid-template-columns: 1fr !important;
-    grid-template-rows: auto auto !important;
-    gap: 8px !important;
-    padding: 10px !important;
-    border-radius: 14px;
-  }
-
-  .manualDockVisuals {
-    gap: 12px;
-  }
-
-  .manualSvgWheel {
-    width: 98px;
-    max-width: 98px;
-  }
-
-  .manualSvgLever {
-    width: 68px;
-    max-width: 68px;
-  }
-
-  .manualSvgTitle {
-    font-size: 12px;
-  }
-
-  .manualSvgValue {
-    font-size: 11px;
-  }
-
-  .manualDockInputs {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-  }
-
-  .manualDockLabel {
-    font-size: 11px;
-  }
-
-  .manualDockInput {
-    font-size: 13px;
-    padding: 8px 10px;
-  }
-
-  .manualDockStatus {
-    font-size: 10px;
-    padding: 8px 10px;
-  }
-
-  .manualDockEnableBtn {
-    padding: 10px 14px;
-    font-size: 14px;
-  }
-
-  .manualDockAutoBtn {
-    top: 8px;
-    right: 8px;
-    padding: 8px 10px;
-    font-size: 11px;
-  }
-}

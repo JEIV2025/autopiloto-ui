@@ -13,15 +13,22 @@ import { LidarRange } from "../instrumentos/LidarRange";
 import { RollInclinometer } from "../instrumentos/RollInclinometer";
 import { LeftStickSVG, RightStickSVG } from "../instrumentos/JoystickStickSVG";
 
+import BotonEmergencia from "../instrumentos/BotonEmergencia";
 import  VolanteSVG  from "../instrumentos/VolanteSVG";
 import  PalancaSVG  from "../instrumentos/PalancaSVG";
 import switchImg from "../images/switch.png";
 
 
-const NavigationTablero = ({waypoints, setWaypoints, progressIdx}) => {
+const NavigationTablero = ({waypoints, 
+                            setWaypoints, 
+                            progressIdx,
+                            mode,
+                            setMode,
+                            distanciasSeguridad
+                          }) => {
  
 
-  const [mode, setMode] = useState(() => localStorage.getItem("dashboardMode") || "superficie");
+  //const [mode, setMode] = useState(() => localStorage.getItem("dashboardMode") || "superficie");
   const isAereo = mode === "aereo";
   useEffect(() => {
     localStorage.setItem("dashboardMode", mode);
@@ -34,11 +41,9 @@ const NavigationTablero = ({waypoints, setWaypoints, progressIdx}) => {
   const [giroManual, setGiroManual] = useState('0');
   const seqRef = useRef(0);
 
-
-
-
   // Confirmación visual al enviar el comando de maniobra (sin depender 100% del back).
   const [manualSendStatus, setManualSendStatus] = useState({ type: 'idle', text: '' });
+
 
   //.... del joystick..............
 const SPEED_STEPS = [0, 100, 300, 350, 450, 550, 650, 750, 850, 900, 950, 1000];
@@ -134,7 +139,22 @@ const lastTelemetryRef = useRef({
   velocidad: 0,
   altura: 0,
   distancia: 0,
-  presion: 0
+  distmin: 40,
+  distmax: 200,
+  presion: 0,
+
+  misionActiva: false,
+  wpActual: "Inicio",
+  wpIndex: 0,
+  wpTotal: 0,
+  distanciaWP: 0,
+  rumboObjetivo: 0,
+  errorRumbo: 0,
+  giroCmd: 0,
+  velocidadCmd: 0,
+  gpsReal: false,
+  alturaObjetivo: 0,
+  errorAltura: 0
 });
 
 const safeTelemetry = useMemo(() => {
@@ -145,7 +165,13 @@ const safeTelemetry = useMemo(() => {
     for (const key of Object.keys(next)) {
       const value = telemetry[key];
 
-      if (value !== undefined && value !== null && !Number.isNaN(Number(value))) {
+      if (value === undefined || value === null) continue;
+
+      if (typeof next[key] === "boolean") {
+        next[key] = Boolean(value);
+      } else if (typeof next[key] === "string") {
+        next[key] = String(value);
+      } else if (!Number.isNaN(Number(value))) {
         next[key] = Number(value);
       }
     }
@@ -169,8 +195,32 @@ const distancia = safeTelemetry.distancia;
 const presion = safeTelemetry.presion;
 
 const velocidadTelemetria = safeTelemetry.velocidad;
+//... datos de mision de autopiloto................
+const misionActiva = safeTelemetry.misionActiva;
+const wpActual = safeTelemetry.wpActual;
+const wpIndex = safeTelemetry.wpIndex;
+const wpTotal = safeTelemetry.wpTotal;
+const distanciaWP = safeTelemetry.distanciaWP;
+const rumboObjetivo = safeTelemetry.rumboObjetivo;
+const errorRumbo = safeTelemetry.errorRumbo;
+const giroCmd = safeTelemetry.giroCmd;
+const velocidadCmd = safeTelemetry.velocidadCmd;
+const gpsReal = safeTelemetry.gpsReal;
+const alturaObjetivo = safeTelemetry.alturaObjetivo;
+const errorAltura = safeTelemetry.errorAltura;
+//..................................................
+const distCritica = distanciasSeguridad?.distmin ?? safeTelemetry.distmin ?? 40;
+const distSeguridad = distanciasSeguridad?.distmax ?? safeTelemetry.distmax ?? 200;
 
-  const isAereoRef = useRef(isAereo);
+let estadoDistancia = 'segura';
+
+if (distancia <= distCritica) {
+  estadoDistancia = 'critica';
+} else if (distancia <= distSeguridad) {
+  estadoDistancia = 'alerta';
+}
+
+const isAereoRef = useRef(isAereo);
 useEffect(() => { isAereoRef.current = isAereo; }, [isAereo]);
 
 
@@ -195,7 +245,18 @@ useEffect(() => {
   }
 }, [altura, safeTelemetry.timestamp]);
 
+//......display correccion rumbo ...........
 
+const correccionRumbo = Math.abs(errorRumbo);
+const necesitaIzquierda = errorRumbo < -2;
+const necesitaDerecha = errorRumbo > 2;
+const rumboEnVia = misionActiva && Math.abs(errorRumbo) <= 2;
+
+const correccionAltura = Math.abs(errorAltura);
+const necesitaSubir = errorAltura > 5;
+const necesitaBajar = errorAltura < -5;
+const alturaEnVia = misionActiva && Math.abs(errorAltura) <= 5;
+//..........................................
 
 
 useEffect(() => {
@@ -477,6 +538,12 @@ if (!live.connected) {
 
 useEffect(() => {
     console.log('📡 Datos actualizados:', telemetry);
+
+
+
+console.log('Distancia seguridad :', distSeguridad);
+console.log('Distancia critica :', distCritica);
+
   }, [telemetry]);
 
 
@@ -819,25 +886,25 @@ const handleVolverATablero = () => {
   setGiroManual('0');
   setManualSendStatus({ type: 'idle', text: 'Modo automático.' });
 
-setJoystickData(prev => ({
-  ...prev,
-  connected: false,
-  updatedAt: Date.now(),
-  cambioActual: SPEED_STEPS.indexOf(0),
-  velocidadProgramada: 0,
-  velocidad: 0,
-  giro: 0,
-  x: 0,
-  y: 0,
-  rumboObjetivo: 0,
-  palancaActiva: false,
-  enabled: false,
-  id: '',
-  Lx: 0,
-  Ly: 0,
-  Rx: 0,
-  Ry: 0,
-}));
+    setJoystickData(prev => ({
+      ...prev,
+      connected: false,
+      updatedAt: Date.now(),
+      cambioActual: SPEED_STEPS.indexOf(0),
+      velocidadProgramada: 0,
+      velocidad: 0,
+      giro: 0,
+      x: 0,
+      y: 0,
+      rumboObjetivo: 0,
+      palancaActiva: false,
+      enabled: false,
+      id: '',
+      Lx: 0,
+      Ly: 0,
+      Rx: 0,
+      Ry: 0,
+    }));
 };
 // DISTIRBUCION DE ELEMENTOS EN GRILLA DE TABLERO DE INSTURMENTOS. 
 // LA DISTRIBUCION DE HACE EN TRES FILAS Y SIETE COLUMNAS
@@ -970,44 +1037,138 @@ return (
 
 
 
+        {/* rumbo */}
+      {/* RUMBO / ACTITUD - FILA 1 */}
+      <div
+        className="celda-4-1"
+        style={{
+          gridColumn: isAereo ? '3 / span 3' : '4',
+          gridRow: '1',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minWidth: 0,
+          minHeight: 0,
+          zIndex: 5,
+        }}
+      >
+        {!isAereo ? (
+          <div className="rumbo-container">
+            <p className="rumbo-label">Rumbo</p>
+            <p className="rumbo-value">{rumbo.toFixed(2)}°</p>
+          </div>
+        ) : (
+          <div className="attitude-central">
+            <AttitudeIndicator rollDeg={roll} pitchDeg={pitch} size={185} />
+          </div>
+        )}
+      </div>
 
         <div
-          className="celda-4-1"
           style={{
-            gridColumn: '4',
-            gridRow: '1',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '10px',
-            minWidth: 0,
-            minHeight: 0,
+            gridColumn: '6',
+            gridRow: '2'
           }}
         >
-          <div className="rumbo-container"> 
-                    <p
-                  className="rumbo-label"
-                  style={{
-                    color: 'yellow',
-                    fontSize: '24px',
-                    fontWeight: 'bold',
-                    marginBottom: '8px'
-                  }}
-                >
-                  Rumbo
-                </p>
-                <p
-                  className="rumbo-value"
-                  style={{
-                    color: 'yellow',
-                    fontSize: '48px',
-                    fontWeight: 'bold'
-                  }}
-                >
-                  {rumbo.toFixed(2)}°
-                </p>
-          </div>
+          <BotonEmergencia socket={socket} />
+        </div>
+      {/* CORRECCIÓN - FILA 2 */}
+      <div
+        className="celda-4-2"
+        style={{
+          gridColumn: isAereo ? '3 / span 3' : '4',
+          gridRow: '2',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minWidth: 0,
+          minHeight: 0,
+          zIndex: 5,
+        }}
+      >
+        {!isAereo ? (
+          <div className="correccion-rumbo-box">
+            <div className={`correccion-arrow ${necesitaIzquierda ? 'active' : ''}`}>
+              ◀
+            </div>
 
-        </div>  
+            <div className={`correccion-display ${misionActiva ? 'active' : 'inactive'}`}>
+              <div className="correccion-title">
+                {misionActiva ? "CORRECCIÓN" : "MISIÓN INACTIVA"}
+              </div>
+
+              <div className="correccion-value">
+                {correccionRumbo.toFixed(1)}
+              </div>
+
+              <div className={`correccion-subtitle ${rumboEnVia ? 'active' : ''}`}>
+                Timón Vía
+              </div>
+
+              <div className="correccion-info">
+                WP {wpIndex}/{wpTotal} - {wpActual}
+              </div>
+            </div>
+
+            <div className={`correccion-arrow ${necesitaDerecha ? 'active' : ''}`}>
+              ▶
+            </div>
+          </div>
+        ) : (
+          <div className="correccion-uav-scale">
+            <div className="correccion-uav-box">
+              <div className={`uav-arrow-up ${necesitaSubir ? 'active' : ''}`}>
+                ▲
+              </div>
+
+              <div className="correccion-uav-row">
+                <div className={`correccion-arrow ${necesitaIzquierda ? 'active' : ''}`}>
+                  ◀
+                </div>
+
+                <div className={`correccion-uav-display ${misionActiva ? 'active' : 'inactive'}`}>
+                  <div className="correccion-title">
+                    {misionActiva ? "CORRECCIÓN" : "MISIÓN INACTIVA"}
+                  </div>
+
+                  <div className="uav-values">
+                    <div className="uav-value-block altitude">
+                      <div className="uav-label">ALTURA</div>
+                      <div className="uav-number">
+                        {correccionAltura.toFixed(1)}
+                      </div>
+                      <div className="uav-unit">m</div>
+                    </div>
+
+                    <div className="uav-separator">/</div>
+
+                    <div className="uav-value-block heading">
+                      <div className="uav-label">RUMBO</div>
+                      <div className="uav-number">
+                        {correccionRumbo.toFixed(1)}
+                      </div>
+                      <div className="uav-unit">°</div>
+                    </div>
+                  </div>
+
+                  <div className="uav-bottom-info">
+                    <span className={alturaEnVia ? "alt-ok" : ""}>Altura vía</span>
+                    <span className={rumboEnVia ? "rumbo-ok" : ""}>Rumbo vía</span>
+                  </div>
+                </div>
+
+                <div className={`correccion-arrow ${necesitaDerecha ? 'active' : ''}`}>
+                  ▶
+                </div>
+              </div>
+
+              <div className={`uav-arrow-down ${necesitaBajar ? 'active' : ''}`}>
+                ▼
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* speed */}
       <div
@@ -1073,13 +1234,13 @@ return (
           {/* ejemplo: Altura, Vario, actitud, etc */}
 
 
-      <div
-        className="manualDock"
-        style={{
-          gridColumn: '3 / span 3',
-          gridRow: '2 / span 2'
-        }}
-      >
+            <div
+              className="manualDock"
+              style={{
+                gridColumn: '3 / span 3',
+                gridRow: '3 / span 2'
+              }}
+            >
           <div className={`manualDockCard ${manualMode ? 'active' : 'disabled'}`}>
             {manualMode && (
               <button className="manualDockAutoBtn" onClick={handleVolverATablero}>
@@ -1088,8 +1249,17 @@ return (
             )}
 
           <div className="manualDockVisuals">
-              <LeftStickSVG yaw={joystickData.Lx ?? 0} climb={joystickData.Ly ?? 0} />
-              <RightStickSVG lateral={joystickData.Rx ?? 0} forward={joystickData.Ry ?? 0} />
+            <LeftStickSVG
+              yaw={joystickData.Lx ?? 0}
+              climb={joystickData.Ly ?? 0}
+              size={250}
+            />
+
+            <RightStickSVG
+              lateral={joystickData.Rx ?? 0}
+              forward={joystickData.Ry ?? 0}
+              size={250}
+            />
           </div>
           {!manualMode && (
               <div className="manualDockOverlay">
@@ -1102,64 +1272,38 @@ return (
       </div>
 
 
-
-
-          {/* ACTITUD grande: fila 1, columnas 2 a 5 */}
-          <div style={{ gridColumn: "3 / span 3", gridRow: "1", display: "flex", justifyContent: "center", alignItems: "center" }}>
-            <AttitudeIndicator rollDeg={roll} pitchDeg={pitch} size={200} />
-          </div>
-
           {/* ALTURA + VARIO: fila 1, columna 6 */}
-          <div style={{ gridColumn: "2 / span 2", gridRow: "1", display: "flex", justifyContent: "center", alignItems: "center" }}>
-            <AltitudeVario altM={altura} varioMs={vario} altMax={50} varioMax={5} />
+          <div style={{ gridColumn: "2 ", gridRow: "1 ", display: "flex", justifyContent: "center", alignItems: "center" }}>
+            <AltitudeVario altM={altura/100} varioMs={vario} altMax={100} varioMax={5} />
           </div>
 
-          {/* LIDAR: fila 2, columnas 1 a 2 */}
-          <div style={{ gridColumn: "1 / span 2", gridRow: "2", display: "flex", justifyContent: "center", alignItems: "center" }}>
+          {/* LIDAR: fila 2, columnas 1  */}
+          <div style={{ gridColumn: "1 ", gridRow: "2", display: "flex", justifyContent: "center", alignItems: "center" }}>
             <LidarRange distCm={distancia} maxCm={300} />
           </div>
 
-        <div
-            className="celda-4-1"
+          <div
+            className=" side-instruments"
             style={{
               gridColumn: "7",
-              gridRow: "1 / span 2",   
+              gridRow: "1 / span 3",
             }}
           >
-              <div className="panel gps-container">
-                <p className="panel-label">GPS</p>
-                <p className="panel-value panel-value--small">{toDMS(lat, true)}</p>
-                <p className="panel-value panel-value--small">{toDMS(lon, false)}</p>
-              </div>
+            <div className="panel gps-container">
+            <p className="panel-label">GPS</p>
+            <p className="panel-value panel-value--small">{toDMS(lat, true)}</p>
+            <p className="panel-value panel-value--small">{toDMS(lon, false)}</p>
+            </div>
 
-              <div className="rumbo-container"> 
-                        <p
-                      className="rumbo-label"
-                      style={{
-                        color: 'yellow',
-                        fontSize: '24px',
-                        fontWeight: 'bold',
-                        marginBottom: '8px'
-                      }}
-                    >
-                      Rumbo
-                    </p>
-                    <p
-                      className="rumbo-value"
-                      style={{
-                        color: 'yellow',
-                        fontSize: '48px',
-                        fontWeight: 'bold'
-                      }}
-                    >
-                      {rumbo.toFixed(2)}°
-                    </p>
-              </div>
+            <div className="rumbo-container side-panel">
+              <p className="rumbo-label">Rumbo</p>
+              <p className="rumbo-value">{rumbo.toFixed(2)}°</p>
+            </div>
 
-              <div className="panel gps-container">
-                <p className="panel-label">Presión</p>
-                <p className="panel-value">{presion.toFixed(1)} hPa</p>
-              </div>
+          <div className="panel gps-container">
+          <p className="panel-label">Presión</p>
+          <p className="panel-value">{presion.toFixed(1)} hPa</p>
+          </div>
           </div>
         </>
       ) : (
@@ -1167,19 +1311,27 @@ return (
           {/* instrumentos de superficie (tu layout actual) */}
 
 
-      
-      <div
-        className="manualDock"
-        style={{
-          gridColumn: '3 / span 3',
-          gridRow: '2 / span 2'
-        }}
-      >
+        <div
+          className={`manualDock ${isAereo ? 'manualDockUAV' : ''}`}
+          style={{
+            gridColumn: '3 / span 3',
+            gridRow: '3 / span 2'
+          }}
+        >
 
 
         <div className={`manualDockCard ${manualMode ? 'active' : 'disabled'}`}>
           {manualMode && (
-            <button className="manualDockAutoBtn" onClick={handleVolverATablero}>
+            <button
+              type="button"
+              className="manualDockAutoBtn"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log("CLICK AUTOMATICO");
+                handleVolverATablero();
+              }}
+            >
               automático
             </button>
           )}
@@ -1187,8 +1339,17 @@ return (
               <div className="manualDockVisuals">
                 {isAereo ? (
                   <>
-              <LeftStickSVG yaw={joystickData.Lx ?? 0} climb={joystickData.Ly ?? 0} />
-              <RightStickSVG lateral={joystickData.Rx ?? 0} forward={joystickData.Ry ?? 0} />
+                <LeftStickSVG
+                  yaw={joystickData.Lx ?? 0}
+                  climb={joystickData.Ly ?? 0}
+                  size={200}
+                />
+
+                <RightStickSVG
+                  lateral={joystickData.Rx ?? 0}
+                  forward={joystickData.Ry ?? 0}
+                  size={200}
+                />
                   </>
                 ) : (
                   <>
@@ -1294,10 +1455,10 @@ return (
           </div>
 
           <div
-            className="celda-4-1"
+            className=" side-instruments"
             style={{
               gridColumn: "7",
-              gridRow: "1 / span 2",   
+              gridRow: "1 / span 3",   
             }}
           >
             <div className="panel gps-container">
@@ -1306,9 +1467,22 @@ return (
               <p className="panel-value panel-value--small">{toDMS(lon, false)}</p>
             </div>
 
-            <div className="panel gps-container">
-              <p className="panel-label">Obstáculo</p>
-              <p className="panel-value">Dist: {distancia.toFixed(0)} cm</p>
+            <div className={`panel gps-container obstacle-panel ${estadoDistancia}`}>
+              <p className="panel-label">
+                {estadoDistancia === 'critica'
+                  ? '🚨 CRÍTICO'
+                  : estadoDistancia === 'alerta'
+                  ? '⚠️ SEGURIDAD'
+                  : '✅ LIBRE'}
+              </p>
+
+              <p className="panel-value">
+                Dist: {distancia.toFixed(0)} cm
+              </p>
+
+              <p className="text-xs mt-1">
+                Min: {distCritica} cm | Max: {distSeguridad} cm
+              </p>
             </div>
 
             <div className="panel gps-container">

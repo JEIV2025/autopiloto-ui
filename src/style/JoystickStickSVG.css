@@ -1,7 +1,18 @@
-.manualSvgCanvas.manualSvgStick{
-  width: 260px;
-  height: 260px;
+
+.manualSvgCanvas.manualSvgStick {
   display: block;
+}
+
+.manualDockUAV .manualSvgGroup {
+  gap: 2px;
+}
+
+.manualDockUAV .manualSvgTitle {
+  font-size: 11px;
+}
+
+.manualDockUAV .manualSvgValue {
+  font-size: 11px;
 }
 
 .manualSvgGroup{

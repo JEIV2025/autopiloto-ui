@@ -1,0 +1,144 @@
+.emergencyStopCell {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+}
+
+.emergencyStopBox {
+  width: 170px;
+  height: 125px;
+
+  background: #111;
+
+  border: 3px solid #7f1d1d;
+  border-radius: 18px;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  box-shadow:
+    inset 0 0 10px rgba(255,255,255,0.08),
+    0 0 15px rgba(220,38,38,0.4);
+}
+
+.emergencyStopBox.confirm {
+  border-color: #facc15;
+
+  box-shadow:
+    inset 0 0 10px rgba(255,255,255,0.08),
+    0 0 20px rgba(250,204,21,0.7);
+}
+
+.emergencyStopBtn {
+  width: 110px;
+  height: 110px;
+
+  border-radius: 50%;
+  border: 5px solid #fecaca;
+
+  background:
+    radial-gradient(
+      circle at 35% 25%,
+      #ff8a8a 0%,
+      #dc2626 45%,
+      #7f1d1d 100%
+    );
+
+  color: white;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+  cursor: pointer;
+
+  font-weight: 900;
+
+  box-shadow:
+    inset 0 5px 8px rgba(255,255,255,0.3),
+    inset 0 -8px 12px rgba(0,0,0,0.35),
+    0 8px 16px rgba(0,0,0,0.4);
+
+  transition: all 0.2s ease;
+}
+
+.emergencyStopBtn:hover {
+  transform: scale(1.03);
+  filter: brightness(1.08);
+}
+
+.emergencyStopIcon {
+  font-size: 28px;
+}
+
+.emergencyStopText {
+  font-size: 15px;
+  letter-spacing: 1px;
+}
+
+.emergencyStopSub {
+  font-size: 10px;
+}
+
+.emergencyConfirmPanel {
+  width: 100%;
+  height: 100%;
+
+  padding: 10px;
+
+  color: white;
+  text-align: center;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+}
+
+.emergencyConfirmTitle {
+  color: #facc15;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.emergencyConfirmText {
+  font-size: 11px;
+  line-height: 1.2;
+}
+
+.emergencyConfirmActions {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+
+.emergencyCancelBtn,
+.emergencyConfirmBtn {
+  border: none;
+  border-radius: 8px;
+
+  padding: 6px 10px;
+
+  font-size: 11px;
+  font-weight: 800;
+
+  cursor: pointer;
+}
+
+.emergencyCancelBtn {
+  background: #6b7280;
+  color: white;
+}
+
+.emergencyConfirmBtn {
+  background: #dc2626;
+  color: white;
+}
+
+.emergencyConfirmBtn:hover {
+  background: #b91c1c;
+}

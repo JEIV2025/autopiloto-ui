@@ -15,13 +15,14 @@ function clamp(x, a, b) {
 
 function StickBase({
   title = "Joystick",
-  x = 0,          // -1..1
-  y = 0,          // -1..1
+  x = 0,
+  y = 0,
   xLabelNeg = "",
   xLabelPos = "",
   yLabelPos = "",
   yLabelNeg = "",
   valueText = "",
+  size = 260,
 }) {
   const uid = useId();
   const plate = `plate-${uid}`;
@@ -50,11 +51,15 @@ function StickBase({
     <div className="manualSvgGroup">
       <div className="manualSvgTitle">{title}</div>
 
-      <svg
-        className="manualSvgCanvas manualSvgStick"
-        viewBox="0 0 280 280"
-        xmlns="http://www.w3.org/2000/svg"
-      >
+<svg
+  className="manualSvgCanvas manualSvgStick"
+  style={{
+    width: size,
+    height: size,
+  }}
+  viewBox="0 0 280 280"
+  xmlns="http://www.w3.org/2000/svg"
+>
         <defs>
           <radialGradient id={plate} cx="40%" cy="35%" r="75%">
             <stop offset="0%" stopColor="#2a313a" />
@@ -124,7 +129,7 @@ function StickBase({
 }
 
 // Export: UAV Left = Throttle/Yaw, Right = Pitch/Roll
-export function LeftStickSVG({ yaw = 0, climb = 0 }) {
+export function LeftStickSVG({ yaw = 0, climb = 0, size = 260 }) {
   return (
     <StickBase
       title=""
@@ -134,12 +139,13 @@ export function LeftStickSVG({ yaw = 0, climb = 0 }) {
       xLabelPos="rot +"
       yLabelPos="sube"
       yLabelNeg="baja"
-      valueText={`Yaw: ${Number(yaw).toFixed?.(2) ?? yaw} | Climb: ${Number(climb).toFixed?.(2) ?? climb}`}
+      valueText={`Yaw: ${Number(yaw).toFixed(2)} | Climb: ${Number(climb).toFixed(2)}`}
+      size={size}
     />
   );
 }
 
-export function RightStickSVG({ lateral = 0, forward = 0 }) {
+export function RightStickSVG({ lateral = 0, forward = 0, size = 260 }) {
   return (
     <StickBase
       title=""
@@ -149,7 +155,8 @@ export function RightStickSVG({ lateral = 0, forward = 0 }) {
       xLabelPos="lat +"
       yLabelPos="avanza"
       yLabelNeg="retrocede"
-      valueText={`Lat: ${Number(lateral).toFixed?.(2) ?? lateral} | Fwd: ${Number(forward).toFixed?.(2) ?? forward}`}
+      valueText={`Lat: ${Number(lateral).toFixed(2)} | Fwd: ${Number(forward).toFixed(2)}`}
+      size={size}
     />
   );
 }

@@ -3,29 +3,37 @@ export function BatteryLevel({
   label = "",
   width = 90,
   height = 170,
-  orientation = "vertical", // "vertical" | "horizontal"
+  orientation = "vertical",
+  minUseful = 90,   // valor recibido considerado 0% útil
+  maxUseful = 100,  // valor recibido considerado 100% útil
 }) {
-  const v = Math.max(0, Math.min(100, Number(value) || 0));
+  const raw = Math.max(0, Math.min(100, Number(value) || 0));
+
+  // Reescalado útil: 90 → 0%, 100 → 100%
+  const v = Math.max(
+    0,
+    Math.min(100, ((raw - minUseful) / (maxUseful - minUseful)) * 100)
+  );
 
   const segments = 5;
 
-  // si querés niveles por escalones exactos: 0/25/50/75/100
   const filled =
     v <= 0 ? 0 :
-    v <= 25 ? 1 :
-    v <= 50 ? 2 :
-    v <= 75 ? 3 : 5;
+    v <= 20 ? 1 :
+    v <= 40 ? 2 :
+    v <= 60 ? 3 :
+    v <= 80 ? 4 : 5;
 
   const color =
     v <= 0  ? "#b0b0b0" :
-    v <= 25 ? "#e53935" :
-    v <= 50 ? "#fb8c00" :
-    v <= 75 ? "#fdd835" :
+    v <= 20 ? "#e53935" :
+    v <= 40 ? "#fb8c00" :
+    v <= 60 ? "#fdd835" :
+    v <= 80 ? "#9ccc65" :
               "#43a047";
 
   const isH = orientation === "horizontal";
 
-  // dimensiones por defecto si está horizontal y no querés pasar props
   const W = width ?? (isH ? 190 : 90);
   const H = height ?? (isH ? 90 : 170);
 
@@ -45,7 +53,6 @@ export function BatteryLevel({
           boxSizing: "border-box",
         }}
       >
-        {/* “pitorro” */}
         <div
           style={{
             position: "absolute",
@@ -75,7 +82,6 @@ export function BatteryLevel({
           }}
         />
 
-        {/* segmentos */}
         <div
           style={{
             display: "flex",
@@ -86,8 +92,7 @@ export function BatteryLevel({
           }}
         >
           {Array.from({ length: segments }).map((_, i) => {
-            // llenar desde abajo (vertical) o desde la izquierda (horizontal)
-            const idx = isH ? i : (segments - 1 - i);
+            const idx = isH ? i : segments - 1 - i;
             const on = idx < filled;
 
             return (
@@ -109,6 +114,7 @@ export function BatteryLevel({
       <div style={{ color: "yellow", fontSize: 22, fontWeight: 800 }}>
         {v.toFixed(0)}%
       </div>
+
     </div>
   );
 }

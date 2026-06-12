@@ -9,9 +9,12 @@ import WayPointsTable from './components/WayPointsTable';
 import PlanManager from './components/PlanManager';
 import SideBar from './components/SideBar'; 
 import ConsoleState from './components/ConsoleState';
+import { useTelemetry } from './components/TelemetryContext';
 
 
 function App() {
+
+  const { telemetry } = useTelemetry();
   const [x, setX] = useState(0);
   const [y, setY] = useState(0);
   const [progressIdx, setProgressIdx] = useState(0); 
@@ -19,20 +22,60 @@ function App() {
   const [mostrarAside, setMostrarAside] = useState(true);
   const [seccionActiva, setSeccionActiva] = useState("inicio");
   const [seccionAnterior, setSeccionAnterior] = useState("inicio");
+
+  const [misionCargadaEnVehiculo, setMisionCargadaEnVehiculo] = useState(false);
   
 
   const [simulatedPath, setSimulatedPath] = useState([]);
 
+  const [distanciasSeguridad, setDistanciasSeguridad] = useState({
+  distmin: 40,
+  distmax: 200,
+  sonido: true
+});
 
 
+const [mode, setMode] = useState("superficie");
+
+//...para saber si estoy simulando o utilizo coordenadas reales
+const [simulacionActiva, setSimulacionActiva] = useState(false);
   
-  const [currentPos, setCurrentPos] = useState({ lat: -34.5873, lon: -58.33674, rumbo: 123.5 });
+const [currentPos, setCurrentPos] = useState({
+  lat: -34.5884060,
+  lon: -58.3665789,
+  rumbo: 0
+});
 
-  const [waypoints, setWaypoints] = useState([
-    { id: 'Base', lat: -34.58, lon: -58.38 }
-  ]);
+const [waypoints, setWaypoints] = useState([
+  {
+    id: 'Inicio',
+    lat: -34.5884060,
+    lon: -58.3665789,
+    altura: 0,
+    velocidad: 0,
+    radioLlegada: 0,
+  }
+]);
 
   const [simBoatHeading, setSimBoatHeading] = useState(null);
+//-- posicionamiento por telemetria...........
+  const telemetriaValida =
+  typeof telemetry?.lat === 'number' &&
+  typeof telemetry?.lon === 'number';
+
+const posicionReal = telemetriaValida
+  ? {
+      lat: telemetry.lat,
+      lon: telemetry.lon,
+      rumbo: telemetry.rumbo ?? 0,
+    }
+  : null;
+
+  const posicionMapa = simulacionActiva
+  ? currentPos
+  : posicionReal ?? currentPos;
+
+  //.....
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -56,16 +99,45 @@ useEffect(() => {
     }
   );
 }, []);
+/*
+useEffect(() => {
+  setWaypoints(prev => {
+    if (!prev.length) return prev;
 
+    return prev.map((wp, idx) =>
+      idx === 0
+        ? {
+            ...wp,
+            id: 'Inicio',
+            lat: currentPos.lat,
+            lon: currentPos.lon,
+            altura: 0,
+            velocidad: 0,
+            radioLlegada: 0,
+          }
+        : wp
+    );
+  });
+}, [currentPos.lat, currentPos.lon]);
+*/
 const handleAddWaypoint = (latlng) => {
-  setWaypoints((prev) => [
-    ...prev,
-    {
-      id: `WP${prev.length + 1}`,
-      lat: latlng.lat,
-      lon: latlng.lng,
-    },
-  ]);
+  setWaypoints((prev) => {
+    const cantidadWP = prev.filter(
+      wp => wp.id !== "Inicio"
+    ).length;
+
+    return [
+      ...prev,
+      {
+        id: `WP${cantidadWP + 1}`,
+        lat: latlng.lat,
+        lon: latlng.lng,
+        altura: 0,
+        velocidad: 0,
+        radioLlegada: 2,
+      },
+    ];
+  });
 };
 
 
@@ -95,23 +167,26 @@ const handleAddWaypoint = (latlng) => {
 
         {/* Acá va el contenido principal actual */}
 
-{seccionActiva === "navegacion" && (
-  <div className="contenedorNavegacion grid grid-rows-[48%_75%] gap-4 h-full min-h-0">
-    <div className="bg-white rounded-xl shadow p-2 overflow-hidden min-h-0">
-      <NavigationViewer />
-    </div>
+          {seccionActiva === "navegacion" && (
+            <div className="contenedorNavegacion grid grid-rows-[48%_75%] gap-4 h-full min-h-0">
+              <div className="bg-white rounded-xl shadow p-2 overflow-hidden min-h-0">
+                <NavigationViewer />
+              </div>
 
-    <div className="bg-[#64778aff] rounded-xl shadow p-2 overflow-hidden min-h-0">
-      <NavigationTablero
-        currentPos={currentPos}
-        setCurrentPos={setCurrentPos}
-        waypoints={waypoints}
-        setWaypoints={setWaypoints}
-        progressIdx={progressIdx}
-      />
-    </div>
-  </div>
-)}
+              <div className="bg-[#64778aff] rounded-xl shadow p-2 overflow-auto min-h-0">
+                <NavigationTablero
+                  currentPos={currentPos}
+                  setCurrentPos={setCurrentPos}
+                  waypoints={waypoints}
+                  setWaypoints={setWaypoints}
+                  progressIdx={progressIdx}
+                  mode={mode}
+                  setMode={setMode}
+                  distanciasSeguridad={distanciasSeguridad}
+                />
+              </div>
+            </div>
+          )}
 
         {seccionActiva === "mision" && (
           <div className="grid grid-rows-5 gap-4 h-full">
@@ -120,22 +195,25 @@ const handleAddWaypoint = (latlng) => {
                 waypoints={waypoints}
                 onAddWaypoint={handleAddWaypoint}
                 progressIdx={progressIdx}
-                currentPos={currentPos}
-                simBoatHeading={simBoatHeading} // <-- Nuevo prop
+                currentPos={posicionMapa}
+                simBoatHeading={simBoatHeading} 
                 simulatedPath={simulatedPath}
+                mode={mode}
               />
             </div>
-            <div className="row-span-2 bg-white rounded-xl shadow p-2 overflow-hidden">
+            <div className="row-span-2 bg-white rounded-xl shadow  ">
               <WayPointsTable
-                currentPos={currentPos}
+                currentPos={posicionMapa}
                 setCurrentPos={setCurrentPos}
                 waypoints={waypoints}
                 setWaypoints={setWaypoints}
                 progressIdx={progressIdx}
                 setProgressIdx={setProgressIdx}
-                setSimBoatHeading={setSimBoatHeading} // <-- Nuevo prop
+                setSimBoatHeading={setSimBoatHeading} 
                 simulatedPath={simulatedPath}
                 setSimulatedPath={setSimulatedPath}
+                misionCargadaEnVehiculo={misionCargadaEnVehiculo}
+                setSimulacionActiva={setSimulacionActiva}
               />
             </div>
           </div>
@@ -148,7 +226,15 @@ const handleAddWaypoint = (latlng) => {
               <div className="stateBar w-full flex justify-center mb-2"style={{ width: '100%', height: '35%' }}>
                 <ConsoleState />
               </div>             
-                <ControlPanel waypoints={waypoints} setWaypoints={setWaypoints} currentPos={currentPos} progressIdx={progressIdx} setProgressIdx={setProgressIdx} />
+                <ControlPanel waypoints={waypoints} 
+                setWaypoints={setWaypoints} 
+                currentPos={currentPos} 
+                progressIdx={progressIdx} 
+                setProgressIdx={setProgressIdx} 
+                setMisionCargadaEnVehiculo={setMisionCargadaEnVehiculo}
+                distanciasSeguridad={distanciasSeguridad}
+                setDistanciasSeguridad={setDistanciasSeguridad}
+               />
             </div>
           </div>     
         )}

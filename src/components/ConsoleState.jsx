@@ -9,6 +9,11 @@ const ConsoleState = () => {
 
   const socketRef = useRef(null);
 
+  const [gpsInfo, setGpsInfo] = useState({
+  gpsNavReady: false,
+  gpsSats: 0,
+   });
+
   useEffect(() => {
     // Backend connection via socket.io
     const socket = io('http://localhost:3001', { transports: ['websocket'], reconnection: true });
@@ -17,10 +22,24 @@ const ConsoleState = () => {
     const handleConnect = () => setBackendStatus('connected');
     const handleDisconnect = () => setBackendStatus('disconnected');
     const handleTelemetry = (data) => {
- 
       try {
         const payload = typeof data === 'string' ? JSON.parse(data) : data;
-        if (payload) setLastTelemetryAt(Date.now());
+
+        if (payload) {
+          setLastTelemetryAt(Date.now());
+
+          setGpsInfo(prev => ({
+            gpsNavReady:
+              payload.gpsNavReady !== undefined
+                ? Boolean(payload.gpsNavReady)
+                : prev.gpsNavReady,
+
+            gpsSats:
+              payload.gpsSats !== undefined
+                ? Number(payload.gpsSats)
+                : prev.gpsSats,
+          }));
+        }
       } catch (_e) {
         setLastTelemetryAt(Date.now());
       }
@@ -97,17 +116,40 @@ const ConsoleState = () => {
     );
   };
 
-  return (
-    <div className="stateBox w-full flex items-center gap-2 px-2 py-1 bg-black/80 backdrop-blur-sm border border-gray-200 rounded-md">
-      {renderPill(backendStatus, 'Servidor', '🖥️')}
-      {renderPill(wifiOnline ? 'ok' : 'desconectada', 'Wi‑Fi', '📶')}
-      {renderPill(antennaStatus, 'Antena', '📡')}
-      
-      <div className="ml-auto text-xs text-white">
-        {antennaStatus === 'ok' && lastTelemetryAt ? `RX ${Math.max(0, Math.floor((Date.now() - lastTelemetryAt) / 1000))}s` : antennaStatus === 'buscando' ? 'Buscando telemetría...' : 'Sin telemetría'}
+    return (
+      <div className="stateBox w-full flex items-center 
+         gap-2 px-2 py-1 bg-black/80 backdrop-blur-sm 
+         border border-gray-200 rounded-md">
+        {renderPill(backendStatus, 'Servidor', '🖥️')}
+        {renderPill(wifiOnline ? 'ok' : 'desconectada', 'Wi-Fi', '📶')}
+        {renderPill(antennaStatus, 'Antena', '📡')}
+
+        {renderPill(gpsInfo.gpsNavReady ? 'ok' : 'desconectada', 'GPS', '🌎')}
+
+        <div
+          className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold shadow-sm ${
+            gpsInfo.gpsSats >= 6
+              ? 'bg-green-300 text-green-800'
+              : gpsInfo.gpsSats > 0
+              ? 'bg-yellow-300 text-yellow-900'
+              : 'bg-red-300 text-red-900'
+          }`}
+          title={`Satélites enlazados: ${gpsInfo.gpsSats}`}
+        >
+          <span className="text-base">🛰</span>
+          <span>Sat</span>
+          <span className="ml-1">{gpsInfo.gpsSats}</span>
+        </div>
+
+        <div className="ml-auto text-xs text-white">
+          {antennaStatus === 'ok' && lastTelemetryAt
+            ? `RX ${Math.max(0, Math.floor((Date.now() - lastTelemetryAt) / 1000))}s`
+            : antennaStatus === 'buscando'
+            ? 'Buscando telemetría...'
+            : 'Sin telemetría'}
+        </div>
       </div>
-    </div>
-  );
+    );
 };
 
 export default ConsoleState;
