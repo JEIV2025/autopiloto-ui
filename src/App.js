@@ -34,6 +34,8 @@ function App() {
   sonido: true
 });
 
+const [rutaCargada, setRutaCargada] = useState([]);
+
 
 const [mode, setMode] = useState("superficie");
 
@@ -199,6 +201,7 @@ const handleAddWaypoint = (latlng) => {
                 simBoatHeading={simBoatHeading} 
                 simulatedPath={simulatedPath}
                 mode={mode}
+                rutaCargada={rutaCargada}
               />
             </div>
             <div className="row-span-2 bg-white rounded-xl shadow  ">
@@ -234,6 +237,7 @@ const handleAddWaypoint = (latlng) => {
                 setMisionCargadaEnVehiculo={setMisionCargadaEnVehiculo}
                 distanciasSeguridad={distanciasSeguridad}
                 setDistanciasSeguridad={setDistanciasSeguridad}
+                setRutaCargada={setRutaCargada}
                />
             </div>
           </div>     

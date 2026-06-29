@@ -12,6 +12,7 @@ const ConsoleState = () => {
   const [gpsInfo, setGpsInfo] = useState({
   gpsNavReady: false,
   gpsSats: 0,
+  sdOk: false,
    });
 
   useEffect(() => {
@@ -38,6 +39,11 @@ const ConsoleState = () => {
               payload.gpsSats !== undefined
                 ? Number(payload.gpsSats)
                 : prev.gpsSats,
+
+            sdOk:
+            payload.SD !== undefined
+              ? Boolean(payload.SD)
+              : prev.sdOk,    
           }));
         }
       } catch (_e) {
@@ -125,6 +131,7 @@ const ConsoleState = () => {
         {renderPill(antennaStatus, 'Antena', '📡')}
 
         {renderPill(gpsInfo.gpsNavReady ? 'ok' : 'desconectada', 'GPS', '🌎')}
+        {renderPill(gpsInfo.sdOk ? 'ok' : 'desconectada', 'SD', '💾')}
 
         <div
           className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold shadow-sm ${

@@ -7,6 +7,7 @@ import '../style/Instrumentos.css';
 
 import { BatteryLevel } from "../instrumentos/BatteryLevel";
 import { TempLevel } from "../instrumentos/TempLevel";
+import IndicadorTelemetria from "../instrumentos/IndicadorTelemetria";
 import { AltitudeVario } from "../instrumentos/AltitudeVario";
 import { AttitudeIndicator } from "../instrumentos/AttitudeIndicator";
 import { LidarRange } from "../instrumentos/LidarRange";
@@ -51,13 +52,13 @@ const DEADZONE = 0.05;
 const AXIS_THRESHOLD = 0.20;
 const FORWARD_THRESHOLD = -0.20;
 const JOYSTICK_TIMEOUT_MS = 500;
-const SEND_INTERVAL_MS = 500; //intervalo de envio por telemetria
+const SEND_INTERVAL_MS = 100; //intervalo de envio por telemetria
 const POLL_INTERVAL_MS = 50;
 const ANGLE_STEP = 5;
 const ANGLE_LIMIT = 90;
 const CENTER_RESET_THRESHOLD = 0.10;
 const SPEED_AXIS_STEP_THRESHOLD = 0.65; // Ru/Rd (stick derecho Y)
-
+const K_GIRO = 0.5;
 const leverActiveRef = useRef(false);
 //const latchedSpeedRef = useRef(0);
 
@@ -156,6 +157,22 @@ const lastTelemetryRef = useRef({
   alturaObjetivo: 0,
   errorAltura: 0
 });
+
+const [telemetriaLink, setTelemetriaLink] = useState({
+  calidad: 100,
+  recibidos: 0,
+  perdidos: 0
+});
+
+useEffect(() => {
+  socket.on("telemetria_link", (data) => {
+    setTelemetriaLink(data);
+  });
+
+  return () => {
+    socket.off("telemetria_link");
+  };
+}, []);
 
 const safeTelemetry = useMemo(() => {
   const prev = lastTelemetryRef.current;
@@ -383,9 +400,10 @@ pollTimerRef.current = setInterval(() => {
   };
 }, POLL_INTERVAL_MS);
 
-
+//.................................................................
 sendTimerRef.current = setInterval(() => {
   const live = livePadRef.current;
+
 
 if (!live.connected) {
   leverActiveRef.current = false;
@@ -407,6 +425,8 @@ if (!live.connected) {
   setManualSendStatus({ type: "warn", text: "Joystick no detectado." });
   return;
 }
+
+
 
   // Cámara (común a USV/UAV)
   const cam_zoom = (live.r1 ? 1 : 0) + (live.l1 ? -1 : 0);              // R1 zoom+ / L1 zoom-
@@ -478,13 +498,14 @@ if (!live.connected) {
     velocidadCmd = velocidadProgramada;
   }
 
-  if (palancaAdelante && palancaCentrada) {
-    rumboCmdRef.current = 0;
-  } else if (x <= -AXIS_THRESHOLD) {
-    rumboCmdRef.current = Math.max(rumboCmdRef.current - ANGLE_STEP, -ANGLE_LIMIT);
-  } else if (x >= AXIS_THRESHOLD) {
-    rumboCmdRef.current = Math.min(rumboCmdRef.current + ANGLE_STEP, ANGLE_LIMIT);
-  }
+/* reset de giro tanto en avance como en reversa */
+if ((palancaAdelante || palancaAtras) && palancaCentrada) {
+  rumboCmdRef.current = 0;
+} else if (x <= -AXIS_THRESHOLD) {
+  rumboCmdRef.current = Math.max(rumboCmdRef.current - ANGLE_STEP, -ANGLE_LIMIT);
+} else if (x >= AXIS_THRESHOLD) {
+  rumboCmdRef.current = Math.min(rumboCmdRef.current + ANGLE_STEP, ANGLE_LIMIT);
+}
 
   const payload = buildJoystickPayloadAll({
     mode: "usv",
@@ -519,6 +540,8 @@ if (!live.connected) {
     text: `USV | velConf ${velocidadProgramada} | vel ${velocidadCmd} | giro ${rumboCmdRef.current}° | Cam z:${cam_zoom} t:${cam_tilt}`
   });
 }, SEND_INTERVAL_MS);
+
+//....................................................
 
   return () => {
     if (pollTimerRef.current) {
@@ -1003,11 +1026,24 @@ return (
   <div className="navigationTableroRoot">
     <div className="instrumentos" >
       {/* termometer */}
+
+<div
+  style={{
+    gridColumn: "1",
+    gridRow: "1",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+  }}
+>
+<IndicadorTelemetria calidad={telemetriaLink.calidad} />
+</div>
+
       <div
         className="gauge-container gauge-termometer"
         style={{
           gridColumn: "1",
-          gridRow: "1",
+          gridRow: "2",
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
@@ -1034,7 +1070,6 @@ return (
       </div>
 
      {/* ---------------------------------------------- */} 
-
 
 
         {/* rumbo */}
@@ -1278,7 +1313,7 @@ return (
           </div>
 
           {/* LIDAR: fila 2, columnas 1  */}
-          <div style={{ gridColumn: "1 ", gridRow: "2", display: "flex", justifyContent: "center", alignItems: "center" }}>
+          <div style={{ gridColumn: "2 ", gridRow: "2", display: "flex", justifyContent: "center", alignItems: "center" }}>
             <LidarRange distCm={distancia} maxCm={300} />
           </div>
 
@@ -1450,7 +1485,7 @@ return (
       </div>         
 
 
-          <div style={{ gridColumn: "1 / span 2", gridRow: "2", display:"flex", justifyContent:"center", alignItems:"center" }}>
+          <div style={{ gridColumn: "2 / span 2", gridRow: "2", display:"flex", justifyContent:"center", alignItems:"center" }}>
             <RollInclinometer rollDeg={roll} />
           </div>
 

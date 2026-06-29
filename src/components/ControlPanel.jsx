@@ -11,7 +11,8 @@ const ControlPanel = ({ waypoints,
                         setProgressIdx,
                         setMisionCargadaEnVehiculo,
                         distanciasSeguridad,
-                        setDistanciasSeguridad 
+                        setDistanciasSeguridad,
+                        setRutaCargada 
                       }) => {
   const [calibrando, setCalibrando] = useState(false);
   const [calibrado, setCalibrado] = useState(false);
@@ -67,6 +68,83 @@ const [sonidoSeguridad, setSonidoSeguridad] = useState(
   distanciasSeguridad?.sonido ?? true
 );
 const [estadoDistancias, setEstadoDistancias] = useState(null);
+
+//.. para guardar recorrido en memoria SD ......
+const [guardandoRecorrido, setGuardandoRecorrido] = useState(false);
+
+const toggleGuardarRecorrido = () => {
+  const nuevoEstado = !guardandoRecorrido;
+
+  socket.emit('control-cmd', {
+    cmd: 'guardarNavegacion',
+    data: nuevoEstado
+  });
+
+  setGuardandoRecorrido(nuevoEstado);
+
+  console.log(
+    nuevoEstado
+      ? '📍 Guardado de recorrido iniciado'
+      : '⏹️ Guardado de recorrido detenido'
+  );
+};
+//..........................................
+const handleCargarRecorridoCSV = (e) => {
+  const file = e.target.files?.[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+
+  reader.onload = () => {
+    const text = reader.result;
+
+    const lines = text
+      .split(/\r?\n/)
+      .map(line => line.trim())
+      .filter(Boolean);
+
+    if (lines.length < 2) return;
+
+    const headers = lines[0]
+      .split(',')
+      .map(h => h.trim().toLowerCase());
+
+    const latIndex = headers.findIndex(h =>
+      h === 'lat' || h === 'latitude' || h === 'latitud'
+    );
+
+    const lonIndex = headers.findIndex(h =>
+      h === 'lon' || h === 'lng' || h === 'longitude' || h === 'longitud'
+    );
+
+    if (latIndex === -1 || lonIndex === -1) {
+      console.error('❌ No se encontraron columnas lat/lon en el CSV');
+      return;
+    }
+
+    const puntos = lines
+      .slice(1)
+      .map(line => {
+        const cols = line.split(',').map(c => c.trim());
+
+        const lat = Number(cols[latIndex]);
+        const lon = Number(cols[lonIndex]);
+
+        return { lat, lon };
+      })
+      .filter(p =>
+        Number.isFinite(p.lat) &&
+        Number.isFinite(p.lon)
+      );
+
+    console.log('📂 Recorrido cargado:', puntos);
+
+    setRutaCargada?.(puntos);
+  };
+
+  reader.readAsText(file);
+};
+//.............................................
   // Opciones para Tipo IMU 
   const opcionesImu = [
     { value: 0, label: 'MEM Basica' },
@@ -432,7 +510,7 @@ useEffect(() => {
       <div style={{ position: 'relative', width: '100%', zIndex: 1 }}>
         <div className="w-full flex flex-row">
           {/* Columna izquierda */}
-          <div className="leftColumn w-1/4 flex flex-col justify-center">
+          <div className="leftColumn w-1/4 flex flex-col justify-center gap-2 ">
             <h2 className="font-semibold text-lg mb-2">Control de Misión</h2>
 
             {/* Selector de waypoint */}
@@ -509,45 +587,61 @@ useEffect(() => {
               </div>
             )}
 
-            <div className="w-full bg-gray-800 rounded-xl p-4 shadow-lg border border-gray-600">
-     
-            <button
-              onClick={() => setShowConfirmEnviar(true)}
-              className={`px-4 py-2 font-semibold rounded shadow-md transition-all duration-300 ${
-                estadoEnvio === "enviada"
-                  ? "bg-green-600 hover:bg-green-700"
-                  : estadoEnvio === "enviando"
-                  ? "bg-yellow-500 hover:bg-yellow-600"
-                  : "bg-indigo-600 hover:bg-indigo-700"
-              } text-white`}
+            <div
+              className="
+                w-full
+                bg-slate-900/65
+                backdrop-blur-sm
+                rounded-xl
+                p-4
+                shadow-lg
+                border
+                border-cyan-700
+                flex
+                justify-center
+                items-center
+                gap-4
+                flex-wrap
+              "
             >
-              {estadoEnvio === "enviando"
-                ? "⏳ Enviando..."
-                : estadoEnvio === "enviada"
-                ? "✅ Misión Enviada"
-                : "Enviar Misión Actual"}
-            </button>
 
-            <button
-              onClick={() => setShowConfirmCargar(true)}
-              className={`px-4 py-2 font-semibold rounded shadow-md transition-all duration-300 ${
-                estadoCarga === "cargada"
-                  ? "bg-green-600 hover:bg-green-700"
-                  : estadoCarga === "cargando"
-                  ? "bg-yellow-500 hover:bg-yellow-600"
+              <button
+                onClick={() => setShowConfirmEnviar(true)}
+                className={`min-w-[220px] px-4 py-2 font-semibold rounded shadow-md transition-all duration-300 ${
+                  estadoEnvio === "enviada"
+                    ? "bg-green-600 hover:bg-green-700"
+                    : estadoEnvio === "enviando"
+                    ? "bg-yellow-500 hover:bg-yellow-600"
+                    : "bg-indigo-600 hover:bg-indigo-700"
+                } text-white`}
+              >
+                {estadoEnvio === "enviando"
+                  ? "⏳ Enviando..."
+                  : estadoEnvio === "enviada"
+                  ? "✅ Misión Enviada"
+                  : "Enviar Misión Actual"}
+              </button>
+
+              <button
+                onClick={() => setShowConfirmCargar(true)}
+                className={`min-w-[220px] px-4 py-2 font-semibold rounded shadow-md transition-all duration-300 ${
+                  estadoCarga === "cargada"
+                    ? "bg-green-600 hover:bg-green-700"
+                    : estadoCarga === "cargando"
+                    ? "bg-yellow-500 hover:bg-yellow-600"
+                    : estadoCarga === "error"
+                    ? "bg-red-600 hover:bg-red-700"
+                    : "bg-teal-600 hover:bg-teal-700"
+                } text-white`}
+              >
+                {estadoCarga === "cargando"
+                  ? "⏳ Solicitando..."
+                  : estadoCarga === "cargada"
+                  ? "✅ Misión Cargada"
                   : estadoCarga === "error"
-                  ? "bg-red-600 hover:bg-red-700"
-                  : "bg-teal-600 hover:bg-teal-700"
-              } text-white`}
-            >
-              {estadoCarga === "cargando"
-                ? "⏳ Solicitando..."
-                : estadoCarga === "cargada"
-                ? "✅ Misión Cargada"
-                : estadoCarga === "error"
-                ? "❌ Sin respuesta"
-                : "Cargar Misión Actual"}
-            </button>
+                  ? "❌ Sin respuesta"
+                  : "Cargar Misión Actual"}
+              </button>
 
             </div>
 
@@ -728,8 +822,38 @@ useEffect(() => {
           {/* Columna derecha - Enviar/Cargar misión */}
           <div className="rightColumn w-1/4 flex flex-col items-center justify-center gap-2">
             
+            <div className="bg-slate-900/65 text-white rounded-lg p-3 shadow-md w-full mb-3">
+              <h3 className="text-center font-bold text-sm mb-3 text-yellow-300">
+                Navegación
+              </h3>
+
+              <div className="flex flex-col gap-2">
+                <button
+                  onClick={toggleGuardarRecorrido}
+                  className={`px-3 py-2 rounded font-semibold text-sm transition ${
+                    guardandoRecorrido
+                      ? 'bg-red-600 hover:bg-red-700'
+                      : 'bg-green-600 hover:bg-green-700'
+                  } text-white`}
+                >
+                  {guardandoRecorrido
+                    ? '⏹️ Detener guardado de recorrido'
+                    : '💾 Guardar recorrido'}
+                </button>
+
+                <label className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded font-semibold text-sm text-center cursor-pointer transition">
+                  📂 Cargar recorrido
+                  <input
+                    type="file"
+                    accept=".csv"
+                    onChange={handleCargarRecorridoCSV}
+                    className="hidden"
+                  />
+                </label>
+              </div>
+            </div>
           {/* Panel Distancias de Seguridad */}
-          <div className="w-full bg-gray-800 rounded-xl p-4 shadow-lg border border-gray-600">
+          <div className="w-full bg-slate-900/65 rounded-xl p-4 shadow-lg border border-gray-600">
 
             <h3 className="text-white text-lg font-bold text-center mb-4">
               🚨 Distancias de Seguridad
@@ -944,7 +1068,10 @@ useEffect(() => {
               <button onClick={() => setShowConfirmMag(false)} className="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded">
                 Cancelar
               </button>
-              <button onClick={() => { setShowConfirmMag(false); setShowModalMagDatos(true); }} className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">
+              <button onClick={() => {
+                 setShowConfirmMag(false); 
+                 setShowModalMagDatos(true); }} 
+                 className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">
                 Siguiente
               </button>
             </div>

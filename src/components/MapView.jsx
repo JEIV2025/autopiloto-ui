@@ -20,6 +20,7 @@ L.Icon.Default.mergeOptions({
 
 // Eliminar baseIcon personalizado
 
+
 // Componente para arreglar el resize
 const MapFixer = ({ trigger, seguirBarco, lat, lon }) => {
   const map = useMap();
@@ -90,14 +91,15 @@ const MapView = ({ waypoints,
                   currentPos, 
                   simBoatHeading, 
                   simulatedPath,
-                  mode }) => {
+                  mode,
+                  rutaCargada
+                 }) => {
   
   const [seguirBarco, setSeguirBarco] = useState(true);
 
 
  const vehicleImg = mode === "aereo" ? dronImg : boteImg;
 const vehicleLabel = mode === "aereo" ? "UAV" : "USV";
-
 
 
   const { telemetry } = useTelemetry();
@@ -109,14 +111,25 @@ const vehicleLabel = mode === "aereo" ? "UAV" : "USV";
   // Determinar el rumbo según el estado:
   // - Si hay simBoatHeading (simulando), usar ese rumbo
   // - Si no hay simulación, usar el rumbo de telemetría del bote físico
-  const rumbo = simBoatHeading ?? (telemetry?.rumbo ? 360 - telemetry.rumbo : 0) ?? currentPos?.rumbo ?? 0;
+const haySimulacion =
+  simBoatHeading !== null &&
+  simBoatHeading !== undefined;
 
-  const rotationStyle =
-    mode === "aereo"
-      ? ""
-      : `transform:rotate(${rumbo}deg);`;
+const rumbo =
+  haySimulacion
+    ? simBoatHeading
+    : telemetry?.rumbo !== undefined
+    ? 360 - Number(telemetry.rumbo)
+    : currentPos?.rumbo ?? 0;
 
+const rumboVisual = haySimulacion
+  ? rumbo
+  : 360 - rumbo;
 
+const rotationStyle =
+  mode === "aereo"
+    ? ""
+    : `transform:rotate(${rumboVisual}deg);`;
 
   const pitch = telemetry?.pitch ?? 0;
   const roll = telemetry?.roll ?? 0;
@@ -125,17 +138,6 @@ const vehicleLabel = mode === "aereo" ? "UAV" : "USV";
 
     const latQuery = latitud.toFixed(6);
 const lonQuery = longitud.toFixed(6);
-
-// Indexar mapas una única vez al montar
-useEffect(() => {
-  const lat = currentPos?.lat ?? -34.5884060;
-  const lon = currentPos?.lon ?? -58.3665789;
-
-  fetch(`http://localhost:3001/index?lat=${lat}&lon=${lon}`)
-    .then(res => res.json())
-    .then(data => console.log('Indexado seamark:', data))
-    .catch(err => console.error('Error al indexar mapas:', err));
-}, []);
 
 
   // Distancia Haversine (km)
@@ -149,7 +151,29 @@ useEffect(() => {
     return R * c;
   }
 
+  const iconRutaInicio = L.divIcon({
+  className: 'ruta-inicio-icon',
+  html: `<div style="font-size:24px;">🟢</div>`,
+  iconSize: [24, 24],
+  iconAnchor: [12, 12],
+});
 
+const iconRutaFin = L.divIcon({
+  className: 'ruta-fin-icon',
+  html: `<div style="font-size:24px;">🏁</div>`,
+  iconSize: [24, 24],
+  iconAnchor: [12, 12],
+});
+
+const tieneRutaCargada = Array.isArray(rutaCargada) && rutaCargada.length > 0;
+const tieneLineaRuta = Array.isArray(rutaCargada) && rutaCargada.length > 1;
+const rutaValida = (rutaCargada || []).filter(
+  p =>
+    Number.isFinite(p.lat) &&
+    Number.isFinite(p.lon) &&
+    Math.abs(p.lat) > 0.000001 &&
+    Math.abs(p.lon) > 0.000001
+);
   return (
 
     <div style={{ position: 'relative', height: '100%', width: '100%' }}>
@@ -176,32 +200,70 @@ useEffect(() => {
 
     <MapContainer
       center={[latitud, longitud]}
-      zoom={12}
+      zoom={14}
       minZoom={10}
-      maxZoom={14}
+      maxZoom={17}
       style={{ height: '100%', width: '100%' }}
     >
      <MapFixer trigger={fullscreen} seguirBarco={seguirBarco} lat={latitud} lon={longitud} />
   {seguirBarco ? <FeedbackClickSeguir /> : <AddWaypointOnClick onAdd={onAddWaypoint} />}
 
-<div
-  className={`centrar-btn ${seguirBarco ? 'activo' : ''}`}
-  onClick={() => setSeguirBarco(prev => !prev)}
-  title="Centrar mapa"
-/>
+      <div
+        className={`centrar-btn ${seguirBarco ? 'activo' : ''}`}
+        onClick={() => setSeguirBarco(prev => !prev)}
+        title="Centrar mapa"
+      />
 
-{/* Capa base: tiles de OpenStreetMap cacheados */}
-<TileLayer
-  url={`http://localhost:3001/tiles/{z}/{x}/{y}.png`}
-  attribution="Mapas cacheados localmente"
-/>
+      {/* Capa base: tiles de OpenStreetMap cacheados */}
+      <TileLayer
+        url={`http://localhost:3001/tiles/{z}/{x}/{y}.png`}
+        attribution="Mapas cacheados localmente"
+      />
 
-{/* Capa extra: capa seamark (marcas náuticas) */}
-<TileLayer
-  url={`http://localhost:3001/seamark/{z}/{x}/{y}.png`}
-  attribution="OpenSeaMap Local"
-/>
+      {/* Capa extra: capa seamark (marcas náuticas) */}
+      <TileLayer
+        url={`http://localhost:3001/seamark/{z}/{x}/{y}.png`}
+        attribution="OpenSeaMap Local"
+      />
 
+{rutaValida.length > 1 && (
+  <Polyline
+    positions={rutaValida.map(p => [p.lat, p.lon])}
+    color="#000000"
+    dashArray="8 8"
+    weight={4}
+    opacity={0.85}
+  />
+)}
+
+{rutaValida.length > 0 && (
+  <>
+    <Marker
+      position={[rutaValida[0].lat, rutaValida[0].lon]}
+      icon={iconRutaInicio}
+    >
+      <Popup>
+        <strong>🟢 Inicio del recorrido cargado</strong><br />
+        Lat: {rutaValida[0].lat.toFixed(6)}<br />
+        Lon: {rutaValida[0].lon.toFixed(6)}
+      </Popup>
+    </Marker>
+
+    <Marker
+      position={[
+        rutaValida[rutaValida.length - 1].lat,
+        rutaValida[rutaValida.length - 1].lon
+      ]}
+      icon={iconRutaFin}
+    >
+      <Popup>
+        <strong>🏁 Fin del recorrido cargado</strong><br />
+        Lat: {rutaValida[rutaValida.length - 1].lat.toFixed(6)}<br />
+        Lon: {rutaValida[rutaValida.length - 1].lon.toFixed(6)}
+      </Popup>
+    </Marker>
+  </>
+)}
 
 
       {/* Trazos de navegación perfectamente sincronizados con el estado secuencial */}
@@ -315,9 +377,6 @@ const wps = waypoints.filter(
     );
   });
 })()}
-
-
-
 
 
       {/* Posición Actual */}

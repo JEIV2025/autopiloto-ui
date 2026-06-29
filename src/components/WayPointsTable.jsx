@@ -437,6 +437,19 @@ const gpsOkClass = (ok) => ok ? "gpsValueOk" : "gpsValueBad";
                 </span>
               </button>
 
+              <button
+  className="px-3 py-2 rounded shadow text-sm bg-purple-600 hover:bg-purple-700 text-white transition font-semibold"
+  onClick={() => {
+    socket.emit('control-cmd', {
+      cmd: 'test-orientacion'
+    });
+
+    console.log('🧭 Comando enviado: test-orientacion');
+  }}
+>
+  🧭 Test Orientación
+</button>
+
           {retornoInverso && (
             <div className="bg-blue-600 text-white px-3 py-1 rounded">
               🔄 Retorno por waypoints inversos

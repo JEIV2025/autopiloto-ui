@@ -809,4 +809,16 @@ switch inferior seleccion UAV  USV
 }
 
 
+@keyframes telemetriaAlarm {
+  0% {
+    box-shadow: 0 0 5px red;
+  }
 
+  50% {
+    box-shadow: 0 0 25px red;
+  }
+
+  100% {
+    box-shadow: 0 0 5px red;
+  }
+}
