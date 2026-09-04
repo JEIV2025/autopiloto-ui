@@ -32,6 +32,14 @@ const WayPointsTable = ({
 const [retornoIdx, setRetornoIdx] = useState(0);
 const [retornoDirecto, setRetornoDirecto] = useState(false);
 
+const [mostrarModalRecorrido, setMostrarModalRecorrido] = useState(false);
+const [accionPendiente, setAccionPendiente] = useState(null);
+
+const [accionRecorrido, setAccionRecorrido] = useState(null);
+// accionRecorrido: "navegacion" | "simulacion"
+
+const [modoRecorrido, setModoRecorrido] = useState("pausado");
+
 
  const simPosRef = useRef(null);
   const rumbo = telemetry?.rumbo ?? 0;
@@ -56,6 +64,77 @@ const GPS_MAX_HDOP = 3.0;
 const GPS_MAX_EHPE = 10.0;
 
 
+const handleIniciarNavegacion = () => {
+  if (!gpsReal) {
+    setMostrarAlertaGPS(true);
+    return;
+  }
+  setAccionPendiente("navegacion");
+  setMostrarModalRecorrido(true);
+};
+const handleSimularNavegacion = () => {
+  setAccionPendiente("simulacion");
+  setMostrarModalRecorrido(true);
+};
+
+const seleccionarModoRecorrido = (modo) => {
+
+        console.log(`🧭 Modo de recorrido seleccionado: ${modo}`);
+
+        setModoRecorrido(modo);
+        setMostrarModalRecorrido(false);
+
+        // ==========================================================
+        // NAVEGACIÓN REAL
+        // ==========================================================
+
+        if (accionRecorrido === "navegacion") {
+
+          socket.emit('control-cmd', {
+            cmd: 'iniciar-navegacion',
+            modoRecorrido: modo
+          });
+
+          console.log(
+            `📡 Orden enviada: iniciar navegación real - modo ${modo}`
+          );
+        }
+
+
+        // ==========================================================
+        // SIMULACIÓN
+        // ==========================================================
+
+        if (accionRecorrido === "simulacion") {
+
+          const inicio = waypoints.find(
+            wp => wp.id === 'Inicio' || wp.id === 'Base'
+          );
+
+          if (inicio) {
+
+            simPosRef.current = {
+              lat: inicio.lat,
+              lon: inicio.lon
+            };
+
+            setCurrentPos(simPosRef.current);
+
+            setSimulatedPath?.([
+              simPosRef.current
+            ]);
+          }
+
+          setSimulando(true);
+          setSimulacionActiva?.(true);
+
+          console.log(
+            `🧭 Simulación iniciada - modo ${modo}`
+          );
+        }
+
+  setAccionRecorrido(null);
+};
   // Haversine en km
   function haversineDistance(lat1, lon1, lat2, lon2) {
     const R = 6371; // radio de la tierra
@@ -96,42 +175,42 @@ useEffect(() => {
   let interval;
   if (simulando) {
     // Lista de destinos (excluye Base). El índice de progreso referencia esta lista.
-const destinos = waypoints.filter(
-  w =>
-    w.id !== 'Inicio' &&
-    w.id !== 'Base' &&
-    typeof w.lat === 'number' &&
-    typeof w.lon === 'number' &&
-    !isNaN(w.lat) &&
-    !isNaN(w.lon)
-);
+      const destinos = waypoints.filter(
+        w =>
+          w.id !== 'Inicio' &&
+          w.id !== 'Base' &&
+          typeof w.lat === 'number' &&
+          typeof w.lon === 'number' &&
+          !isNaN(w.lat) &&
+          !isNaN(w.lon)
+      );
 
-    console.log("simulando:", simulando);
-    console.log("destinos:", destinos);
-    console.log("progressIdx:", progressIdx);
-    console.log("currentPos:", currentPos);
+          console.log("simulando:", simulando);
+          console.log("destinos:", destinos);
+          console.log("progressIdx:", progressIdx);
+          console.log("currentPos:", currentPos);
 
-  
-    // Si no hay destinos, detener simulación
-    if (destinos.length === 0) {
-      console.warn("No hay destinos válidos para simular");
-      setSimulando(false);
-      setSimulacionActiva?.(false);
-      if (setSimBoatHeading) setSimBoatHeading(null);
-      return () => {};
-    }
+        
+          // Si no hay destinos, detener simulación
+          if (destinos.length === 0) {
+            console.warn("No hay destinos válidos para simular");
+            setSimulando(false);
+            setSimulacionActiva?.(false);
+            if (setSimBoatHeading) setSimBoatHeading(null);
+            return () => {};
+          }
 
-const inicio = waypoints.find(
-  wp => wp.id === 'Inicio' || wp.id === 'Base'
-);
+      const inicio = waypoints.find(
+        wp => wp.id === 'Inicio' || wp.id === 'Base'
+      );
 
-const startLat = inicio?.lat ?? currentPos?.lat ?? -34.5884060;
-const startLon = inicio?.lon ?? currentPos?.lon ?? -58.3665789;
+      const startLat = inicio?.lat ?? currentPos?.lat ?? -34.5884060;
+      const startLon = inicio?.lon ?? currentPos?.lon ?? -58.3665789;
 
-let pos = simPosRef.current ?? {
-  lat: startLat,
-  lon: startLon
-};
+      let pos = simPosRef.current ?? {
+        lat: startLat,
+        lon: startLon
+      };
 
     interval = setInterval(() => {
       // Si ya completamos todos los WP → detener
@@ -143,12 +222,12 @@ let pos = simPosRef.current ?? {
         return;
       }
 
-const destino =  (retornoInverso || retornoDirecto)
-    ? rutaRetorno[retornoIdx]
-    : destinos[progressIdx];
+        const destino =  (retornoInverso || retornoDirecto)
+            ? rutaRetorno[retornoIdx]
+            : destinos[progressIdx];
 
-if (!destino) return;
-  
+        if (!destino) return;
+          
 
       // Distancia en km al destino actual
       const distKm = haversineDistance(pos.lat, pos.lon, destino.lat, destino.lon);
@@ -161,77 +240,122 @@ if (!destino) return;
         ? Number(destino.radioLlegada) / 1000
         : 0.05;
 
+        console.log("🧭 modoRecorrido actual:", modoRecorrido);
+
       // Si llegamos cerca, quedarnos en el WP hasta confirmar manualmente
-if (!Number.isFinite(distKm) || distKm <= radioLlegadaKm) {
-  pos = { lat: destino.lat, lon: destino.lon };
-  simPosRef.current = pos;
-  setCurrentPos(pos);
-
-  if (setSimulatedPath) {
-    setSimulatedPath(prev => [...prev.slice(-1000), pos]);
-  }
-
-  if (retornoInverso || retornoDirecto) {
-    clearInterval(interval);
-
-    if (retornoIdx < rutaRetorno.length - 1) {
-      setRetornoIdx(prev => prev + 1);
-      return;
-    }
-
-    setRetornoFinalizado(true);
-    setRetornoInverso(false);
-    setSimulando(false);
-    setSimulacionActiva?.(false);
-    setSimBoatHeading?.(null);
-
-    console.log("🏁 Retorno al Inicio completado");
-    return;
-  }
-
-  return;
-}else {
-        const velocidadDestino = (retornoInverso || retornoDirecto)
-            ? Math.max(...destinos.map(w => Number(w.velocidad) || 0))
-            : Number(destino.velocidad);
-
-        if (!Number.isFinite(velocidadDestino) || velocidadDestino <= 0) {
-          setErrorSimulacion(`⚠️ Falta cargar velocidad en ${destino.id}`);
-          setSimulando(false);
-          setSimulacionActiva?.(false);
-          clearInterval(interval);
-          return;
-        }
-
-        setErrorSimulacion("");
-
-        const FACTOR_SIMULACION = 200;
-
-        const velKms = ((velocidadDestino * FACTOR_SIMULACION) / 3600) / 10;
-          
-        const rawFrac = velKms / distKm;
-        const frac = Math.max(0, Math.min(rawFrac, 1)); // clamp [0,1]
-
-        pos = {
-          lat: pos.lat + (destino.lat - pos.lat) * frac,
-          lon: pos.lon + (destino.lon - pos.lon) * frac,
-        };
+      if (!Number.isFinite(distKm) || distKm <= radioLlegadaKm) {
+        pos = { lat: destino.lat, lon: destino.lon };
         simPosRef.current = pos;
         setCurrentPos(pos);
 
-       if (setSimulatedPath) {
+        if (setSimulatedPath) {
           setSimulatedPath(prev => [...prev.slice(-1000), pos]);
         }
-        console.log(
-          `➡️ Navegando hacia ${destino.id} | Velocidad real: ${velocidadDestino} km/h | Simulada: ${velocidadDestino * FACTOR_SIMULACION} km/h`
-        );
-        console.log(
-        `📏 Distancia: ${(distKm * 1000).toFixed(1)} m | Radio: ${destino.radioLlegada} m`
-        );
 
-      }
+        if (retornoInverso || retornoDirecto) {
+          clearInterval(interval);
 
-    }, 100); // actualiza cada 1 seg
+          if (retornoIdx < rutaRetorno.length - 1) {
+            setRetornoIdx(prev => prev + 1);
+            return;
+          }
+
+          setRetornoFinalizado(true);
+          setRetornoInverso(false);
+          setSimulando(false);
+          setSimulacionActiva?.(false);
+          setSimBoatHeading?.(null);
+
+          console.log("🏁 Retorno al Inicio completado");
+          return;
+        }
+//...........................................
+
+
+          // ======================================================
+          // NAVEGACIÓN CONTINUA
+          // ======================================================
+          if (modoRecorrido === "continuo") {
+
+            console.log(`✅ ${destino.id} alcanzado`);
+
+            // Si todavía quedan waypoints
+            if (progressIdx < destinos.length - 1) {
+
+              console.log("▶ Avanzando automáticamente al siguiente waypoint");
+
+              clearInterval(interval);
+
+              setProgressIdx(prev => prev + 1);
+
+              return;
+            }
+
+            // Último waypoint
+            console.log("🏁 Último waypoint alcanzado");
+
+            clearInterval(interval);
+
+            setSimulando(false);
+            setSimulacionActiva?.(false);
+            setSimBoatHeading?.(null);
+
+            return;
+          }
+
+
+          // ======================================================
+          // NAVEGACIÓN PAUSADA
+          // ======================================================
+
+          console.log(
+            `⏸ ${destino.id} alcanzado - esperando WayPoint Cumplido`
+          );
+
+//.........................................
+        return;
+      }else {
+              const velocidadDestino = (retornoInverso || retornoDirecto)
+                  ? Math.max(...destinos.map(w => Number(w.velocidad) || 0))
+                  : Number(destino.velocidad);
+
+              if (!Number.isFinite(velocidadDestino) || velocidadDestino <= 0) {
+                setErrorSimulacion(`⚠️ Falta cargar velocidad en ${destino.id}`);
+                setSimulando(false);
+                setSimulacionActiva?.(false);
+                clearInterval(interval);
+                return;
+              }
+
+              setErrorSimulacion("");
+
+              const FACTOR_SIMULACION = 200;
+
+              const velKms = ((velocidadDestino * FACTOR_SIMULACION) / 3600) / 10;
+                
+              const rawFrac = velKms / distKm;
+              const frac = Math.max(0, Math.min(rawFrac, 1)); // clamp [0,1]
+
+              pos = {
+                lat: pos.lat + (destino.lat - pos.lat) * frac,
+                lon: pos.lon + (destino.lon - pos.lon) * frac,
+              };
+              simPosRef.current = pos;
+              setCurrentPos(pos);
+
+            if (setSimulatedPath) {
+                setSimulatedPath(prev => [...prev.slice(-1000), pos]);
+              }
+              console.log(
+                `➡️ Navegando hacia ${destino.id} | Velocidad real: ${velocidadDestino} km/h | Simulada: ${velocidadDestino * FACTOR_SIMULACION} km/h`
+              );
+              console.log(
+              `📏 Distancia: ${(distKm * 1000).toFixed(1)} m | Radio: ${destino.radioLlegada} m`
+              );
+
+            }
+
+    }, 100); // actualiza cada 0.1 seg
 
 
   } else {
@@ -248,7 +372,8 @@ if (!Number.isFinite(distKm) || distKm <= radioLlegadaKm) {
   progressIdx,
   retornoInverso,
   retornoIdx,
-  rutaRetorno
+  rutaRetorno,
+  modoRecorrido
 ]);
 
 
@@ -346,16 +471,21 @@ const gpsOkClass = (ok) => ok ? "gpsValueOk" : "gpsValueBad";
                   : 'bg-gray-500 text-gray-300 cursor-not-allowed'
               }`}
               onClick={() => {
-
+                // 1. Primero verificar condiciones GPS
+           
                 if (!gpsNavReady) {
                   setMostrarAlertaGPS(true);
                   return;
                 }
 
+                // 2. GPS correcto → preguntar modo de recorrido
+                setAccionRecorrido("navegacion");
+                setMostrarModalRecorrido(true);
+/*
                 socket.emit('control-cmd', {
                   cmd: 'iniciar-navegacion'
                 });
-
+*/
                 console.log('📡 Orden enviada: iniciar navegación real');
               }}
             >
@@ -401,32 +531,30 @@ const gpsOkClass = (ok) => ok ? "gpsValueOk" : "gpsValueBad";
 
               <span className="wp-btn-icon">✓</span>
             </button>
+            
             <button
                      className={`wp-btn-simulate px-3 py-2 rounded shadow text-sm ${
                      simulando ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700'
                     } text-white transition`}
                   onClick={() => {
-                    const nuevoEstado = !simulando;
 
-                    if (nuevoEstado) {
-                      const inicio = waypoints.find(wp => wp.id === 'Inicio' || wp.id === 'Base');
+                  // Si ya está simulando → detener directamente
+                  if (simulando) {
 
-                      if (inicio) {
-                        simPosRef.current = {
-                          lat: inicio.lat,
-                          lon: inicio.lon
-                        };
+                    simPosRef.current = null;
+                    setSimBoatHeading?.(null);
 
-                        setCurrentPos(simPosRef.current);
-                        setSimulatedPath?.([simPosRef.current]);
-                      }
-                    } else {
-                      simPosRef.current = null;
-                      setSimBoatHeading?.(null);
-                    }
+                    setSimulando(false);
+                    setSimulacionActiva?.(false);
 
-                    setSimulando(nuevoEstado);
-                    setSimulacionActiva?.(nuevoEstado);
+                    console.log('🛑 Simulación detenida');
+
+                    return;
+                  }
+
+                  // Si NO está simulando → preguntar modo de recorrido
+                  setAccionRecorrido("simulacion");
+                  setMostrarModalRecorrido(true);
                   }}
                 >
                 <span className="wp-btn-text">
@@ -438,17 +566,17 @@ const gpsOkClass = (ok) => ok ? "gpsValueOk" : "gpsValueBad";
               </button>
 
               <button
-  className="px-3 py-2 rounded shadow text-sm bg-purple-600 hover:bg-purple-700 text-white transition font-semibold"
-  onClick={() => {
-    socket.emit('control-cmd', {
-      cmd: 'test-orientacion'
-    });
+              className="px-3 py-2 rounded shadow text-sm bg-purple-600 hover:bg-purple-700 text-white transition font-semibold"
+              onClick={() => {
+                socket.emit('control-cmd', {
+                  cmd: 'test-orientacion'
+                });
 
-    console.log('🧭 Comando enviado: test-orientacion');
-  }}
->
-  🧭 Test Orientación
-</button>
+                console.log('🧭 Comando enviado: test-orientacion');
+              }}
+            >
+              🧭 Test Orientación
+            </button>
 
           {retornoInverso && (
             <div className="bg-blue-600 text-white px-3 py-1 rounded">
@@ -787,6 +915,100 @@ const gpsOkClass = (ok) => ok ? "gpsValueOk" : "gpsValueBad";
   </div>
 )}
 
+{mostrarModalRecorrido && (
+  <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/60">
+
+    <div className="bg-gray-800 text-white rounded-xl shadow-2xl p-6 w-[430px] max-w-[90vw] text-center">
+
+      <h2 className="text-xl font-bold mb-3">
+        🧭 Modo de Recorrido
+      </h2>
+
+      <p className="text-gray-300 mb-6">
+        ¿Cómo quiere hacer el recorrido de waypoints?
+      </p>
+
+      <div className="flex justify-center gap-4">
+
+        {/* PAUSADO */}
+        <button
+          onClick={() => seleccionarModoRecorrido("pausado")}
+          className="
+            px-5 py-3
+            rounded-lg
+            bg-yellow-600
+            hover:bg-yellow-700
+            text-white
+            font-semibold
+            transition
+          "
+        >
+          ⏸ Pausado
+        </button>
+
+
+        {/* CONTINUO */}
+        <button
+          onClick={() => seleccionarModoRecorrido("continuo")}
+          className="
+            px-5 py-3
+            rounded-lg
+            bg-green-600
+            hover:bg-green-700
+            text-white
+            font-semibold
+            transition
+          "
+        >
+          ▶ Continuo
+        </button>
+
+      </div>
+
+
+      <div className="mt-5 text-sm text-gray-400">
+
+        <div>
+          <strong className="text-yellow-400">
+            Pausado:
+          </strong>
+          {" "}
+          espera confirmación en cada waypoint.
+        </div>
+
+        <div className="mt-1">
+          <strong className="text-green-400">
+            Continuo:
+          </strong>
+          {" "}
+          avanza automáticamente al siguiente waypoint.
+        </div>
+
+      </div>
+
+
+      <button
+        onClick={() => {
+          setMostrarModalRecorrido(false);
+          setAccionRecorrido(null);
+        }}
+        className="
+          mt-6
+          px-4 py-2
+          rounded
+          bg-gray-600
+          hover:bg-gray-700
+          text-white
+          transition
+        "
+      >
+        Cancelar
+      </button>
+
+    </div>
+
+  </div>
+)}
 
         </div>
       </div>

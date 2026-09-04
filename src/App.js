@@ -168,7 +168,7 @@ const handleAddWaypoint = (latlng) => {
         </button>
 
         {/* Acá va el contenido principal actual */}
-
+ {/*
           {seccionActiva === "navegacion" && (
             <div className="contenedorNavegacion grid grid-rows-[48%_75%] gap-4 h-full min-h-0">
               <div className="bg-white rounded-xl shadow p-2 overflow-hidden min-h-0">
@@ -176,6 +176,23 @@ const handleAddWaypoint = (latlng) => {
               </div>
 
               <div className="bg-[#64778aff] rounded-xl shadow p-2 overflow-auto min-h-0">
+                <NavigationTablero
+                  currentPos={currentPos}
+                  setCurrentPos={setCurrentPos}
+                  waypoints={waypoints}
+                  setWaypoints={setWaypoints}
+                  progressIdx={progressIdx}
+                  mode={mode}
+                  setMode={setMode}
+                  distanciasSeguridad={distanciasSeguridad}
+                />
+              </div>
+            </div>
+          )}
+*/}
+          {seccionActiva === "navegacion" && (
+            <div className="contenedorNavegacion h-full min-h-0">
+              <div className="bg-[#64778aff] rounded-xl shadow p-2 overflow-auto h-full min-h-0">
                 <NavigationTablero
                   currentPos={currentPos}
                   setCurrentPos={setCurrentPos}
