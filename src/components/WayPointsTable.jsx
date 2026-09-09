@@ -39,6 +39,7 @@ const [accionRecorrido, setAccionRecorrido] = useState(null);
 // accionRecorrido: "navegacion" | "simulacion"
 
 const [modoRecorrido, setModoRecorrido] = useState("pausado");
+const [accionFinalSeleccionada, setAccionFinalSeleccionada] = useState("esperar");
 
 
  const simPosRef = useRef(null);
@@ -77,29 +78,25 @@ const handleSimularNavegacion = () => {
   setMostrarModalRecorrido(true);
 };
 
-const seleccionarModoRecorrido = (modo) => {
+const seleccionarModoRecorrido = (modo , accionFinal) => {
 
-        console.log(`🧭 Modo de recorrido seleccionado: ${modo}`);
+            console.log("🧭 Modo:", modo);
+            console.log("🏁 Acción final:", accionFinal);
 
-        setModoRecorrido(modo);
-        setMostrarModalRecorrido(false);
+            setMostrarModalRecorrido(false);
 
-        // ==========================================================
-        // NAVEGACIÓN REAL
-        // ==========================================================
+            if (accionRecorrido === "navegacion") {
 
-        if (accionRecorrido === "navegacion") {
+              socket.emit("control-cmd", {
+                cmd: "iniciar-navegacion",
+                modoRecorrido: modo,
+                accionFinal: accionFinal
+              });
 
-          socket.emit('control-cmd', {
-            cmd: 'iniciar-navegacion',
-            modoRecorrido: modo
-          });
-
-          console.log(
-            `📡 Orden enviada: iniciar navegación real - modo ${modo}`
-          );
-        }
-
+              console.log(
+                `📡 Navegación iniciada | modo=${modo} | accionFinal=${accionFinal}`
+              );
+            }
 
         // ==========================================================
         // SIMULACIÓN
@@ -918,38 +915,164 @@ const gpsOkClass = (ok) => ok ? "gpsValueOk" : "gpsValueBad";
 {mostrarModalRecorrido && (
   <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/60">
 
-    <div className="bg-gray-800 text-white rounded-xl shadow-2xl p-6 w-[430px] max-w-[90vw] text-center">
+    <div className="bg-gray-800 text-white rounded-xl shadow-2xl p-6 w-[520px] max-w-[92vw] text-center">
 
       <h2 className="text-xl font-bold mb-3">
-        🧭 Modo de Recorrido
+        🧭 Configuración del Recorrido
       </h2>
 
-      <p className="text-gray-300 mb-6">
-        ¿Cómo quiere hacer el recorrido de waypoints?
+      <p className="text-gray-300 mb-5">
+        Seleccione cómo desea recorrer los waypoints y qué debe hacer el vehículo al finalizar la misión.
       </p>
 
-      <div className="flex justify-center gap-4">
 
-        {/* PAUSADO */}
+      {/* ===================================================== */}
+      {/* MODO DE RECORRIDO */}
+      {/* ===================================================== */}
+
+      <div className="mb-6">
+
+        <h3 className="font-semibold mb-3">
+          Modo de recorrido
+        </h3>
+
+        <div className="flex justify-center gap-4">
+
+          <button
+            onClick={() => setModoRecorrido("pausado")}
+            className={`
+              px-5 py-3
+              rounded-lg
+              font-semibold
+              transition
+              ${
+                modoRecorrido === "pausado"
+                  ? "bg-yellow-600 ring-2 ring-yellow-300"
+                  : "bg-gray-600 hover:bg-gray-500"
+              }
+            `}
+          >
+            ⏸ Pausado
+          </button>
+
+
+          <button
+            onClick={() => setModoRecorrido("continuo")}
+            className={`
+              px-5 py-3
+              rounded-lg
+              font-semibold
+              transition
+              ${
+                modoRecorrido === "continuo"
+                  ? "bg-green-600 ring-2 ring-green-300"
+                  : "bg-gray-600 hover:bg-gray-500"
+              }
+            `}
+          >
+            ▶ Continuo
+          </button>
+
+        </div>
+
+        <div className="mt-3 text-sm text-gray-400">
+
+          {modoRecorrido === "pausado" ? (
+            <span>
+              Espera confirmación del operador en cada waypoint.
+            </span>
+          ) : (
+            <span>
+              Avanza automáticamente de un waypoint al siguiente.
+            </span>
+          )}
+
+        </div>
+
+      </div>
+
+
+      {/* ===================================================== */}
+      {/* ACCION FINAL */}
+      {/* ===================================================== */}
+
+      <div className="border-t border-gray-600 pt-5">
+
+        <h3 className="font-semibold mb-3">
+          Al llegar al último waypoint
+        </h3>
+
+        <div className="flex flex-col gap-3">
+
+          <button          
+            onClick={() => setAccionFinalSeleccionada("esperar")}
+            className={`
+              px-4 py-3
+              rounded-lg
+              transition
+              ${
+                accionFinalSeleccionada === "esperar"
+                  ? "bg-blue-600 ring-2 ring-blue-300"
+                  : "bg-gray-600 hover:bg-gray-500"
+              }
+            `}
+          >
+            ⏳ Permanecer en el último waypoint
+          </button>
+
+
+          <button
+            onClick={() => setAccionFinalSeleccionada("retorno-inverso")}
+            className={`
+              px-4 py-3
+              rounded-lg
+              transition
+              ${
+                accionFinalSeleccionada === "retorno-inverso"
+                  ? "bg-purple-600 ring-2 ring-purple-300"
+                  : "bg-gray-600 hover:bg-gray-500"
+              }
+            `}
+          >
+            ↩ Volver siguiendo los waypoints anteriores
+          </button>
+
+
+          <button
+          disabled={modoRecorrido === "pausado"}
+            onClick={() => setAccionFinalSeleccionada("retorno-directo")}
+            className={`
+              px-4 py-3
+              rounded-lg
+              transition
+              ${
+                accionFinalSeleccionada === "retorno-directo"
+                  ? "bg-red-600 ring-2 ring-red-300"
+                  : "bg-gray-600 hover:bg-gray-500"
+              }
+            `}
+          >
+            🏠 Volver directamente a Inicio
+          </button>
+
+        </div>
+
+      </div>
+
+
+      {/* ===================================================== */}
+      {/* CONFIRMAR / CANCELAR */}
+      {/* ===================================================== */}
+
+      <div className="flex justify-center gap-4 mt-6">
+
         <button
-          onClick={() => seleccionarModoRecorrido("pausado")}
-          className="
-            px-5 py-3
-            rounded-lg
-            bg-yellow-600
-            hover:bg-yellow-700
-            text-white
-            font-semibold
-            transition
-          "
-        >
-          ⏸ Pausado
-        </button>
-
-
-        {/* CONTINUO */}
-        <button
-          onClick={() => seleccionarModoRecorrido("continuo")}
+          onClick={() => {
+            seleccionarModoRecorrido(
+              modoRecorrido,
+              accionFinalSeleccionada
+            );
+          }}
           className="
             px-5 py-3
             rounded-lg
@@ -960,50 +1083,28 @@ const gpsOkClass = (ok) => ok ? "gpsValueOk" : "gpsValueBad";
             transition
           "
         >
-          ▶ Continuo
+          ✅ Confirmar
+        </button>
+
+
+        <button
+          onClick={() => {
+            setMostrarModalRecorrido(false);
+            setAccionRecorrido(null);
+          }}
+          className="
+            px-5 py-3
+            rounded-lg
+            bg-gray-600
+            hover:bg-gray-700
+            text-white
+            transition
+          "
+        >
+          Cancelar
         </button>
 
       </div>
-
-
-      <div className="mt-5 text-sm text-gray-400">
-
-        <div>
-          <strong className="text-yellow-400">
-            Pausado:
-          </strong>
-          {" "}
-          espera confirmación en cada waypoint.
-        </div>
-
-        <div className="mt-1">
-          <strong className="text-green-400">
-            Continuo:
-          </strong>
-          {" "}
-          avanza automáticamente al siguiente waypoint.
-        </div>
-
-      </div>
-
-
-      <button
-        onClick={() => {
-          setMostrarModalRecorrido(false);
-          setAccionRecorrido(null);
-        }}
-        className="
-          mt-6
-          px-4 py-2
-          rounded
-          bg-gray-600
-          hover:bg-gray-700
-          text-white
-          transition
-        "
-      >
-        Cancelar
-      </button>
 
     </div>
 
