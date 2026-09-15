@@ -20,7 +20,7 @@ L.Icon.Default.mergeOptions({
 
 // Eliminar baseIcon personalizado
 
-
+ 
 // Componente para arreglar el resize
 const MapFixer = ({ trigger, seguirBarco, lat, lon }) => {
   const map = useMap();
@@ -67,6 +67,10 @@ const FeedbackClickSeguir = () => {
   return null;
 };
 
+const centroInicialMapa = [
+  -34.5884060,
+  -58.3665789
+];
 
 // Icono de waypoint completado
 const iconCompletado = L.divIcon({
@@ -105,9 +109,30 @@ const vehicleLabel = mode === "aereo" ? "UAV" : "USV";
   const { telemetry } = useTelemetry();
   
   // Usa la posición simulada si está disponible
-  const latitud = currentPos?.lat ?? -34.5884060;
-  const longitud = currentPos?.lon ?? -58.3665789;
-  
+const posicionActualValida =
+  Number.isFinite(currentPos?.lat) &&
+  Number.isFinite(currentPos?.lon) &&
+  currentPos.lat >= -90 &&
+  currentPos.lat <= 90 &&
+  currentPos.lon >= -180 &&
+  currentPos.lon <= 180 &&
+  !(currentPos.lat === 0 && currentPos.lon === 0);
+
+const latitud = posicionActualValida
+  ? currentPos.lat
+  : undefined;
+
+const longitud = posicionActualValida
+  ? currentPos.lon
+  : undefined;
+
+/*
+ * Las coordenadas predeterminadas solamente se utilizan
+ * para centrar inicialmente el mapa.
+ */
+const centroMapa = posicionActualValida
+  ? [latitud, longitud]
+  : centroInicialMapa;
   // Determinar el rumbo según el estado:
   // - Si hay simBoatHeading (simulando), usar ese rumbo
   // - Si no hay simulación, usar el rumbo de telemetría del bote físico
@@ -122,9 +147,13 @@ const rumbo =
     ? 360 - Number(telemetry.rumbo)
     : currentPos?.rumbo ?? 0;
 
+const rumboValido = Number.isFinite(Number(rumbo))
+  ? Number(rumbo)
+  : 0;
+
 const rumboVisual = haySimulacion
-  ? rumbo
-  : 360 - rumbo;
+  ? rumboValido
+  : 360 - rumboValido;
 
 const rotationStyle =
   mode === "aereo"
@@ -133,11 +162,7 @@ const rotationStyle =
 
   const pitch = telemetry?.pitch ?? 0;
   const roll = telemetry?.roll ?? 0;
-  const usandoValoresPorDefecto =
-    telemetry?.lat === undefined || telemetry?.lon === undefined;
-
-    const latQuery = latitud.toFixed(6);
-const lonQuery = longitud.toFixed(6);
+const usandoValoresPorDefecto =  !posicionActualValida;
 
 
   // Distancia Haversine (km)
@@ -199,7 +224,7 @@ const rutaValida = (rutaCargada || []).filter(
 
 
     <MapContainer
-      center={[latitud, longitud]}
+      center={centroMapa}
       zoom={14}
       minZoom={10}
       maxZoom={17}
@@ -379,25 +404,32 @@ const wps = waypoints.filter(
 })()}
 
 
-      {/* Posición Actual */}
-      <Marker
-        className='boteImg'
-        position={[latitud, longitud]}
-        icon={L.divIcon({
-          className: 'vehicle-marker',
-          html: `<img src="${vehicleImg}" 
-                      style="width:50px;${rotationStyle}" 
-                      alt="${vehicleLabel}" />`,
-          iconSize: [50, 50],
-          iconAnchor: [25, 25],
-        })}
-      >
-        <Popup>
-          Posición Actual<br />
-          Modo: {vehicleLabel}<br />
-          Rumbo: {rumbo?.toFixed(2)}°<br />
-        </Popup>
-    </Marker>
+        
+        {/* Posición actual */}
+        {posicionActualValida && (
+          <Marker
+            className="boteImg"
+            position={[latitud, longitud]}
+            icon={L.divIcon({
+              className: 'vehicle-marker',
+              html: `
+                <img
+                  src="${vehicleImg}"
+                  style="width:50px;${rotationStyle}"
+                  alt="${vehicleLabel}"
+                />
+              `,
+              iconSize: [50, 50],
+              iconAnchor: [25, 25],
+            })}
+          >
+            <Popup>
+              Posición Actual<br />
+              Modo: {vehicleLabel}<br />
+              Rumbo: {rumboValido.toFixed(2)}°<br />
+            </Popup>
+          </Marker>
+        )}
 
     {/* Línea punteada entre waypoints eliminada */}
 

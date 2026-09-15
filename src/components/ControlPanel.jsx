@@ -55,6 +55,16 @@ const ControlPanel = ({ waypoints,
   const [panelImuAbierto, setPanelImuAbierto] = useState(false);
   const [panelMarAbierto, setPanelMarAbierto] = useState(false);
 
+  const [gpsConfig, setGpsConfig] = useState({
+  min_sats: 6,
+  max_hdop: 3.0,
+  max_ehpe_m: 10.0,
+  required_samples: 3,
+  max_age_ms: 2000,
+});
+
+const [mensajeGpsConfig, setMensajeGpsConfig] = useState("");
+
   //distancias de seguridad....
 const [distMin, setDistMin] = useState(
   (distanciasSeguridad?.distmin ?? 40) / 100
@@ -89,6 +99,70 @@ const toggleGuardarRecorrido = () => {
   );
 };
 //..........................................
+
+const handleGpsConfigChange = (e) => {
+  const { name, value } = e.target;
+
+  setGpsConfig((configAnterior) => ({
+    ...configAnterior,
+    [name]: value,
+  }));
+};
+
+// .. funcion de envio....
+const handleEnviarGpsConfig = () => {
+  const data = {
+    min_sats: Math.trunc(Number(gpsConfig.min_sats)),
+    max_hdop: Number(gpsConfig.max_hdop),
+    max_ehpe_m: Number(gpsConfig.max_ehpe_m),
+    required_samples: Math.trunc(
+      Number(gpsConfig.required_samples)
+    ),
+    max_age_ms: Math.trunc(
+      Number(gpsConfig.max_age_ms)
+    ),
+  };
+
+  if (
+    !Number.isFinite(data.min_sats) ||
+    !Number.isFinite(data.max_hdop) ||
+    !Number.isFinite(data.max_ehpe_m) ||
+    !Number.isFinite(data.required_samples) ||
+    !Number.isFinite(data.max_age_ms) ||
+    data.min_sats < 1 ||
+    data.max_hdop <= 0 ||
+    data.max_ehpe_m <= 0 ||
+    data.required_samples < 1 ||
+    data.max_age_ms < 100
+  ) {
+    setMensajeGpsConfig("Parámetros GPS inválidos");
+
+    setTimeout(() => {
+      setMensajeGpsConfig("");
+    }, 3000);
+
+    return;
+  }
+
+  const paquete = {
+    cmd: "gpsinicial",
+    data,
+  };
+
+  console.log("Enviando configuración GPS:", paquete);
+
+  socket.emit("control-cmd", paquete );
+
+  setMensajeGpsConfig(
+    "Parámetros GPS enviados correctamente"
+  );
+
+  setTimeout(() => {
+    setMensajeGpsConfig("");
+  }, 3000);
+};
+
+//.......................................
 const handleCargarRecorridoCSV = (e) => {
   const file = e.target.files?.[0];
   if (!file) return;
@@ -247,20 +321,6 @@ useEffect(() => {
     setMagSoftHardIron([['', '', ''], ['', '', ''], ['', '', '']]);
   };
 
-  // Función para enviar comando de referenciar
-  const handleReferenciar = () => {
-    socket.emit('control-cmd', {
-      cmd: 'referenciar',
-      data: tipoNorte
-    });
-    
-    // Guardar la selección en localStorage
-    localStorage.setItem('tipoNorte', tipoNorte);
-    
-    // Mostrar mensaje de confirmación
-    setMensajeReferencia('enviado');
-    setTimeout(() => setMensajeReferencia(null), 3000);
-  };
 
   // Función para enviar datos de orientación (rumbo, rolido, cabeceo)
   const handleEnviarOrientacion = () => {
@@ -691,64 +751,199 @@ useEffect(() => {
               </div>
               
              </div>
+            <div className="tipoNorte">
+              <h2>🛰️ Validación GPS</h2>
+
+              <hr
+                style={{
+                  border: "1px solid #ccc",
+                  margin: "5px 0",
+                  width: "100%",
+                }}
+              />
 
 
-            <div className='tipoNorte'>
-              <h2>🧭  Norte Referencia</h2>
-              <hr style={{ border: '1px solid #ccc', margin: '5px 0',width:'100%' }} />
-              <div className="flex flex-col gap-3 mt-4">
-                <label className="flex items-center gap-2 cursor-pointer">
+              <div className="flex flex-col gap-3">
+
+                {/* SATÉLITES MÍNIMOS */}
+                <label className="flex flex-col gap-1">
+                  <span className="text-sm font-semibold">
+                    Satélites mínimos
+                  </span>
+
                   <input
-                    type="radio"
-                    name="tipoNorte"
-                    value="desactivado"
-                    checked={tipoNorte === 'desactivado'}
-                    onChange={(e) => setTipoNorte(e.target.value)}
-                    className="w-4 h-4"
+                    type="number"
+                    name="min_sats"
+                    min="1"
+                    max="32"
+                    step="1"
+                    value={gpsConfig.min_sats}
+                    onChange={handleGpsConfigChange}
+                    className="
+                      w-full
+                      bg-gray-200
+                      border
+                      border-gray-400
+                      rounded
+                      px-3
+                      py-2
+                      text-gray-900
+                    "
                   />
-                  <span>Desactivado</span>
                 </label>
-                <label className="flex items-center gap-2 cursor-pointer">
+
+                {/* HDOP MÁXIMO */}
+                <label className="flex flex-col gap-1">
+                  <span className="text-sm font-semibold">
+                    HDOP máximo
+                  </span>
+
                   <input
-                    type="radio"
-                    name="tipoNorte"
-                    value="magnetico"
-                    checked={tipoNorte === 'magnetico'}
-                    onChange={(e) => setTipoNorte(e.target.value)}
-                    className="w-4 h-4"
+                    type="number"
+                    name="max_hdop"
+                    min="0.1"
+                    step="0.1"
+                    value={gpsConfig.max_hdop}
+                    onChange={handleGpsConfigChange}
+                    className="
+                      w-full
+                      bg-gray-200
+                      border
+                      border-gray-400
+                      rounded
+                      px-3
+                      py-2
+                      text-gray-900
+                    "
                   />
-                  <span>Magnético</span>
                 </label>
-                <label className="flex items-center gap-2 cursor-pointer">
+
+                {/* EHPE MÁXIMO */}
+                <label className="flex flex-col gap-1">
+                  <span className="text-sm font-semibold">
+                    EHPE máximo (m)
+                  </span>
+
                   <input
-                    type="radio"
-                    name="tipoNorte"
-                    value="declinacion"
-                    checked={tipoNorte === 'declinacion'}
-                    onChange={(e) => setTipoNorte(e.target.value)}
-                    className="w-4 h-4"
+                    type="number"
+                    name="max_ehpe_m"
+                    min="0.1"
+                    step="0.1"
+                    value={gpsConfig.max_ehpe_m}
+                    onChange={handleGpsConfigChange}
+                    className="
+                      w-full
+                      bg-gray-200
+                      border
+                      border-gray-400
+                      rounded
+                      px-3
+                      py-2
+                      text-gray-900
+                    "
                   />
-                  <span>Declinación</span>
                 </label>
+
+                {/* MUESTRAS REQUERIDAS */}
+                <label className="flex flex-col gap-1">
+                  <span className="text-sm font-semibold">
+                    Muestras buenas requeridas
+                  </span>
+
+                  <input
+                    type="number"
+                    name="required_samples"
+                    min="1"
+                    max="100"
+                    step="1"
+                    value={gpsConfig.required_samples}
+                    onChange={handleGpsConfigChange}
+                    className="
+                      w-full
+                      bg-gray-200
+                      border
+                      border-gray-400
+                      rounded
+                      px-3
+                      py-2
+                      text-gray-900
+                    "
+                  />
+                </label>
+
+                {/* ANTIGÜEDAD MÁXIMA */}
+                <label className="flex flex-col gap-1">
+                  <span className="text-sm font-semibold">
+                    Antigüedad máxima de datos (ms)
+                  </span>
+
+                  <input
+                    type="number"
+                    name="max_age_ms"
+                    min="100"
+                    max="60000"
+                    step="100"
+                    value={gpsConfig.max_age_ms}
+                    onChange={handleGpsConfigChange}
+                    className="
+                      w-full
+                      bg-gray-200
+                      border
+                      border-gray-400
+                      rounded
+                      px-3
+                      py-2
+                      text-gray-900
+                    "
+                  />
+                </label>
+
                 <button
-                  onClick={handleReferenciar}
-                  className="bg-blue-500 text-white px-4 py-2 font-semibold rounded shadow-md hover:bg-blue-600 mt-3"
+                  type="button"
+                  onClick={handleEnviarGpsConfig}
+                  className="
+                    bg-blue-500
+                    text-white
+                    px-4
+                    py-2
+                    font-semibold
+                    rounded
+                    shadow-md
+                    hover:bg-blue-600
+                    mt-3
+                  "
                 >
-                  Enviar
+                  Enviar parámetros GPS
                 </button>
               </div>
-              
-              {/* Mensaje de confirmación - Toast flotante */}
-              {mensajeReferencia && (
-                <div className="fixed top-4  z-50 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg shadow-lg ">
+
+              {mensajeGpsConfig && (
+                <div
+                  className={`
+                    fixed
+                    top-4
+                    z-50
+                    p-4
+                    rounded-lg
+                    shadow-lg
+                    border
+                    ${
+                      mensajeGpsConfig.includes("inválidos")
+                        ? "bg-red-100 border-red-400 text-red-700"
+                        : "bg-green-100 border-green-400 text-green-700"
+                    }
+                  `}
+                >
                   <div className="flex items-center">
-                    <span className="text-green-500 mr-2 text-xl">✅</span>
-                    <div>
-                      <span className="font-semibold block">Referencia enviada correctamente!</span>
-                      <p className="text-sm opacity-80">
-                        Tipo: <strong>{tipoNorte.charAt(0).toUpperCase() + tipoNorte.slice(1)}</strong>
-                      </p>
-                    </div>
+                    <span className="mr-2 text-xl">
+                      {mensajeGpsConfig.includes("inválidos")
+                        ? "⚠️"
+                        : "✅"}
+                    </span>
+
+                    <span className="font-semibold">
+                      {mensajeGpsConfig}
+                    </span>
                   </div>
                 </div>
               )}

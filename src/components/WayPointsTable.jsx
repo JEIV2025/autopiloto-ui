@@ -42,10 +42,33 @@ const [modoRecorrido, setModoRecorrido] = useState("pausado");
 const [accionFinalSeleccionada, setAccionFinalSeleccionada] = useState("esperar");
 
 
- const simPosRef = useRef(null);
-  const rumbo = telemetry?.rumbo ?? 0;
-  const lat = currentPos?.lat ?? telemetry?.lat ?? 0;
-  const lon = currentPos?.lon ?? telemetry?.lon ?? 0;
+const simPosRef = useRef(null);
+const inicioSimulacionRef = useRef(null);
+
+const rumbo = Number.isFinite(Number(telemetry?.rumbo))
+  ? Number(telemetry.rumbo)
+  : 0;
+
+ 
+  const INTERVALO_SIMULACION_MS = 100;
+const FACTOR_SIMULACION = 100;
+
+const posicionActualValida =
+  Number.isFinite(currentPos?.lat) &&
+  Number.isFinite(currentPos?.lon) &&
+  currentPos.lat >= -90 &&
+  currentPos.lat <= 90 &&
+  currentPos.lon >= -180 &&
+  currentPos.lon <= 180 &&
+  !(currentPos.lat === 0 && currentPos.lon === 0);
+
+const lat = posicionActualValida
+  ? currentPos.lat
+  : null;
+
+const lon = posicionActualValida
+  ? currentPos.lon
+  : null;
 const misionActiva = Boolean(telemetry?.misionActiva);
 const wpEnZona = Boolean(telemetry?.wpEnZona);
 const gpsReal = Boolean(telemetry?.gpsReal);
@@ -104,23 +127,64 @@ const seleccionarModoRecorrido = (modo , accionFinal) => {
 
         if (accionRecorrido === "simulacion") {
 
-          const inicio = waypoints.find(
-            wp => wp.id === 'Inicio' || wp.id === 'Base'
-          );
+const inicioEncontrado = waypoints.find(
+  wp =>
+    (wp.id === 'Inicio' || wp.id === 'Base') &&
+    Number.isFinite(wp.lat) &&
+    Number.isFinite(wp.lon)
+);
 
-          if (inicio) {
+/*
+ * Si todavía no existe Inicio, solamente para la simulación
+ * se utiliza la posición inicial del laboratorio.
+ */
+const inicio = inicioEncontrado ?? {
+  id: 'Inicio',
+  lat: -34.5884060,
+  lon: -58.3665789,
+  altura: 0,
+  velocidad: 0,
+  radioLlegada: 0
+};
 
-            simPosRef.current = {
-              lat: inicio.lat,
-              lon: inicio.lon
-            };
+if (!inicioEncontrado) {
+  setWaypoints((prev) => [
+    inicio,
+    ...prev.filter(
+      wp => wp.id !== 'Inicio' && wp.id !== 'Base'
+    )
+  ]);
+}
 
-            setCurrentPos(simPosRef.current);
+/*
+ * Esta copia no debe modificarse mientras se mueve el barco.
+ */
+inicioSimulacionRef.current = {
+  id: 'Inicio',
+  lat: inicio.lat,
+  lon: inicio.lon,
+  altura: 0,
+  velocidad: 0,
+  radioLlegada: 0
+};
 
-            setSimulatedPath?.([
-              simPosRef.current
-            ]);
-          }
+simPosRef.current = {
+  lat: inicio.lat,
+  lon: inicio.lon
+};
+
+setCurrentPos(simPosRef.current);
+
+setSimulatedPath?.([
+  simPosRef.current
+]);
+
+setProgressIdx(0);
+setRutaRetorno([]);
+setRetornoIdx(0);
+setRetornoInverso(false);
+setRetornoDirecto(false);
+setRetornoFinalizado(false);
 
           setSimulando(true);
           setSimulacionActiva?.(true);
@@ -154,6 +218,7 @@ const seleccionarModoRecorrido = (modo , accionFinal) => {
     return distanceKm / speedKmh;
   }
 
+  
   function calculateHeading(lat1, lon1, lat2, lon2) {
     const toRad = deg => deg * Math.PI / 180;
     const toDeg = rad => rad * 180 / Math.PI;
@@ -211,13 +276,24 @@ useEffect(() => {
 
     interval = setInterval(() => {
       // Si ya completamos todos los WP → detener
-      if (progressIdx >= destinos.length) {
-        console.warn("Simulación finalizada: progressIdx fuera de rango");
-        setSimulando(false);
-        setSimulacionActiva?.(false);
-        clearInterval(interval);
-        return;
-      }
+if (
+  !retornoInverso &&
+  !retornoDirecto &&
+  progressIdx >= destinos.length
+) {
+  console.warn(
+    "Simulación finalizada: progressIdx fuera de rango"
+  );
+
+  setSimulando(false);
+  setSimBoatHeading?.(null);
+
+  /*
+   * No colocar setSimulacionActiva(false),
+   * porque haría desaparecer la posición simulada.
+   */
+  return;
+}
 
         const destino =  (retornoInverso || retornoDirecto)
             ? rutaRetorno[retornoIdx]
@@ -289,13 +365,135 @@ useEffect(() => {
             }
 
             // Último waypoint
-            console.log("🏁 Último waypoint alcanzado");
+// Último waypoint
+console.log("🏁 Último waypoint alcanzado");
 
-            clearInterval(interval);
+clearInterval(interval);
 
-            setSimulando(false);
-            setSimulacionActiva?.(false);
-            setSimBoatHeading?.(null);
+/*
+ * Marca todos los tramos de ida como completados.
+ */
+setProgressIdx(destinos.length);
+
+/*
+ * Mantiene visible la posición simulada.
+ * No debe ejecutarse setSimulacionActiva(false)
+ * al llegar al último waypoint.
+ */
+setSimulacionActiva?.(true);
+
+/* =====================================================
+ * PERMANECER EN EL ÚLTIMO WAYPOINT
+ * ===================================================== */
+if (accionFinalSeleccionada === "esperar") {
+  setSimulando(false);
+  setSimBoatHeading?.(null);
+
+  console.log(
+    "⏳ Simulación finalizada: permanece en el último waypoint"
+  );
+
+  return;
+}
+
+/* =====================================================
+ * RETORNO POR WAYPOINTS INVERSOS
+ * ===================================================== */
+if (accionFinalSeleccionada === "retorno-inverso") {
+  const inicio = inicioSimulacionRef.current;
+
+  if (!inicio) {
+    console.error(
+      "No existe una posición inicial para realizar el retorno"
+    );
+
+    setSimulando(false);
+    setSimBoatHeading?.(null);
+
+    return;
+  }
+
+  /*
+   * Si la ida fue:
+   * WP0 → WP1 → WP2 → WP3
+   *
+   * El regreso será:
+   * WP3 → WP2 → WP1 → WP0
+   *
+   * WP3 no se agrega porque el barco ya está allí.
+   */
+  const rutaInversa = [
+    ...destinos.slice(0, -1).reverse(),
+    inicio
+  ];
+
+  setRutaRetorno(rutaInversa);
+  setRetornoIdx(0);
+
+  setRetornoDirecto(false);
+  setRetornoInverso(true);
+  setRetornoFinalizado(false);
+
+  /*
+   * Se mantiene simulando.
+   * El cambio de rutaRetorno reiniciará el useEffect.
+   */
+  setSimulando(true);
+
+  console.log(
+    "↩️ Iniciando retorno por waypoints inversos:",
+    rutaInversa
+  );
+
+  return;
+}
+
+/* =====================================================
+ * RETORNO DIRECTO A WP0
+ * ===================================================== */
+if (accionFinalSeleccionada === "retorno-directo") {
+  const inicio = inicioSimulacionRef.current;
+
+  if (!inicio) {
+    console.error(
+      "No existe una posición inicial para realizar el retorno"
+    );
+
+    setSimulando(false);
+    setSimBoatHeading?.(null);
+
+    return;
+  }
+
+  setRutaRetorno([inicio]);
+  setRetornoIdx(0);
+
+  setRetornoInverso(false);
+  setRetornoDirecto(true);
+  setRetornoFinalizado(false);
+
+  setSimulando(true);
+
+  console.log(
+    "🏠 Iniciando retorno directo al punto inicial:",
+    inicio
+  );
+
+  return;
+}
+
+/*
+ * Seguridad ante un valor desconocido.
+ */
+setSimulando(false);
+setSimBoatHeading?.(null);
+
+console.warn(
+  "Acción final desconocida:",
+  accionFinalSeleccionada
+);
+
+return;
 
             return;
           }
@@ -326,13 +524,21 @@ useEffect(() => {
 
               setErrorSimulacion("");
 
-              const FACTOR_SIMULACION = 200;
+/*
+ * velocidadDestino se interpreta aquí como km/h.
+ * Calcula cuántos kilómetros debe avanzar en cada ciclo.
+ */
+const avanceKm =
+  velocidadDestino *
+  FACTOR_SIMULACION *
+  (INTERVALO_SIMULACION_MS / 3600000);
 
-              const velKms = ((velocidadDestino * FACTOR_SIMULACION) / 3600) / 10;
-                
-              const rawFrac = velKms / distKm;
-              const frac = Math.max(0, Math.min(rawFrac, 1)); // clamp [0,1]
+const rawFrac = avanceKm / distKm;
 
+const frac = Math.max(
+  0,
+  Math.min(rawFrac, 0.20)
+);
               pos = {
                 lat: pos.lat + (destino.lat - pos.lat) * frac,
                 lon: pos.lon + (destino.lon - pos.lon) * frac,
@@ -352,7 +558,7 @@ useEffect(() => {
 
             }
 
-    }, 100); // actualiza cada 0.1 seg
+    }, INTERVALO_SIMULACION_MS); // actualiza cada 0.1 seg
 
 
   } else {
@@ -370,6 +576,8 @@ useEffect(() => {
   retornoInverso,
   retornoIdx,
   rutaRetorno,
+  accionFinalSeleccionada,
+  retornoDirecto,
   modoRecorrido
 ]);
 
@@ -425,15 +633,24 @@ const destinoActual = destinosActuales[progressIdx];
 const esUltimoWaypoint = progressIdx >= destinosActuales.length - 1;
 const esPrimerWaypoint =  progressIdx <= 0;
 
-const distanciaAlDestinoKm = destinoActual
-  ? haversineDistance(lat, lon, destinoActual.lat, destinoActual.lon)
-  : Infinity;
+const distanciaAlDestinoKm =
+  posicionActualValida && destinoActual
+    ? haversineDistance(
+        lat,
+        lon,
+        destinoActual.lat,
+        destinoActual.lon
+      )
+    : Infinity;
 
 const radioLlegadaKm = destinoActual?.radioLlegada
   ? Number(destinoActual.radioLlegada) / 1000
   : 0.05;
 
-const llegoAlWaypoint = distanciaAlDestinoKm <= radioLlegadaKm;
+const llegoAlWaypoint =
+  posicionActualValida &&
+  Number.isFinite(distanciaAlDestinoKm) &&
+  distanciaAlDestinoKm <= radioLlegadaKm;
 
 
 const gpsOkClass = (ok) => ok ? "gpsValueOk" : "gpsValueBad";
@@ -447,16 +664,35 @@ const gpsOkClass = (ok) => ok ? "gpsValueOk" : "gpsValueBad";
             <div className="bg-gray-800 text-white p-2 rounded text-sm">
               <div className="flex items-center gap-2">
                 <span className="text font-bold">Posición Actual:</span>
-                <div className="flex gap-1">
-                  <div className="flex items-center gap-1">
-                    <span className=" text-xs text-white">{currentPos.lat >= 0 ? 'N' : 'S'}</span>
-                    <span className=" bg-black border text-white w-24 text-sm px-1 py-1">{currentPos.lat.toFixed(6)}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <span className="text-xs text-white">{currentPos.lon >= 0 ? 'E' : 'O'}</span>
-                    <span className="bg-black border text-white w-24 text-sm px-1 py-1">{currentPos.lon.toFixed(6)}</span>
-                  </div>
-                </div>
+<div className="flex gap-1">
+  {posicionActualValida ? (
+    <>
+      <div className="flex items-center gap-1">
+        <span className="text-xs text-white">
+          {lat >= 0 ? 'N' : 'S'}
+        </span>
+
+        <span className="bg-black border text-white w-24 text-sm px-1 py-1">
+          {Math.abs(lat).toFixed(6)}
+        </span>
+      </div>
+
+      <div className="flex items-center gap-1">
+        <span className="text-xs text-white">
+          {lon >= 0 ? 'E' : 'O'}
+        </span>
+
+        <span className="bg-black border text-white w-24 text-sm px-1 py-1">
+          {Math.abs(lon).toFixed(6)}
+        </span>
+      </div>
+    </>
+  ) : (
+    <span className="bg-yellow-600 text-black px-3 py-1 rounded font-semibold">
+      Esperando posición GPS
+    </span>
+  )}
+</div>
               </div>
             </div>
             <div className="navBtns flex gap-2">
@@ -596,7 +832,6 @@ const gpsOkClass = (ok) => ok ? "gpsValueOk" : "gpsValueBad";
                 <p className="text-gray-800 mb-4">
                   Se llegó al último waypoint. Para regresar al Inicio, seleccione el modo de retorno.
                 </p>
-
                 <div className="flex flex-col gap-3">
                   <button
                     className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded font-semibold"
@@ -606,27 +841,42 @@ const gpsOkClass = (ok) => ok ? "gpsValueOk" : "gpsValueBad";
                       if (misionActiva) {
                         socket.emit('control-cmd', { cmd: 'returnReverseWP' });
                       } else {
-                      const inicio = waypoints.find(w => w.id === 'Inicio' || w.id === 'Base');
+const inicio = inicioSimulacionRef.current;
 
-                      const wps = waypoints.filter(
-                        w =>
-                          w.id !== 'Inicio' &&
-                          w.id !== 'Base' &&
-                          typeof w.lat === 'number' &&
-                          typeof w.lon === 'number'
-                      );
+if (!inicio) {
+  console.error(
+    "No existe una posición inicial para el retorno"
+  );
+  return;
+}
+const wps = waypoints.filter(
+  w =>
+    w.id !== 'Inicio' &&
+    w.id !== 'Base' &&
+    Number.isFinite(w.lat) &&
+    Number.isFinite(w.lon)
+);
 
-                      const ruta = [
-                        ...wps.slice(0, -1).reverse(),
-                        inicio
-                      ].filter(Boolean);
+/*
+ * Si la posición actual es el último waypoint:
+ *
+ * WP3 → WP2 → WP1 → WP0
+ *
+ * Se excluye el último waypoint porque el barco
+ * ya se encuentra allí.
+ */
+const ruta = [
+  ...wps.slice(0, -1).reverse(),
+  inicio
+];
 
-                      setRutaRetorno(ruta);
-                      setRetornoIdx(0);
-                      setRetornoInverso(true);
-                      setRetornoFinalizado(false);
-                      setSimulando(true);
-                      setSimulacionActiva?.(true);
+setRutaRetorno(ruta);
+setRetornoIdx(0);
+setRetornoInverso(true);
+setRetornoDirecto(false);
+setRetornoFinalizado(false);
+setSimulando(true);
+setSimulacionActiva?.(true);
                       }
                     }}
                   >
@@ -645,22 +895,26 @@ const gpsOkClass = (ok) => ok ? "gpsValueOk" : "gpsValueBad";
                         return;
                       }
 
-                      const inicio = waypoints.find(
-                        wp => wp.id === 'Inicio' || wp.id === 'Base'
-                      );
+const inicio = inicioSimulacionRef.current;
 
-                      if (!inicio) return;
+if (!inicio) {
+  console.error(
+    "No existe una posición inicial para el retorno"
+  );
+  return;
+}
 
-                      setRutaRetorno([inicio]);
-                      setRetornoIdx(0);
+setRutaRetorno([inicio]);
+setRetornoIdx(0);
 
-                      setRetornoDirecto(true);
-                      setRetornoFinalizado(false);
+setRetornoInverso(false);
+setRetornoDirecto(true);
+setRetornoFinalizado(false);
 
-                      setSimulando(true);
-                      setSimulacionActiva?.(true);
+setSimulando(true);
+setSimulacionActiva?.(true);
 
-                      console.log("⚡ Retorno directo al Inicio");
+console.log("⚡ Retorno directo al Inicio");
                     }}
                   >
                     ⚡ Volver directo al Inicio
@@ -722,38 +976,66 @@ const gpsOkClass = (ok) => ok ? "gpsValueOk" : "gpsValueBad";
                     estado = 'Inicio';
                     color = 'text-gray-400';
                     rowBg = 'bg-gray-800';
-                  } else {
-                    if (realIdx < progressIdx) {
-                      estado = 'Completado';
-                      color = 'text-green-500';
-                      rowBg = 'bg-green-900/30';
-                    } else if (realIdx === progressIdx) {
-                      // Si el barco está en el WP, mostrar "Zona de llegada"
-                      const distToWp = haversineDistance(lat, lon, wp.lat, wp.lon);
-                      estado = distToWp < 0.05 ? 'Zona de llegada' : 'En camino';
-                      color = distToWp < 0.05 ? 'text-yellow-400' : 'text-blue-500';
-                      rowBg = distToWp < 0.05 ? 'bg-yellow-900/30' : 'bg-blue-900/30';
-                    } else {
-                      estado = 'Próximo destino';
-                      color = 'text-red-500';
-                      rowBg = 'bg-red-900/20';
-                    }
-                  }
-                  let dist, distNudos, time;
-                  if (wp.id === 'Inicio') {
-                    dist = haversineDistance(lat, lon, wp.lat, wp.lon);
-                    distNudos = kmToNudos(dist).toFixed(2);
-                    time = estimatedTime(dist).toFixed(2);
-                  } else {
-                    if (realIdx < progressIdx) {
-                      distNudos = '--';
-                      time = '--';
-                    } else {
-                      dist = haversineDistance(lat, lon, wp.lat, wp.lon);
-                      distNudos = kmToNudos(dist).toFixed(2);
-                      time = estimatedTime(dist).toFixed(2);
-                    }
-                  }
+} else if (realIdx === progressIdx) {
+  if (!posicionActualValida) {
+    estado = 'Esperando posición';
+    color = 'text-yellow-400';
+    rowBg = 'bg-yellow-900/30';
+  } else {
+    const distToWp = haversineDistance(
+      lat,
+      lon,
+      wp.lat,
+      wp.lon
+    );
+
+    const estaEnZona =
+      Number.isFinite(distToWp) &&
+      distToWp < 0.05;
+
+    estado = estaEnZona
+      ? 'Zona de llegada'
+      : 'En camino';
+
+    color = estaEnZona
+      ? 'text-yellow-400'
+      : 'text-blue-500';
+
+    rowBg = estaEnZona
+      ? 'bg-yellow-900/30'
+      : 'bg-blue-900/30';
+  }
+}
+let distNudos = '--';
+let time = '--';
+
+if (posicionActualValida) {
+  if (wp.id === 'Inicio') {
+    const dist = haversineDistance(
+      lat,
+      lon,
+      wp.lat,
+      wp.lon
+    );
+
+    if (Number.isFinite(dist)) {
+      distNudos = kmToNudos(dist).toFixed(2);
+      time = estimatedTime(dist).toFixed(2);
+    }
+  } else if (realIdx >= progressIdx) {
+    const dist = haversineDistance(
+      lat,
+      lon,
+      wp.lat,
+      wp.lon
+    );
+
+    if (Number.isFinite(dist)) {
+      distNudos = kmToNudos(dist).toFixed(2);
+      time = estimatedTime(dist).toFixed(2);
+    }
+  }
+}
                   return (
                     <tr key={wp.id} className={`text-center ${rowBg} wp-tr`}>
 

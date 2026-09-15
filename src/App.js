@@ -42,41 +42,105 @@ const [mode, setMode] = useState("superficie");
 //...para saber si estoy simulando o utilizo coordenadas reales
 const [simulacionActiva, setSimulacionActiva] = useState(false);
   
-const [currentPos, setCurrentPos] = useState({
+const POSICION_SIMULACION_INICIAL = {
   lat: -34.5884060,
   lon: -58.3665789,
   rumbo: 0
-});
+};
 
-const [waypoints, setWaypoints] = useState([
-  {
-    id: 'Inicio',
-    lat: -34.5884060,
-    lon: -58.3665789,
-    altura: 0,
-    velocidad: 0,
-    radioLlegada: 0,
-  }
-]);
+const [currentPos, setCurrentPos] = useState(POSICION_SIMULACION_INICIAL
+);
+
+const [ultimaPosicionReal, setUltimaPosicionReal] =
+  useState(null);
+
+const [waypoints, setWaypoints] = useState([]);
 
   const [simBoatHeading, setSimBoatHeading] = useState(null);
 //-- posicionamiento por telemetria...........
-  const telemetriaValida =
-  typeof telemetry?.lat === 'number' &&
-  typeof telemetry?.lon === 'number';
+const telemetriaValida =
+  Number.isFinite(telemetry?.lat) &&
+  Number.isFinite(telemetry?.lon) &&
+  telemetry.lat >= -90 &&
+  telemetry.lat <= 90 &&
+  telemetry.lon >= -180 &&
+  telemetry.lon <= 180 &&
+  !(telemetry.lat === 0 && telemetry.lon === 0);
 
-const posicionReal = telemetriaValida
-  ? {
-      lat: telemetry.lat,
-      lon: telemetry.lon,
-      rumbo: telemetry.rumbo ?? 0,
-    }
-  : null;
+  useEffect(() => {
+  if (!telemetriaValida)
+    return;
 
-  const posicionMapa = simulacionActiva
+  setUltimaPosicionReal({
+    lat: telemetry.lat,
+    lon: telemetry.lon,
+    rumbo: Number.isFinite(telemetry.rumbo)
+      ? telemetry.rumbo
+      : 0,
+  });
+}, [
+  telemetriaValida,
+  telemetry?.lat,
+  telemetry?.lon,
+  telemetry?.rumbo
+]);
+
+const posicionMapa = simulacionActiva
   ? currentPos
-  : posicionReal ?? currentPos;
+  : ultimaPosicionReal;
 
+  useEffect(() => {
+  if (!posicionMapa)
+    return;
+
+/*
+ * WP0 solamente se actualiza durante la planificación.
+ * Al iniciar navegación real o simulada debe quedar fijo.
+ */
+if (misionCargadaEnVehiculo || simulacionActiva)
+  return;
+
+  setWaypoints((waypointsAnteriores) => {
+    const inicioAnterior = waypointsAnteriores.find(
+      (wp) => wp.id === 'Inicio' || wp.id === 'Base'
+    );
+
+    const otrosWaypoints = waypointsAnteriores.filter(
+      (wp) => wp.id !== 'Inicio' && wp.id !== 'Base'
+    );
+
+    /*
+     * Evita actualizar el estado si las coordenadas
+     * no cambiaron.
+     */
+    if (
+      inicioAnterior &&
+      inicioAnterior.lat === posicionMapa.lat &&
+      inicioAnterior.lon === posicionMapa.lon
+    ) {
+      return waypointsAnteriores;
+    }
+
+    const inicioActualizado = {
+      id: 'Inicio',
+      lat: posicionMapa.lat,
+      lon: posicionMapa.lon,
+      altura: 0,
+      velocidad: 0,
+      radioLlegada: 0,
+    };
+
+    return [
+      inicioActualizado,
+      ...otrosWaypoints
+    ];
+  });
+}, [
+  posicionMapa?.lat,
+  posicionMapa?.lon,
+  misionCargadaEnVehiculo,
+  simulacionActiva
+]);
   //.....
 
   useEffect(() => {
