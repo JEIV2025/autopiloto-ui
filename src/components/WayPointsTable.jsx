@@ -18,6 +18,7 @@ const WayPointsTable = ({
   simulatedPath,
   setSimulatedPath,
   misionCargadaEnVehiculo,
+  simulacionActiva,
   setSimulacionActiva
 }) => {
   const [velocidad, setVelocidad] = useState(2000); // velocidad fija para simulación (km/h)
@@ -40,7 +41,7 @@ const [accionRecorrido, setAccionRecorrido] = useState(null);
 
 const [modoRecorrido, setModoRecorrido] = useState("pausado");
 const [accionFinalSeleccionada, setAccionFinalSeleccionada] = useState("esperar");
-
+const [continuacionEnviada, setContinuacionEnviada] = useState(false);
 
 const simPosRef = useRef(null);
 const inicioSimulacionRef = useRef(null);
@@ -52,6 +53,25 @@ const rumbo = Number.isFinite(Number(telemetry?.rumbo))
  
   const INTERVALO_SIMULACION_MS = 100;
 const FACTOR_SIMULACION = 100;
+
+
+const wpEnZona = Boolean(telemetry?.wpEnZona);
+const gpsReal = Boolean(telemetry?.gpsReal);
+const gpsCommOk = Boolean(telemetry?.gpsCommOk);
+const gpsTimeValid = Boolean(telemetry?.gpsTimeValid);
+const gpsFixValid = Boolean(telemetry?.gpsFixValid);
+const gpsPosValid = Boolean(telemetry?.gpsPosValid);
+const gpsSats = Number(telemetry?.gpsSats ?? 0);
+const gpsHdop = Number(telemetry?.gpsHdop ?? 0);
+const gpsEhpe = Number(telemetry?.gpsEhpe ?? 0);
+const gpsNavReady = Boolean(telemetry?.gpsNavReady);
+const gpsQualityCount = Number(telemetry?.gpsQualityCount ?? 0);
+const gpsRequiredSamples = Number(telemetry?.gpsRequiredSamples ?? 3);
+
+const GPS_MIN_SATS = 6;
+const GPS_MAX_HDOP = 3.0;
+const GPS_MAX_EHPE = 10.0;
+
 
 const posicionActualValida =
   Number.isFinite(currentPos?.lat) &&
@@ -69,23 +89,38 @@ const lat = posicionActualValida
 const lon = posicionActualValida
   ? currentPos.lon
   : null;
-const misionActiva = Boolean(telemetry?.misionActiva);
-const wpEnZona = Boolean(telemetry?.wpEnZona);
-const gpsReal = Boolean(telemetry?.gpsReal);
-const gpsCommOk = Boolean(telemetry?.gpsCommOk);
-const gpsTimeValid = Boolean(telemetry?.gpsTimeValid);
-const gpsFixValid = Boolean(telemetry?.gpsFixValid);
-const gpsPosValid = Boolean(telemetry?.gpsPosValid);
-const gpsSats = Number(telemetry?.gpsSats ?? 0);
-const gpsHdop = Number(telemetry?.gpsHdop ?? 0);
-const gpsEhpe = Number(telemetry?.gpsEhpe ?? 0);
-const gpsNavReady = Boolean(telemetry?.gpsNavReady);
-const gpsQualityCount = Number(telemetry?.gpsQualityCount ?? 0);
-const gpsRequiredSamples = Number(telemetry?.gpsRequiredSamples ?? 3);
 
-const GPS_MIN_SATS = 6;
-const GPS_MAX_HDOP = 3.0;
-const GPS_MAX_EHPE = 10.0;
+const prepararWaypointsConInicioActual = () => {
+  if (!posicionActualValida || !gpsPosValid) {
+    setMostrarAlertaGPS(true);
+    return null;
+  }
+
+  const inicioAnterior = waypoints.find(
+    wp => wp.id === 'Inicio' || wp.id === 'Base'
+  );
+
+  const inicioActual = {
+    ...inicioAnterior,
+    id: 'Inicio',
+    lat,
+    lon,
+    altura: 0,
+    velocidad: 0,
+    radioLlegada: 0,
+  };
+
+  const destinos = waypoints.filter(
+    wp =>
+      wp.id !== 'Inicio' &&
+      wp.id !== 'Base'
+  );
+
+  return [
+    inicioActual,
+    ...destinos
+  ];
+};
 
 
 const handleIniciarNavegacion = () => {
@@ -109,11 +144,37 @@ const seleccionarModoRecorrido = (modo , accionFinal) => {
             setMostrarModalRecorrido(false);
 
             if (accionRecorrido === "navegacion") {
+              if (!posicionActualValida) {
+                setMostrarAlertaGPS(true);
+                setAccionRecorrido(null);
+                return;
+              }
+
+              /*
+              * Fija visualmente WP0 en la posición real
+              * desde la cual comienza la navegación.
+              */
+              setWaypoints((prev) => [
+                {
+                  id: "Inicio",
+                  lat: currentPos.lat,
+                  lon: currentPos.lon,
+                  altura: 0,
+                  velocidad: 0,
+                  radioLlegada: 0,
+                },
+                ...prev.filter(
+                  (wp) => wp.id !== "Inicio" && wp.id !== "Base"
+                ),
+              ]);
+
+              setProgressIdx(0);
+              setContinuacionEnviada(false);
 
               socket.emit("control-cmd", {
                 cmd: "iniciar-navegacion",
                 modoRecorrido: modo,
-                accionFinal: accionFinal
+                accionFinal: accionFinal,
               });
 
               console.log(
@@ -127,65 +188,56 @@ const seleccionarModoRecorrido = (modo , accionFinal) => {
 
         if (accionRecorrido === "simulacion") {
 
-const inicioEncontrado = waypoints.find(
-  wp =>
-    (wp.id === 'Inicio' || wp.id === 'Base') &&
-    Number.isFinite(wp.lat) &&
-    Number.isFinite(wp.lon)
-);
+          /*
+          * La simulación siempre comienza desde la posición
+          * preestablecida, independientemente del GPS real.
+          */
+          const inicio = {
+            id: "Inicio",
+            lat: -34.5884060,
+            lon: -58.3665789,
+            altura: 0,
+            velocidad: 0,
+            radioLlegada: 0,
+          };
 
-/*
- * Si todavía no existe Inicio, solamente para la simulación
- * se utiliza la posición inicial del laboratorio.
- */
-const inicio = inicioEncontrado ?? {
-  id: 'Inicio',
-  lat: -34.5884060,
-  lon: -58.3665789,
-  altura: 0,
-  velocidad: 0,
-  radioLlegada: 0
-};
+          setWaypoints((prev) => [
+            inicio,
+            ...prev.filter(
+              (wp) => wp.id !== "Inicio" && wp.id !== "Base"
+            ),
+          ]);
 
-if (!inicioEncontrado) {
-  setWaypoints((prev) => [
-    inicio,
-    ...prev.filter(
-      wp => wp.id !== 'Inicio' && wp.id !== 'Base'
-    )
-  ]);
-}
+          /*
+          * Esta copia no debe modificarse mientras se mueve el barco.
+          */
+          inicioSimulacionRef.current = {
+            id: 'Inicio',
+            lat: inicio.lat,
+            lon: inicio.lon,
+            altura: 0,
+            velocidad: 0,
+            radioLlegada: 0
+          };
 
-/*
- * Esta copia no debe modificarse mientras se mueve el barco.
- */
-inicioSimulacionRef.current = {
-  id: 'Inicio',
-  lat: inicio.lat,
-  lon: inicio.lon,
-  altura: 0,
-  velocidad: 0,
-  radioLlegada: 0
-};
+          simPosRef.current = {
+            lat: inicio.lat,
+            lon: inicio.lon
+          };
 
-simPosRef.current = {
-  lat: inicio.lat,
-  lon: inicio.lon
-};
+          setCurrentPos(simPosRef.current);
 
-setCurrentPos(simPosRef.current);
+          setSimulatedPath?.([
+            simPosRef.current
+          ]);
 
-setSimulatedPath?.([
-  simPosRef.current
-]);
-
-setProgressIdx(0);
-setRutaRetorno([]);
-setRetornoIdx(0);
-setRetornoInverso(false);
-setRetornoDirecto(false);
-setRetornoFinalizado(false);
-
+          setProgressIdx(0);
+          setRutaRetorno([]);
+          setRetornoIdx(0);
+          setRetornoInverso(false);
+          setRetornoDirecto(false);
+          setRetornoFinalizado(false);
+          setContinuacionEnviada(false);
           setSimulando(true);
           setSimulacionActiva?.(true);
 
@@ -652,6 +704,33 @@ const llegoAlWaypoint =
   Number.isFinite(distanciaAlDestinoKm) &&
   distanciaAlDestinoKm <= radioLlegadaKm;
 
+ /*
+ * En simulación se utiliza la distancia calculada por React.
+ *
+ * En navegación real se prioriza wpEnZona,
+ * recibido desde el STM32.
+ */
+const llegadaConfirmada = simulacionActiva
+  ? llegoAlWaypoint
+  : wpEnZona || llegoAlWaypoint;
+
+const puedeContinuar =
+  modoRecorrido === "pausado" &&
+  llegadaConfirmada &&
+  !continuacionEnviada &&
+  !retornoInverso &&
+  !retornoFinalizado;
+
+/*
+ * Cuando el STM32 abandona la zona del waypoint,
+ * se permite una nueva confirmación futura.
+ */
+useEffect(() => {
+  if (!wpEnZona) {
+    setContinuacionEnviada(false);
+  }
+}, [wpEnZona, progressIdx]); 
+
 
 const gpsOkClass = (ok) => ok ? "gpsValueOk" : "gpsValueBad";
 
@@ -725,45 +804,64 @@ const gpsOkClass = (ok) => ok ? "gpsValueOk" : "gpsValueBad";
               🚀 Iniciar Navegación
             </button>
 
-            <button
-              disabled={!llegoAlWaypoint || retornoInverso || retornoFinalizado}
-              className={`wp-btn-completed px-3 py-2 rounded shadow transition text-sm ${
-                llegoAlWaypoint
-                  ? 'bg-green-600 hover:bg-green-700 text-white'
-                  : 'bg-gray-500 text-gray-300 cursor-not-allowed'
-              }`}
-              onClick={() => {
-                if (!llegoAlWaypoint) return;
+<button
+  disabled={!puedeContinuar}
+  className={`wp-btn-completed px-3 py-2 rounded shadow transition text-sm ${
+    puedeContinuar
+      ? "bg-green-600 hover:bg-green-700 text-white"
+      : "bg-gray-500 text-gray-300 cursor-not-allowed"
+  }`}
+  onClick={() => {
+    if (!puedeContinuar) {
+      return;
+    }
 
-                if (!retornoInverso && esUltimoWaypoint) {
-                  setShowReturnModal(true);
-                  return;
-                }
+    /*
+     * Si se alcanzó el último waypoint,
+     * se muestran las opciones finales.
+     */
+    if (!retornoInverso && esUltimoWaypoint) {
+      setShowReturnModal(true);
+      return;
+    }
 
-                if (misionActiva) {
-                  socket.emit('control-cmd', {
-                    cmd: 'nextWP'
-                  });
+    /*
+     * Navegación real: se envía la orden al STM32.
+     */
+    if (!simulacionActiva) {
+      socket.emit("control-cmd", {
+        cmd: "nextWP",
+      });
 
-                  console.log('📡 Comando enviado: nextWP');
-                  return;
-                }
+      console.log("📡 Comando enviado: nextWP");
 
-                setProgressIdx(prev => prev + 1);
-              }}
-                          >
-              <span className="wp-btn-text">
-                {retornoFinalizado
-                  ? 'Retorno Completado'
-                  : retornoInverso
-                  ? 'Retornando...'
-                  : llegoAlWaypoint
-                  ? 'WayPoint Cumplido'
-                  : 'Esperando llegada'}
-              </span>
+      setContinuacionEnviada(true);
+    }
 
-              <span className="wp-btn-icon">✓</span>
-            </button>
+    /*
+     * Actualiza la representación de la ruta.
+     * En simulación también inicia el movimiento
+     * hacia el siguiente objetivo.
+     */
+    setProgressIdx((prev) =>
+      Math.min(prev + 1, destinosActuales.length - 1)
+    );
+  }}
+>
+  <span className="wp-btn-text">
+    {retornoFinalizado
+      ? "Retorno completado"
+      : retornoInverso
+      ? "Retornando..."
+      : puedeContinuar
+      ? "Continuar al siguiente WP"
+      : modoRecorrido === "continuo"
+      ? "Modo continuo"
+      : "Esperando llegada"}
+  </span>
+
+  <span className="wp-btn-icon">▶</span>
+</button>
             
             <button
                      className={`wp-btn-simulate px-3 py-2 rounded shadow text-sm ${
@@ -838,45 +936,48 @@ const gpsOkClass = (ok) => ok ? "gpsValueOk" : "gpsValueBad";
                     onClick={() => {
                       setShowReturnModal(false);
 
-                      if (misionActiva) {
-                        socket.emit('control-cmd', { cmd: 'returnReverseWP' });
+                      if (!simulacionActiva) {
+                        socket.emit("control-cmd", {
+                          cmd: "returnReverseWP",
+                        });
+                        return;
                       } else {
-const inicio = inicioSimulacionRef.current;
+                      const inicio = inicioSimulacionRef.current;
 
-if (!inicio) {
-  console.error(
-    "No existe una posición inicial para el retorno"
-  );
-  return;
-}
-const wps = waypoints.filter(
-  w =>
-    w.id !== 'Inicio' &&
-    w.id !== 'Base' &&
-    Number.isFinite(w.lat) &&
-    Number.isFinite(w.lon)
-);
+                      if (!inicio) {
+                        console.error(
+                          "No existe una posición inicial para el retorno"
+                        );
+                        return;
+                      }
+                      const wps = waypoints.filter(
+                        w =>
+                          w.id !== 'Inicio' &&
+                          w.id !== 'Base' &&
+                          Number.isFinite(w.lat) &&
+                          Number.isFinite(w.lon)
+                      );
 
-/*
- * Si la posición actual es el último waypoint:
- *
- * WP3 → WP2 → WP1 → WP0
- *
- * Se excluye el último waypoint porque el barco
- * ya se encuentra allí.
- */
-const ruta = [
-  ...wps.slice(0, -1).reverse(),
-  inicio
-];
+                      /*
+                      * Si la posición actual es el último waypoint:
+                      *
+                      * WP3 → WP2 → WP1 → WP0
+                      *
+                      * Se excluye el último waypoint porque el barco
+                      * ya se encuentra allí.
+                      */
+                      const ruta = [
+                        ...wps.slice(0, -1).reverse(),
+                        inicio
+                      ];
 
-setRutaRetorno(ruta);
-setRetornoIdx(0);
-setRetornoInverso(true);
-setRetornoDirecto(false);
-setRetornoFinalizado(false);
-setSimulando(true);
-setSimulacionActiva?.(true);
+                      setRutaRetorno(ruta);
+                      setRetornoIdx(0);
+                      setRetornoInverso(true);
+                      setRetornoDirecto(false);
+                      setRetornoFinalizado(false);
+                      setSimulando(true);
+                      setSimulacionActiva?.(true);
                       }
                     }}
                   >
@@ -888,33 +989,34 @@ setSimulacionActiva?.(true);
                     onClick={() => {
                       setShowReturnModal(false);
 
-                      if (misionActiva) {
-                        socket.emit('control-cmd', {
-                          cmd: 'returnDirectInicio'
-                        });
-                        return;
+                      if (!simulacionActiva) {
+                      socket.emit("control-cmd", {
+                        cmd: "returnDirectInicio",
+                      });
+
+                      return;
                       }
 
-const inicio = inicioSimulacionRef.current;
+                    const inicio = inicioSimulacionRef.current;
 
-if (!inicio) {
-  console.error(
-    "No existe una posición inicial para el retorno"
-  );
-  return;
-}
+                    if (!inicio) {
+                      console.error(
+                        "No existe una posición inicial para el retorno"
+                      );
+                      return;
+                    }
 
-setRutaRetorno([inicio]);
-setRetornoIdx(0);
+                    setRutaRetorno([inicio]);
+                    setRetornoIdx(0);
 
-setRetornoInverso(false);
-setRetornoDirecto(true);
-setRetornoFinalizado(false);
+                    setRetornoInverso(false);
+                    setRetornoDirecto(true);
+                    setRetornoFinalizado(false);
 
-setSimulando(true);
-setSimulacionActiva?.(true);
+                    setSimulando(true);
+                    setSimulacionActiva?.(true);
 
-console.log("⚡ Retorno directo al Inicio");
+                    console.log("⚡ Retorno directo al Inicio");
                     }}
                   >
                     ⚡ Volver directo al Inicio

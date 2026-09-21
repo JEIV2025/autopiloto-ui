@@ -71,6 +71,128 @@ const centroInicialMapa = [
   -34.5884060,
   -58.3665789
 ];
+/*
+ * Configuración y persistencia del zoom.
+ *
+ * El servidor local dispone de teselas hasta zoom 17.
+ * Leaflet ampliará esas teselas para permitir zoom 18, 19 y 20.
+ */
+const MAP_ZOOM_STORAGE_KEY = "mision-map-zoom";
+const MAP_CENTER_STORAGE_KEY = "mision-map-center";
+const MAP_FOLLOW_STORAGE_KEY = "mision-map-follow";
+
+const MAP_ZOOM_DEFAULT = 18;
+const MAP_ZOOM_MIN = 10;
+const MAP_ZOOM_MAX = 20;
+
+const obtenerZoomInicial = () => {
+  const zoomGuardado = Number(
+    localStorage.getItem(MAP_ZOOM_STORAGE_KEY)
+  );
+
+  const zoomGuardadoValido =
+    Number.isFinite(zoomGuardado) &&
+    zoomGuardado >= MAP_ZOOM_MIN &&
+    zoomGuardado <= MAP_ZOOM_MAX;
+
+  return zoomGuardadoValido
+    ? zoomGuardado
+    : MAP_ZOOM_DEFAULT;
+};
+
+const obtenerCentroGuardado = () => {
+  try {
+    const centroGuardado = localStorage.getItem(
+      MAP_CENTER_STORAGE_KEY
+    );
+
+    if (!centroGuardado) {
+      return null;
+    }
+
+    const centro = JSON.parse(centroGuardado);
+
+    const centroValido =
+      Number.isFinite(centro?.lat) &&
+      Number.isFinite(centro?.lon) &&
+      centro.lat >= -90 &&
+      centro.lat <= 90 &&
+      centro.lon >= -180 &&
+      centro.lon <= 180;
+
+    if (!centroValido) {
+      return null;
+    }
+
+    return [centro.lat, centro.lon];
+  } catch (error) {
+    console.error(
+      "No se pudo recuperar el centro del mapa:",
+      error
+    );
+
+    return null;
+  }
+};
+const obtenerSeguimientoInicial = () => {
+  const valorGuardado = localStorage.getItem(
+    MAP_FOLLOW_STORAGE_KEY
+  );
+
+  /*
+   * Si todavía no existe una preferencia almacenada,
+   * el seguimiento comienza activado.
+   */
+  if (valorGuardado === null) {
+    return true;
+  }
+
+  return valorGuardado === "true";
+};
+
+const PersistirVistaMapa = ({
+  onMovimientoManual
+}) => {
+  const map = useMap();
+
+  const guardarVista = () => {
+    const centro = map.getCenter();
+    const zoom = map.getZoom();
+
+    localStorage.setItem(
+      MAP_ZOOM_STORAGE_KEY,
+      String(zoom)
+    );
+
+    localStorage.setItem(
+      MAP_CENTER_STORAGE_KEY,
+      JSON.stringify({
+        lat: centro.lat,
+        lon: centro.lng,
+      })
+    );
+  };
+
+  /*
+   * Guarda el centro cuando el mapa se desplaza.
+   */
+  useMapEvent("moveend", guardarVista);
+
+  /*
+   * Guarda el nivel cuando cambia el zoom.
+   */
+  useMapEvent("zoomend", guardarVista);
+
+  /*
+   * Si el usuario arrastra el mapa manualmente,
+   * se desactiva el seguimiento del barco.
+   */
+  useMapEvent("dragstart", () => {
+    onMovimientoManual?.();
+  });
+
+  return null;
+};
 
 // Icono de waypoint completado
 const iconCompletado = L.divIcon({
@@ -93,13 +215,38 @@ const MapView = ({ waypoints,
                   onAddWaypoint, 
                   progressIdx, 
                   currentPos, 
+                  posicionSimulada,
                   simBoatHeading, 
                   simulatedPath,
                   mode,
                   rutaCargada
                  }) => {
   
-  const [seguirBarco, setSeguirBarco] = useState(true);
+const [seguirBarco, setSeguirBarco] =
+  useState(obtenerSeguimientoInicial);
+  const [zoomInicial] = useState(obtenerZoomInicial);
+
+  const desactivarSeguimientoManual = () => {
+  setSeguirBarco(false);
+
+  localStorage.setItem(
+    MAP_FOLLOW_STORAGE_KEY,
+    "false"
+  );
+};
+
+const alternarSeguimientoBarco = () => {
+  setSeguirBarco((estadoAnterior) => {
+    const nuevoEstado = !estadoAnterior;
+
+    localStorage.setItem(
+      MAP_FOLLOW_STORAGE_KEY,
+      String(nuevoEstado)
+    );
+
+    return nuevoEstado;
+  });
+};
 
 
  const vehicleImg = mode === "aereo" ? dronImg : boteImg;
@@ -133,6 +280,13 @@ const longitud = posicionActualValida
 const centroMapa = posicionActualValida
   ? [latitud, longitud]
   : centroInicialMapa;
+  /*
+ * Si existe una vista guardada se utiliza esa zona.
+ * En caso contrario, se utiliza la posición disponible.
+ */
+const [centroInicial] = useState(() => {
+  return obtenerCentroGuardado() ?? centroMapa;
+});
   // Determinar el rumbo según el estado:
   // - Si hay simBoatHeading (simulando), usar ese rumbo
   // - Si no hay simulación, usar el rumbo de telemetría del bote físico
@@ -162,7 +316,9 @@ const rotationStyle =
 
   const pitch = telemetry?.pitch ?? 0;
   const roll = telemetry?.roll ?? 0;
-const usandoValoresPorDefecto =  !posicionActualValida;
+
+const usandoValoresPorDefecto =
+  Boolean(posicionSimulada);
 
 
   // Distancia Haversine (km)
@@ -218,37 +374,53 @@ const rutaValida = (rutaCargada || []).filter(
             fontWeight: 'bold',
           }}
         >
-          ⚠️ Mostrando ubicación inicial predeterminada
+         ⚠️ Mostrando posición simulada
         </div>
       )}
 
-
-    <MapContainer
-      center={centroMapa}
-      zoom={14}
-      minZoom={10}
-      maxZoom={17}
-      style={{ height: '100%', width: '100%' }}
-    >
-     <MapFixer trigger={fullscreen} seguirBarco={seguirBarco} lat={latitud} lon={longitud} />
-  {seguirBarco ? <FeedbackClickSeguir /> : <AddWaypointOnClick onAdd={onAddWaypoint} />}
+      <MapContainer
+        center={centroInicial}
+        zoom={zoomInicial}
+        minZoom={MAP_ZOOM_MIN}
+        maxZoom={MAP_ZOOM_MAX}
+        style={{ height: "100%", width: "100%" }}
+      >
+          <MapFixer 
+          trigger={fullscreen} 
+          seguirBarco={seguirBarco} 
+          lat={latitud} 
+          lon={longitud} />
+          <PersistirVistaMapa
+        onMovimientoManual={desactivarSeguimientoManual}
+      />
+        {seguirBarco ? <FeedbackClickSeguir /> : <AddWaypointOnClick onAdd={onAddWaypoint} />}
 
       <div
-        className={`centrar-btn ${seguirBarco ? 'activo' : ''}`}
-        onClick={() => setSeguirBarco(prev => !prev)}
-        title="Centrar mapa"
+        className={`centrar-btn ${
+          seguirBarco ? "activo" : ""
+        }`}
+        onClick={alternarSeguimientoBarco}
+        title={
+          seguirBarco
+            ? "Desactivar seguimiento"
+            : "Seguir posición del barco"
+        }
       />
 
       {/* Capa base: tiles de OpenStreetMap cacheados */}
       <TileLayer
-        url={`http://localhost:3001/tiles/{z}/{x}/{y}.png`}
+        url="http://localhost:3001/tiles/{z}/{x}/{y}.png"
         attribution="Mapas cacheados localmente"
+        maxNativeZoom={17}
+        maxZoom={MAP_ZOOM_MAX}
       />
 
       {/* Capa extra: capa seamark (marcas náuticas) */}
       <TileLayer
-        url={`http://localhost:3001/seamark/{z}/{x}/{y}.png`}
+        url="http://localhost:3001/seamark/{z}/{x}/{y}.png"
         attribution="OpenSeaMap Local"
+        maxNativeZoom={17}
+        maxZoom={MAP_ZOOM_MAX}
       />
 
 {rutaValida.length > 1 && (

@@ -85,9 +85,67 @@ const telemetriaValida =
   telemetry?.rumbo
 ]);
 
+const prepararMisionReal = () => {
+  const latActual = Number(telemetry?.lat);
+  const lonActual = Number(telemetry?.lon);
+
+  const posicionGpsValida =
+    Boolean(telemetry?.gpsPosValid) &&
+    Number.isFinite(latActual) &&
+    Number.isFinite(lonActual) &&
+    latActual >= -90 &&
+    latActual <= 90 &&
+    lonActual >= -180 &&
+    lonActual <= 180 &&
+    !(latActual === 0 && lonActual === 0);
+
+  if (!posicionGpsValida) {
+    console.error(
+      "No se puede preparar la misión: posición GPS inválida"
+    );
+
+    return null;
+  }
+
+  const destinos = waypoints.filter(
+    wp =>
+      wp.id !== 'Inicio' &&
+      wp.id !== 'Base'
+  );
+
+  const inicioReal = {
+    id: 'Inicio',
+    lat: latActual,
+    lon: lonActual,
+    altura: 0,
+    velocidad: 0,
+    radioLlegada: 0,
+  };
+
+  return [
+    inicioReal,
+    ...destinos
+  ];
+};
+
+/*
+ * Prioridades de posicionamiento:
+ *
+ * 1. Durante una simulación se utiliza currentPos.
+ * 2. En modo real se utiliza la última posición GPS.
+ * 3. Si no existe telemetría GPS, se conserva currentPos
+ *    como posición de demostración.
+ */
 const posicionMapa = simulacionActiva
   ? currentPos
-  : ultimaPosicionReal;
+  : ultimaPosicionReal ?? currentPos;
+
+/*
+ * Permite que MapView informe si la posición mostrada
+ * es simulada o proviene del GPS real.
+ */
+const posicionMapaSimulada =
+  simulacionActiva || ultimaPosicionReal === null;
 
   useEffect(() => {
   if (!posicionMapa)
@@ -151,41 +209,12 @@ if (misionCargadaEnVehiculo || simulacionActiva)
     return () => clearInterval(interval);
   }, []);
 
-
-useEffect(() => {
-  navigator.geolocation.getCurrentPosition(
-    (pos) => {
-      setCurrentPos({
-        lat: pos.coords.latitude,
-        lon: pos.coords.longitude,
-      });
-    },
-    (err) => {
-      console.error("Error de geolocalización:", err);
-    }
-  );
-}, []);
 /*
-useEffect(() => {
-  setWaypoints(prev => {
-    if (!prev.length) return prev;
+ * currentPos se utiliza exclusivamente para la simulación.
+ * La posición real del vehículo proviene de ultimaPosicionReal,
+ * obtenida mediante telemetría.
+ */
 
-    return prev.map((wp, idx) =>
-      idx === 0
-        ? {
-            ...wp,
-            id: 'Inicio',
-            lat: currentPos.lat,
-            lon: currentPos.lon,
-            altura: 0,
-            velocidad: 0,
-            radioLlegada: 0,
-          }
-        : wp
-    );
-  });
-}, [currentPos.lat, currentPos.lon]);
-*/
 const handleAddWaypoint = (latlng) => {
   setWaypoints((prev) => {
     const cantidadWP = prev.filter(
@@ -283,6 +312,7 @@ const handleAddWaypoint = (latlng) => {
                 simulatedPath={simulatedPath}
                 mode={mode}
                 rutaCargada={rutaCargada}
+                posicionSimulada={posicionMapaSimulada}
               />
             </div>
             <div className="row-span-2 bg-white rounded-xl shadow  ">
@@ -298,6 +328,7 @@ const handleAddWaypoint = (latlng) => {
                 setSimulatedPath={setSimulatedPath}
                 misionCargadaEnVehiculo={misionCargadaEnVehiculo}
                 setSimulacionActiva={setSimulacionActiva}
+                simulacionActiva={simulacionActiva}
               />
             </div>
           </div>
@@ -312,7 +343,7 @@ const handleAddWaypoint = (latlng) => {
               </div>             
                 <ControlPanel waypoints={waypoints} 
                 setWaypoints={setWaypoints} 
-                currentPos={currentPos} 
+                currentPos={ultimaPosicionReal} 
                 progressIdx={progressIdx} 
                 setProgressIdx={setProgressIdx} 
                 setMisionCargadaEnVehiculo={setMisionCargadaEnVehiculo}

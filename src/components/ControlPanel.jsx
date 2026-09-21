@@ -401,22 +401,74 @@ useEffect(() => {
   };
 
   // Función para enviar la misión
-  const handleConfirmEnviar = () => {
-    setShowConfirmEnviar(false);
-    setEstadoEnvio("enviando");
+const handleConfirmEnviar = () => {
+  setShowConfirmEnviar(false);
 
-    socket.emit('control-cmd', {
-      cmd: 'enviar-mision',
-      data: waypoints
-    });
+  const posicionRealValida =
+    Number.isFinite(currentPos?.lat) &&
+    Number.isFinite(currentPos?.lon) &&
+    currentPos.lat >= -90 &&
+    currentPos.lat <= 90 &&
+    currentPos.lon >= -180 &&
+    currentPos.lon <= 180 &&
+    !(currentPos.lat === 0 && currentPos.lon === 0);
 
-   setTimeout(() => {
+  if (!posicionRealValida) {
+    setEstadoEnvio("sin-gps");
+
+    setTimeout(() => {
+      setEstadoEnvio(null);
+    }, 5000);
+
+    return;
+  }
+
+  setEstadoEnvio("enviando");
+
+  /*
+   * WP0 se fija con la posición GPS real disponible
+   * en el momento de enviar la misión.
+   */
+  const inicioReal = {
+    id: "Inicio",
+    lat: currentPos.lat,
+    lon: currentPos.lon,
+    altura: 0,
+    velocidad: 0,
+    radioLlegada: 0,
+  };
+
+  /*
+   * Se elimina cualquier Inicio o Base anterior para
+   * evitar enviar dos puntos iniciales.
+   */
+  const waypointsParaEnviar = [
+    inicioReal,
+    ...waypoints.filter(
+      (wp) => wp.id !== "Inicio" && wp.id !== "Base"
+    ),
+  ];
+
+  /*
+   * Actualiza el mapa y la tabla con el mismo WP0
+   * que se enviará al STM32.
+   */
+  setWaypoints(waypointsParaEnviar);
+
+  socket.emit("control-cmd", {
+    cmd: "enviar-mision",
+    data: waypointsParaEnviar,
+  });
+
+  setTimeout(() => {
     setEstadoEnvio("enviada");
     setMisionCargadaEnVehiculo(true);
   }, 1000);
-    setTimeout(() => setEstadoEnvio(null), 5000);
-  };
 
+  setTimeout(() => {
+    setEstadoEnvio(null);
+  }, 5000);
+};
   // Función para cargar la misión desde el micro
   const handleConfirmCargar = () => {
     setShowConfirmCargar(false);
@@ -665,22 +717,27 @@ useEffect(() => {
               "
             >
 
-              <button
-                onClick={() => setShowConfirmEnviar(true)}
-                className={`min-w-[220px] px-4 py-2 font-semibold rounded shadow-md transition-all duration-300 ${
-                  estadoEnvio === "enviada"
-                    ? "bg-green-600 hover:bg-green-700"
-                    : estadoEnvio === "enviando"
-                    ? "bg-yellow-500 hover:bg-yellow-600"
-                    : "bg-indigo-600 hover:bg-indigo-700"
-                } text-white`}
-              >
-                {estadoEnvio === "enviando"
-                  ? "⏳ Enviando..."
-                  : estadoEnvio === "enviada"
-                  ? "✅ Misión Enviada"
-                  : "Enviar Misión Actual"}
-              </button>
+<button
+  onClick={() => setShowConfirmEnviar(true)}
+  disabled={estadoEnvio === "enviando"}
+  className={`min-w-[220px] px-4 py-2 font-semibold rounded shadow-md transition-all duration-300 ${
+    estadoEnvio === "enviada"
+      ? "bg-green-600 hover:bg-green-700"
+      : estadoEnvio === "sin-gps"
+      ? "bg-red-600 hover:bg-red-700"
+      : estadoEnvio === "enviando"
+      ? "bg-yellow-500 cursor-wait"
+      : "bg-indigo-600 hover:bg-indigo-700"
+  } text-white`}
+>
+  {estadoEnvio === "enviando"
+    ? "⏳ Enviando..."
+    : estadoEnvio === "sin-gps"
+    ? "⚠️ Sin posición GPS válida"
+    : estadoEnvio === "enviada"
+    ? "✅ Misión enviada"
+    : "Enviar Misión Actual"}
+</button>
 
               <button
                 onClick={() => setShowConfirmCargar(true)}
