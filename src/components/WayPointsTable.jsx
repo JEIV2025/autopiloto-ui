@@ -43,6 +43,10 @@ const [modoRecorrido, setModoRecorrido] = useState("pausado");
 const [accionFinalSeleccionada, setAccionFinalSeleccionada] = useState("esperar");
 const [continuacionEnviada, setContinuacionEnviada] = useState(false);
 
+const [mensajeTestOrientacion, setMensajeTestOrientacion] = useState("");
+
+const testOrientacionTimerRef = useRef(null);
+
 const simPosRef = useRef(null);
 const inicioSimulacionRef = useRef(null);
 
@@ -734,8 +738,39 @@ useEffect(() => {
 
 const gpsOkClass = (ok) => ok ? "gpsValueOk" : "gpsValueBad";
 
+useEffect(() => {
+  return () => {
+    if (testOrientacionTimerRef.current) {
+      clearTimeout(testOrientacionTimerRef.current);
+    }
+  };
+}, []);
+
   return (
     <div className="waypoints-table-container" style={{ background: '#64778aff', display: 'flex', flexDirection: 'column', height: '100%', overflowY: 'auto' }}>
+   {mensajeTestOrientacion && (
+  <div
+    role="status"
+    className="
+      fixed
+      top-6
+      right-6
+      z-[99999]
+      bg-purple-700
+      text-white
+      px-5
+      py-3
+      rounded-lg
+      shadow-2xl
+      font-semibold
+      border
+      border-purple-300
+    "
+  >
+    {mensajeTestOrientacion}
+  </div>
+)}
+   
       <div style={{ flexShrink: 0 }}>
         <div className="bg-black text-white p-4 rounded-lg shadow-lg w-full overflow-x-auto">
           <h2 className="text-center text-lg font-bold mb-4">Listado WayPoints</h2>
@@ -897,17 +932,48 @@ const gpsOkClass = (ok) => ok ? "gpsValueOk" : "gpsValueBad";
               </button>
 
               <button
-              className="px-3 py-2 rounded shadow text-sm bg-purple-600 hover:bg-purple-700 text-white transition font-semibold"
-              onClick={() => {
-                socket.emit('control-cmd', {
-                  cmd: 'test-orientacion'
-                });
+                disabled={!misionCargadaEnVehiculo}
+                className={`px-3 py-2 rounded shadow text-sm transition font-semibold ${
+                  misionCargadaEnVehiculo
+                    ? "bg-purple-600 hover:bg-purple-700 text-white"
+                    : "bg-gray-500 text-gray-300 cursor-not-allowed"
+                }`}
+                title={
+                  misionCargadaEnVehiculo
+                    ? "Ejecutar test con la misión almacenada en el STM32"
+                    : "Primero debe enviar o cargar una misión en el STM32"
+                }
+                onClick={() => {
+                  if (!misionCargadaEnVehiculo) {
+                    return;
+                  }
 
-                console.log('🧭 Comando enviado: test-orientacion');
-              }}
-            >
-              🧭 Test Orientación
-            </button>
+                  socket.emit("control-cmd", {
+                    cmd: "test-orientacion",
+                  });
+
+                  setMensajeTestOrientacion(
+                    "🧭 Orden enviada: test de orientación iniciado"
+                  );
+
+                  if (testOrientacionTimerRef.current) {
+                    clearTimeout(testOrientacionTimerRef.current);
+                  }
+
+                  testOrientacionTimerRef.current = setTimeout(() => {
+                    setMensajeTestOrientacion("");
+                    testOrientacionTimerRef.current = null;
+                  }, 4000);
+
+                  console.log(
+                    "🧭 Test de orientación iniciado con la misión almacenada en el STM32"
+                  );
+                }}
+              >
+                {misionCargadaEnVehiculo
+                  ? "🧭 Test Orientación"
+                  : "🔒 Test Orientación"}
+              </button>
 
           {retornoInverso && (
             <div className="bg-blue-600 text-white px-3 py-1 rounded">
